@@ -1,0 +1,802 @@
+// lib/ayah_actions_sheet.dart - SIMPLIFIED VERSION with single play button
+
+import 'dart:convert';
+import 'dart:async';
+import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
+import 'models/ayah_marker.dart';
+import 'bookmark_manager.dart';
+
+class AyahActionsSheet extends StatefulWidget {
+  final AyahMarker ayahMarker;
+  final String surahName;
+  final String juzName;
+  final int currentPage;
+  final Function(AyahMarker, String) onContinuousPlayRequested;
+
+  const AyahActionsSheet({
+    super.key,
+    required this.ayahMarker,
+    required this.surahName,
+    required this.juzName,
+    required this.currentPage,
+    required this.onContinuousPlayRequested,
+  });
+
+  @override
+  State<AyahActionsSheet> createState() => _AyahActionsSheetState();
+}
+
+class _AyahActionsSheetState extends State<AyahActionsSheet> with TickerProviderStateMixin {
+  bool _isBookmarked = false;
+  bool _isLoadingTafsir = false;
+  bool _isLoadingAyahText = false;
+  String? _tafsirText;
+  String? _ayahText;
+  String? _error;
+  String? _tafsirSource;
+  String _defaultReciter = 'عبد الباسط عبد الصمد';
+  String _defaultTafsir = 'تفسير ابن كثير';
+
+  // Enhanced cache with expiration
+  static final Map<String, CacheEntry> _ayahTextCache = {};
+  static final Map<String, CacheEntry> _tafsirCache = {};
+
+  @override
+  void initState() {
+    super.initState();
+    _checkBookmarkStatus();
+    _loadAyahText();
+    _loadSettings();
+  }
+
+  Future<void> _loadSettings() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      setState(() {
+        _defaultReciter = prefs.getString('selected_reciter') ?? 'عبد الباسط عبد الصمد';
+        _defaultTafsir = prefs.getString('default_tafsir') ?? 'تفسير ابن كثير';
+      });
+    } catch (e) {
+      debugPrint('Error loading settings: $e');
+    }
+  }
+
+  Future<void> _checkBookmarkStatus() async {
+    final isBookmarked = await BookmarkManager.isAyahBookmarked(
+      widget.ayahMarker.surah,
+      widget.ayahMarker.ayah,
+    );
+    if (mounted) {
+      setState(() {
+        _isBookmarked = isBookmarked;
+      });
+    }
+  }
+
+  // ENHANCED: Improved Ayah text loading with better error handling and multiple fallbacks
+  Future<void> _loadAyahText() async {
+    final cacheKey = '${widget.ayahMarker.surah}:${widget.ayahMarker.ayah}';
+
+    // Check cache first (with expiration)
+    if (_ayahTextCache.containsKey(cacheKey)) {
+      final cacheEntry = _ayahTextCache[cacheKey]!;
+      if (!cacheEntry.isExpired) {
+        if (mounted) {
+          setState(() {
+            _ayahText = cacheEntry.data;
+            _isLoadingAyahText = false;
+          });
+        }
+        return;
+      } else {
+        _ayahTextCache.remove(cacheKey);
+      }
+    }
+
+    setState(() {
+      _isLoadingAyahText = true;
+      _error = null;
+    });
+
+    // Enhanced API endpoints with better reliability
+    final apiStrategies = [
+      // Strategy 1: AlQuran.cloud (most reliable)
+          () async {
+        final response = await http.get(
+          Uri.parse('https://api.alquran.cloud/v1/ayah/${widget.ayahMarker.surah}:${widget.ayahMarker.ayah}/ar.asad'),
+          headers: {'Accept': 'application/json', 'User-Agent': 'QuranApp/1.0'},
+        ).timeout(const Duration(seconds: 8));
+
+        if (response.statusCode == 200) {
+          final data = json.decode(response.body);
+          return data['data']['text'] as String?;
+        }
+        return null;
+      },
+
+      // Strategy 2: Alternative AlQuran endpoint
+          () async {
+        final response = await http.get(
+          Uri.parse('https://api.alquran.cloud/v1/ayah/${widget.ayahMarker.surah}:${widget.ayahMarker.ayah}'),
+          headers: {'Accept': 'application/json'},
+        ).timeout(const Duration(seconds: 8));
+
+        if (response.statusCode == 200) {
+          final data = json.decode(response.body);
+          return data['data']['text'] as String?;
+        }
+        return null;
+      },
+
+      // Strategy 3: Quran.com API
+          () async {
+        final response = await http.get(
+          Uri.parse('https://api.quran.com/api/v4/verses/by_key/${widget.ayahMarker.surah}:${widget.ayahMarker.ayah}?fields=text_uthmani'),
+          headers: {'Accept': 'application/json'},
+        ).timeout(const Duration(seconds: 8));
+
+        if (response.statusCode == 200) {
+          final data = json.decode(response.body);
+          return data['verse']['text_uthmani'] as String?;
+        }
+        return null;
+      },
+
+      // Strategy 4: Static fallback data
+          () async {
+        return _getStaticAyahText(widget.ayahMarker.surah, widget.ayahMarker.ayah);
+      },
+    ];
+
+    String? result;
+    String lastError = '';
+
+    for (int i = 0; i < apiStrategies.length && result == null; i++) {
+      try {
+        debugPrint('Trying Ayah API strategy ${i + 1}');
+        result = await apiStrategies[i]();
+        if (result != null && result.trim().isNotEmpty) {
+          debugPrint('Ayah API strategy ${i + 1} succeeded');
+          break;
+        }
+      } catch (e) {
+        lastError = e.toString();
+        debugPrint('Ayah API strategy ${i + 1} failed: $e');
+        continue;
+      }
+    }
+
+    if (mounted) {
+      setState(() {
+        if (result != null && result.trim().isNotEmpty) {
+          _ayahText = result.trim();
+          _ayahTextCache[cacheKey] = CacheEntry(result.trim(), DateTime.now());
+          _error = null;
+        } else {
+          _error = 'فشل في تحميل نص الآية - يرجى المحاولة مرة أخرى';
+          debugPrint('All Ayah API strategies failed. Last error: $lastError');
+        }
+        _isLoadingAyahText = false;
+      });
+    }
+  }
+
+  // ENHANCED: Improved Tafsir loading with configurable source
+  Future<void> _loadTafsir() async {
+    if (_isLoadingTafsir) return;
+
+    final cacheKey = 'tafsir_${_defaultTafsir}_${widget.ayahMarker.surah}:${widget.ayahMarker.ayah}';
+
+    // Check cache first
+    if (_tafsirCache.containsKey(cacheKey)) {
+      final cacheEntry = _tafsirCache[cacheKey]!;
+      if (!cacheEntry.isExpired) {
+        if (mounted) {
+          setState(() {
+            _tafsirText = cacheEntry.data;
+            _tafsirSource = cacheEntry.source;
+            _isLoadingTafsir = false;
+          });
+        }
+        return;
+      } else {
+        _tafsirCache.remove(cacheKey);
+      }
+    }
+
+    setState(() {
+      _isLoadingTafsir = true;
+      _error = null;
+    });
+
+    // Get tafsir based on default setting
+    final tafsirStrategies = _getTafsirStrategies();
+    final selectedStrategy = tafsirStrategies.firstWhere(
+          (strategy) => strategy.name == _defaultTafsir,
+      orElse: () => tafsirStrategies.first,
+    );
+
+    String? tafsirResult;
+    String lastError = '';
+
+    try {
+      debugPrint('Loading tafsir: ${selectedStrategy.name}');
+      tafsirResult = await selectedStrategy.apiCall();
+      if (tafsirResult != null && tafsirResult.trim().isNotEmpty) {
+        debugPrint('Tafsir loaded successfully: ${selectedStrategy.name}');
+      }
+    } catch (e) {
+      lastError = e.toString();
+      debugPrint('Tafsir loading failed: $e');
+
+      // Try fallback strategies
+      for (var strategy in tafsirStrategies) {
+        if (strategy.name != selectedStrategy.name) {
+          try {
+            tafsirResult = await strategy.apiCall();
+            if (tafsirResult != null && tafsirResult.trim().isNotEmpty) {
+              _defaultTafsir = strategy.name; // Update to working tafsir
+              break;
+            }
+          } catch (e) {
+            continue;
+          }
+        }
+      }
+    }
+
+    if (mounted) {
+      setState(() {
+        if (tafsirResult != null && tafsirResult.trim().isNotEmpty) {
+          _tafsirText = _cleanTafsirText(tafsirResult.trim());
+          _tafsirSource = _defaultTafsir;
+          _tafsirCache[cacheKey] = CacheEntry(_tafsirText!, DateTime.now(), source: _defaultTafsir);
+        } else {
+          _tafsirText = 'عذراً، لا يمكن تحميل التفسير في الوقت الحالي. يرجى المحاولة مرة أخرى.';
+          _tafsirSource = null;
+          debugPrint('All Tafsir strategies failed. Last error: $lastError');
+        }
+        _isLoadingTafsir = false;
+      });
+    }
+  }
+
+  List<TafsirStrategy> _getTafsirStrategies() {
+    return [
+      // Strategy 1: Tafsir Ibn Kathir (most comprehensive)
+      TafsirStrategy(
+        name: 'تفسير ابن كثير',
+        apiCall: () async {
+          final response = await http.get(
+            Uri.parse('https://api.alquran.cloud/v1/ayah/${widget.ayahMarker.surah}:${widget.ayahMarker.ayah}/ar.katheer'),
+            headers: {'Accept': 'application/json'},
+          ).timeout(const Duration(seconds: 10));
+
+          if (response.statusCode == 200) {
+            final data = json.decode(response.body);
+            return data['data']['text'] as String?;
+          }
+          return null;
+        },
+      ),
+
+      // Strategy 2: Tafsir Jalalayn (concise)
+      TafsirStrategy(
+        name: 'تفسير الجلالين',
+        apiCall: () async {
+          final response = await http.get(
+            Uri.parse('https://api.alquran.cloud/v1/ayah/${widget.ayahMarker.surah}:${widget.ayahMarker.ayah}/ar.jalalayn'),
+            headers: {'Accept': 'application/json'},
+          ).timeout(const Duration(seconds: 10));
+
+          if (response.statusCode == 200) {
+            final data = json.decode(response.body);
+            return data['data']['text'] as String?;
+          }
+          return null;
+        },
+      ),
+
+      // Strategy 3: Tafsir Muyassar (simplified)
+      TafsirStrategy(
+        name: 'التفسير الميسر',
+        apiCall: () async {
+          final response = await http.get(
+            Uri.parse('https://api.alquran.cloud/v1/ayah/${widget.ayahMarker.surah}:${widget.ayahMarker.ayah}/ar.muyassar'),
+            headers: {'Accept': 'application/json'},
+          ).timeout(const Duration(seconds: 10));
+
+          if (response.statusCode == 200) {
+            final data = json.decode(response.body);
+            return data['data']['text'] as String?;
+          }
+          return null;
+        },
+      ),
+
+      // Strategy 4: Tafsir As-Sa'di
+      TafsirStrategy(
+        name: 'تفسير السعدي',
+        apiCall: () async {
+          final response = await http.get(
+            Uri.parse('https://api.quran.com/api/v4/verses/by_key/${widget.ayahMarker.surah}:${widget.ayahMarker.ayah}?translations=171'),
+            headers: {'Accept': 'application/json'},
+          ).timeout(const Duration(seconds: 10));
+
+          if (response.statusCode == 200) {
+            final data = json.decode(response.body);
+            if (data['translations'] != null && data['translations'].isNotEmpty) {
+              return data['translations'][0]['text'] as String?;
+            }
+          }
+          return null;
+        },
+      ),
+
+      // Strategy 5: Tafsir Al-Tabari
+      TafsirStrategy(
+        name: 'تفسير الطبري',
+        apiCall: () async {
+          final response = await http.get(
+            Uri.parse('https://api.alquran.cloud/v1/ayah/${widget.ayahMarker.surah}:${widget.ayahMarker.ayah}/ar.tabary'),
+            headers: {'Accept': 'application/json'},
+          ).timeout(const Duration(seconds: 10));
+
+          if (response.statusCode == 200) {
+            final data = json.decode(response.body);
+            return data['data']['text'] as String?;
+          }
+          return null;
+        },
+      ),
+
+      // Strategy 6: Tafsir Al-Qurtubi
+      TafsirStrategy(
+        name: 'تفسير القرطبي',
+        apiCall: () async {
+          final response = await http.get(
+            Uri.parse('https://api.alquran.cloud/v1/ayah/${widget.ayahMarker.surah}:${widget.ayahMarker.ayah}/ar.qurtubi'),
+            headers: {'Accept': 'application/json'},
+          ).timeout(const Duration(seconds: 10));
+
+          if (response.statusCode == 200) {
+            final data = json.decode(response.body);
+            return data['data']['text'] as String?;
+          }
+          return null;
+        },
+      ),
+    ];
+  }
+
+  // Clean tafsir text from HTML tags and extra formatting
+  String _cleanTafsirText(String text) {
+    return text
+        .replaceAll(RegExp(r'<[^>]*>'), '') // Remove HTML tags
+        .replaceAll(RegExp(r'\s+'), ' ') // Normalize whitespace
+        .trim();
+  }
+
+  // Static fallback for common ayahs
+  String? _getStaticAyahText(int surah, int ayah) {
+    final staticData = {
+      '1:1': 'بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ',
+      '1:2': 'الْحَمْدُ لِلَّهِ رَبِّ الْعَالَمِينَ',
+      '1:3': 'الرَّحْمَٰنِ الرَّحِيمِ',
+      '1:4': 'مَالِكِ يَوْمِ الدِّينِ',
+      '1:5': 'إِيَّاكَ نَعْبُدُ وَإِيَّاكَ نَسْتَعِينُ',
+      '1:6': 'اهْدِنَا الصِّرَاطَ الْمُسْتَقِيمَ',
+      '1:7': 'صِرَاطَ الَّذِينَ أَنْعَمْتَ عَلَيْهِمْ غَيْرِ الْمَغْضُوبِ عَلَيْهِمْ وَلَا الضَّالِّينَ',
+      '2:255': 'اللَّهُ لَا إِلَٰهَ إِلَّا هُوَ الْحَيُّ الْقَيُّومُ ۚ لَا تَأْخُذُهُ سِنَةٌ وَلَا نَوْمٌ...',
+    };
+
+    return staticData['$surah:$ayah'];
+  }
+
+  Future<void> _toggleBookmark() async {
+    if (_isBookmarked) {
+      await BookmarkManager.removeAyahBookmark(
+        widget.ayahMarker.surah,
+        widget.ayahMarker.ayah,
+      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Directionality(
+              textDirection: TextDirection.rtl,
+              child: Text('تم إزالة إشارة الآية المرجعية'),
+            ),
+            duration: Duration(seconds: 1),
+          ),
+        );
+      }
+    } else {
+      final bookmark = Bookmark(
+        page: widget.currentPage,
+        surahName: widget.surahName,
+        juzName: widget.juzName,
+        createdAt: DateTime.now(),
+        surahNumber: widget.ayahMarker.surah,
+        ayahNumber: widget.ayahMarker.ayah,
+        type: BookmarkType.ayah,
+      );
+      await BookmarkManager.addBookmark(bookmark);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Directionality(
+              textDirection: TextDirection.rtl,
+              child: Text('تم إضافة إشارة الآية المرجعية'),
+            ),
+            duration: Duration(seconds: 1),
+          ),
+        );
+      }
+    }
+    await _checkBookmarkStatus();
+  }
+
+  // SIMPLIFIED: Single play button that starts continuous playback
+  void _playAyah() {
+    Navigator.of(context).pop(); // Close the sheet
+    widget.onContinuousPlayRequested(widget.ayahMarker, _defaultReciter);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: () => Navigator.of(context).pop(),
+      child: DraggableScrollableSheet(
+        initialChildSize: 0.6,
+        minChildSize: 0.4,
+        maxChildSize: 0.9,
+        builder: (context, scrollController) {
+          return GestureDetector(
+            onTap: () {},
+            child: Container(
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.surface,
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+              ),
+              child: Column(
+                children: [
+                  // Handle bar
+                  Container(
+                    width: 40,
+                    height: 4,
+                    margin: const EdgeInsets.symmetric(vertical: 12),
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).colorScheme.outline,
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+
+                  // Header
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.menu_book_rounded,
+                          color: Theme.of(context).colorScheme.primary,
+                          size: 24,
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            'سورة ${_getSurahName(widget.ayahMarker.surah)} - آية ${widget.ayahMarker.ayah}',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: Theme.of(context).colorScheme.onSurface,
+                            ),
+                            textDirection: TextDirection.rtl,
+                          ),
+                        ),
+                        IconButton(
+                          onPressed: _toggleBookmark,
+                          icon: Icon(
+                            _isBookmarked ? Icons.bookmark : Icons.bookmark_border,
+                            color: _isBookmarked
+                                ? Theme.of(context).colorScheme.primary
+                                : Theme.of(context).colorScheme.onSurface,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  const Divider(height: 1),
+
+                  // Content
+                  Expanded(
+                    child: ListView(
+                      controller: scrollController,
+                      padding: const EdgeInsets.all(16),
+                      children: [
+                        // Error display
+                        if (_error != null)
+                          Container(
+                            padding: const EdgeInsets.all(12),
+                            margin: const EdgeInsets.only(bottom: 16),
+                            decoration: BoxDecoration(
+                              color: Theme.of(context).colorScheme.errorContainer,
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Row(
+                              children: [
+                                Icon(
+                                  Icons.error_outline,
+                                  color: Theme.of(context).colorScheme.onErrorContainer,
+                                ),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: Text(
+                                    _error!,
+                                    style: TextStyle(
+                                      color: Theme.of(context).colorScheme.onErrorContainer,
+                                    ),
+                                    textDirection: TextDirection.rtl,
+                                  ),
+                                ),
+                                TextButton(
+                                  onPressed: () => _loadAyahText(),
+                                  child: const Text('إعادة المحاولة'),
+                                ),
+                              ],
+                            ),
+                          ),
+
+                        // Ayah text
+                        if (_isLoadingAyahText)
+                          const Center(child: CircularProgressIndicator())
+                        else if (_ayahText != null) ...[
+                          Container(
+                            padding: const EdgeInsets.all(16),
+                            decoration: BoxDecoration(
+                              color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(
+                                color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.3),
+                              ),
+                            ),
+                            child: Text(
+                              _ayahText!,
+                              style: const TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.w500,
+                                height: 1.8,
+                              ),
+                              textDirection: TextDirection.rtl,
+                              textAlign: TextAlign.center,
+                            ),
+                          ),
+                          const SizedBox(height: 24),
+                        ],
+
+                        // SIMPLIFIED: Single play button with enhanced design
+                        _buildSectionTitle('استماع الآية'),
+                        const SizedBox(height: 12),
+                        Container(
+                          width: double.infinity,
+                          height: 60,
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [
+                                Theme.of(context).colorScheme.primary,
+                                Theme.of(context).colorScheme.primary.withValues(alpha: 0.8),
+                              ],
+                            ),
+                            borderRadius: BorderRadius.circular(16),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.3),
+                                blurRadius: 8,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                          child: Material(
+                            color: Colors.transparent,
+                            child: InkWell(
+                              borderRadius: BorderRadius.circular(16),
+                              onTap: _playAyah,
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    Icons.play_circle_filled,
+                                    color: Theme.of(context).colorScheme.onPrimary,
+                                    size: 32,
+                                  ),
+                                  const SizedBox(width: 16),
+                                  Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        'تشغيل الآية مع التتابع',
+                                        style: TextStyle(
+                                          color: Theme.of(context).colorScheme.onPrimary,
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                        textDirection: TextDirection.rtl,
+                                      ),
+                                      Text(
+                                        'بصوت $_defaultReciter',
+                                        style: TextStyle(
+                                          color: Theme.of(context).colorScheme.onPrimary.withValues(alpha: 0.8),
+                                          fontSize: 12,
+                                        ),
+                                        textDirection: TextDirection.rtl,
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+
+                        const SizedBox(height: 24),
+
+                        // Tafsir section
+                        Row(
+                          children: [
+                            _buildSectionTitle('التفسير'),
+                            if (_tafsirSource != null) ...[
+                              const SizedBox(width: 8),
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                decoration: BoxDecoration(
+                                  color: Theme.of(context).colorScheme.secondary.withValues(alpha: 0.2),
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: Text(
+                                  _tafsirSource!,
+                                  style: TextStyle(
+                                    fontSize: 10,
+                                    color: Theme.of(context).colorScheme.secondary,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                  textDirection: TextDirection.rtl,
+                                ),
+                              ),
+                            ],
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+                        if (_tafsirText == null)
+                          Card(
+                            elevation: 0,
+                            color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                            child: ListTile(
+                              leading: Icon(
+                                Icons.book_outlined,
+                                color: Theme.of(context).colorScheme.primary,
+                              ),
+                              title: const Text(
+                                'عرض التفسير',
+                                textDirection: TextDirection.rtl,
+                              ),
+                              subtitle: Text(
+                                'من $_defaultTafsir',
+                                textDirection: TextDirection.rtl,
+                              ),
+                              trailing: _isLoadingTafsir
+                                  ? const SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: CircularProgressIndicator(strokeWidth: 2),
+                              )
+                                  : const Icon(Icons.keyboard_arrow_left),
+                              onTap: _isLoadingTafsir ? null : _loadTafsir,
+                            ),
+                          )
+                        else
+                          Container(
+                            padding: const EdgeInsets.all(16),
+                            decoration: BoxDecoration(
+                              color: Theme.of(context).colorScheme.surface,
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(
+                                color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.3),
+                              ),
+                            ),
+                            child: Column(
+                              children: [
+                                Text(
+                                  _tafsirText!,
+                                  style: const TextStyle(
+                                    fontSize: 16,
+                                    height: 1.6,
+                                  ),
+                                  textDirection: TextDirection.rtl,
+                                ),
+                                if (_tafsirText!.contains('عذراً'))
+                                  Padding(
+                                    padding: const EdgeInsets.only(top: 12),
+                                    child: ElevatedButton(
+                                      onPressed: _loadTafsir,
+                                      child: const Text('إعادة المحاولة'),
+                                    ),
+                                  ),
+                              ],
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildSectionTitle(String title) {
+    return Text(
+      title,
+      style: TextStyle(
+        fontSize: 18,
+        fontWeight: FontWeight.bold,
+        color: Theme.of(context).colorScheme.primary,
+      ),
+      textDirection: TextDirection.rtl,
+    );
+  }
+
+  String _getSurahName(int surahNumber) {
+    const surahNames = {
+      1: 'الفاتحة', 2: 'البقرة', 3: 'آل عمران', 4: 'النساء', 5: 'المائدة',
+      6: 'الأنعام', 7: 'الأعراف', 8: 'الأنفال', 9: 'التوبة', 10: 'يونس',
+      11: 'هود', 12: 'يوسف', 13: 'الرعد', 14: 'إبراهيم', 15: 'الحجر',
+      16: 'النحل', 17: 'الإسراء', 18: 'الكهف', 19: 'مريم', 20: 'طه',
+      21: 'الأنبياء', 22: 'الحج', 23: 'المؤمنون', 24: 'النور', 25: 'الفرقان',
+      26: 'الشعراء', 27: 'النمل', 28: 'القصص', 29: 'العنكبوت', 30: 'الروم',
+      31: 'لقمان', 32: 'السجدة', 33: 'الأحزاب', 34: 'سبأ', 35: 'فاطر',
+      36: 'يس', 37: 'الصافات', 38: 'ص', 39: 'الزمر', 40: 'غافر',
+      41: 'فصلت', 42: 'الشورى', 43: 'الزخرف', 44: 'الدخان', 45: 'الجاثية',
+      46: 'الأحقاف', 47: 'محمد', 48: 'الفتح', 49: 'الحجرات', 50: 'ق',
+      51: 'الذاريات', 52: 'الطور', 53: 'النجم', 54: 'القمر', 55: 'الرحمن',
+      56: 'الواقعة', 57: 'الحديد', 58: 'المجادلة', 59: 'الحشر', 60: 'الممتحنة',
+      61: 'الصف', 62: 'الجمعة', 63: 'المنافقون', 64: 'التغابن', 65: 'الطلاق',
+      66: 'التحريم', 67: 'الملك', 68: 'القلم', 69: 'الحاقة', 70: 'المعارج',
+      71: 'نوح', 72: 'الجن', 73: 'المزمل', 74: 'المدثر', 75: 'القيامة',
+      76: 'الإنسان', 77: 'المرسلات', 78: 'النبأ', 79: 'النازعات', 80: 'عبس',
+      81: 'التكوير', 82: 'الانفطار', 83: 'المطففين', 84: 'الانشقاق', 85: 'البروج',
+      86: 'الطارق', 87: 'الأعلى', 88: 'الغاشية', 89: 'الفجر', 90: 'البلد',
+      91: 'الشمس', 92: 'الليل', 93: 'الضحى', 94: 'الشرح', 95: 'التين',
+      96: 'العلق', 97: 'القدر', 98: 'البينة', 99: 'الزلزلة', 100: 'العاديات',
+      101: 'القارعة', 102: 'التكاثر', 103: 'العصر', 104: 'الهمزة', 105: 'الفيل',
+      106: 'قريش', 107: 'الماعون', 108: 'الكوثر', 109: 'الكافرون', 110: 'النصر',
+      111: 'المسد', 112: 'الإخلاص', 113: 'الفلق', 114: 'الناس'
+    };
+    return surahNames[surahNumber] ?? 'سورة $surahNumber';
+  }
+}
+
+// Helper classes for better organization
+class CacheEntry {
+  final String data;
+  final DateTime createdAt;
+  final String? source;
+  static const Duration cacheExpiry = Duration(hours: 24);
+
+  CacheEntry(this.data, this.createdAt, {this.source});
+
+  bool get isExpired => DateTime.now().difference(createdAt) > cacheExpiry;
+}
+
+class TafsirStrategy {
+  final String name;
+  final Future<String?> Function() apiCall;
+
+  TafsirStrategy({required this.name, required this.apiCall});
+}
