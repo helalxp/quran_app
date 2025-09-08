@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+
 enum AppTheme { brown, green, blue }
 
 class ThemeManager extends ChangeNotifier {
@@ -114,7 +115,7 @@ class ThemeManager extends ChangeNotifier {
 
     return ThemeData(
       colorScheme: colorScheme.copyWith(
-        surface: backgroundColor, // For older Flutter versions
+        surface: backgroundColor,
       ),
       brightness: brightness,
       fontFamily: 'Uthmanic',
@@ -122,7 +123,7 @@ class ThemeManager extends ChangeNotifier {
       scaffoldBackgroundColor: backgroundColor,
 
       // Enhanced card theme for better appearance
-      cardTheme: CardTheme(
+      cardTheme: CardThemeData(
         elevation: 2,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12),
@@ -141,14 +142,12 @@ class ThemeManager extends ChangeNotifier {
         surfaceTintColor: Colors.transparent,
       ),
 
-      // Enhanced floating action button theme
       floatingActionButtonTheme: FloatingActionButtonThemeData(
         backgroundColor: colorScheme.primaryContainer,
         foregroundColor: colorScheme.onPrimaryContainer,
         elevation: 3,
       ),
 
-      // Enhanced snack bar theme
       snackBarTheme: SnackBarThemeData(
         backgroundColor: colorScheme.inverseSurface,
         contentTextStyle: TextStyle(color: colorScheme.onInverseSurface),
@@ -157,14 +156,13 @@ class ThemeManager extends ChangeNotifier {
       ),
 
       // Better surface colors
-      dialogTheme: DialogTheme(
+      dialogTheme: DialogThemeData(
         backgroundColor: brightness == Brightness.light
             ? Colors.white
             : colorScheme.surface,
         surfaceTintColor: Colors.transparent,
       ),
 
-      // Bottom sheet theme for better appearance
       bottomSheetTheme: BottomSheetThemeData(
         backgroundColor: brightness == Brightness.light
             ? Colors.white

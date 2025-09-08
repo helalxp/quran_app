@@ -1,4 +1,4 @@
-// This is a basic Flutter widget test.
+// This is a Flutter widget test for the Quran Reader app.
 //
 // To perform an interaction with a widget in your test, use the WidgetTester
 // utility in the flutter_test package. For example, you can send tap and scroll
@@ -8,23 +8,33 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:untitled/main.dart';
+import 'package:quran_reader/main.dart';
 
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
+  testWidgets('Quran app initializes correctly', (WidgetTester tester) async {
     // Build our app and trigger a frame.
-    await tester.pumpWidget(const MyApp());
-
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
-
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
+    await tester.pumpWidget(const QuranApp());
+    
+    // Pump once to trigger initial build
     await tester.pump();
 
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+    // Verify that MaterialApp is present
+    expect(find.byType(MaterialApp), findsOneWidget);
+    
+    // Verify that the loading screen appears
+    expect(find.byType(CircularProgressIndicator), findsOneWidget);
+  });
+
+  testWidgets('App has proper title configuration', (WidgetTester tester) async {
+    // Build our app and trigger a frame.
+    await tester.pumpWidget(const QuranApp());
+    
+    // Pump once to get the MaterialApp
+    await tester.pump();
+
+    // Verify that the app has the correct title in MaterialApp
+    final materialApp = tester.widget<MaterialApp>(find.byType(MaterialApp));
+    expect(materialApp.title, equals('Quran Reader'));
+    expect(materialApp.debugShowCheckedModeBanner, equals(false));
   });
 }

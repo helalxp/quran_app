@@ -125,7 +125,7 @@ class _FloatingMediaPlayerState extends State<FloatingMediaPlayer>
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.1),
+              color: Colors.black.withValues(alpha: 0.1),
               blurRadius: 8,
               offset: const Offset(0, -2),
             ),
@@ -195,7 +195,7 @@ class _FloatingMediaPlayerState extends State<FloatingMediaPlayer>
                               return Text(
                                 reciter ?? 'قارئ غير محدد',
                                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                  color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+                                  color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
                                 ),
                                 overflow: TextOverflow.ellipsis,
                               );
@@ -208,7 +208,7 @@ class _FloatingMediaPlayerState extends State<FloatingMediaPlayer>
                     // Expand/collapse icon
                     Icon(
                       _isExpanded ? Icons.keyboard_arrow_down : Icons.keyboard_arrow_up,
-                      color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                      color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
                     ),
                   ],
                 ),
@@ -258,7 +258,7 @@ class _FloatingMediaPlayerState extends State<FloatingMediaPlayer>
                                       _isDragging = false;
                                     },
                                     activeColor: Theme.of(context).colorScheme.primary,
-                                    inactiveColor: Theme.of(context).colorScheme.outline.withOpacity(0.3),
+                                    inactiveColor: Theme.of(context).colorScheme.outline.withValues(alpha: 0.3),
                                   ),
                                 ),
                                 Padding(

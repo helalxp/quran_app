@@ -492,6 +492,7 @@ class _ViewerScreenState extends State<ViewerScreen> with TickerProviderStateMix
                             ),
                             direction: DismissDirection.endToStart,
                             onDismissed: (direction) async {
+                              final scaffoldMessenger = ScaffoldMessenger.of(context);
                               if (bookmark.isAyahBookmark) {
                                 await BookmarkManager.removeAyahBookmark(
                                   bookmark.surahNumber!,
@@ -502,7 +503,8 @@ class _ViewerScreenState extends State<ViewerScreen> with TickerProviderStateMix
                               }
                               _checkBookmarkStatus();
 
-                              ScaffoldMessenger.of(context).showSnackBar(
+                              if (mounted) {
+                                scaffoldMessenger.showSnackBar(
                                 const SnackBar(
                                   content: Directionality(
                                     textDirection: TextDirection.rtl,
@@ -511,12 +513,13 @@ class _ViewerScreenState extends State<ViewerScreen> with TickerProviderStateMix
                                   duration: Duration(seconds: 2),
                                 ),
                               );
+                              }
                             },
                             child: ListTile(
                               leading: CircleAvatar(
                                 backgroundColor: bookmark.isAyahBookmark
-                                    ? Theme.of(context).colorScheme.secondary.withOpacity(0.1)
-                                    : Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                                    ? Theme.of(context).colorScheme.secondary.withValues(alpha: 0.1)
+                                    : Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
                                 child: Icon(
                                   bookmark.isAyahBookmark ? Icons.format_quote : Icons.bookmark,
                                   color: bookmark.isAyahBookmark
@@ -542,7 +545,7 @@ class _ViewerScreenState extends State<ViewerScreen> with TickerProviderStateMix
                                     _formatDate(bookmark.createdAt),
                                     style: TextStyle(
                                       fontSize: 12,
-                                      color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                                      color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
                                     ),
                                   ),
                                   const SizedBox(width: 8),
@@ -758,7 +761,7 @@ class _ViewerScreenState extends State<ViewerScreen> with TickerProviderStateMix
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(8),
                   border: Border.all(
-                    color: Theme.of(context).colorScheme.outline.withOpacity(0.3),
+                    color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.3),
                   ),
                 ),
                 child: Text(
@@ -783,7 +786,7 @@ class _ViewerScreenState extends State<ViewerScreen> with TickerProviderStateMix
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(8),
                   border: Border.all(
-                    color: Theme.of(context).colorScheme.outline.withOpacity(0.3),
+                    color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.3),
                   ),
                 ),
                 child: Text(
@@ -822,7 +825,7 @@ class _ViewerScreenState extends State<ViewerScreen> with TickerProviderStateMix
         height: 40,
         child: Material(
           // Use a broadly supported color (surfaceVariant) instead of surfaceContainerHighest
-          color: Theme.of(context).colorScheme.surfaceVariant,
+          color: Theme.of(context).colorScheme.surfaceContainerHighest,
           borderRadius: BorderRadius.circular(8),
           elevation: 2.0,
           child: InkWell(
@@ -889,7 +892,7 @@ class _ViewerScreenState extends State<ViewerScreen> with TickerProviderStateMix
                       subtitle: Text(
                         surah.nameEnglish,
                         style: TextStyle(
-                          color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+                          color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
                         ),
                       ),
                       onTap: () {

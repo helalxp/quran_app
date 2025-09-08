@@ -297,7 +297,7 @@ class ContinuousAudioManager {
   // NEW: Separate method for handling errors consistently
   void _handleError(dynamic error) {
     _consecutiveErrors++;
-    debugPrint('❌ Error (${_consecutiveErrors}/$maxConsecutiveErrors): $error');
+    debugPrint('❌ Error ($_consecutiveErrors/$maxConsecutiveErrors): $error');
 
     if (_consecutiveErrors >= maxConsecutiveErrors) {
       debugPrint('❌ Too many consecutive errors, stopping playback');
@@ -479,7 +479,7 @@ class ContinuousAudioManager {
       final oldIndex = _currentIndex;
       _currentIndex++;
       final nextAyah = _playQueue[_currentIndex];
-      debugPrint('⏭️ Moving from ${oldIndex} to ${_currentIndex}: ${nextAyah.surah}:${nextAyah.ayah}');
+      debugPrint('⏭️ Moving from $oldIndex to $_currentIndex: ${nextAyah.surah}:${nextAyah.ayah}');
       await _playCurrentAyah();
     } else {
       debugPrint('🏁 Reached end of surah, stopping playback');
