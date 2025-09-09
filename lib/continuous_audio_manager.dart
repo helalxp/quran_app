@@ -3,13 +3,33 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:just_audio/just_audio.dart';
+import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'models/ayah_marker.dart';
+import 'theme_manager.dart';
+
+// Constants for better maintainability
+class AudioConstants {
+  static const int maxConsecutiveErrors = 5;
+  static const Duration playerDisposeTimeout = Duration(seconds: 3);
+  static const Duration completionDebounceTimeout = Duration(milliseconds: 200);
+  static const Duration urlLoadTimeout = Duration(seconds: 8);
+  static const Duration transitionDelay = Duration(milliseconds: 150);
+}
+
+// Error categorization for better handling
+enum AudioErrorType { network, timeout, codec, permission, unknown }
 
 class ContinuousAudioManager {
   // Singleton
   static final ContinuousAudioManager _instance = ContinuousAudioManager._internal();
   factory ContinuousAudioManager() => _instance;
   ContinuousAudioManager._internal();
+
+  // Page following functionality  
+  PageController? _pageController;
+  Function(int)? _onPageChange;
+  WeakReference<BuildContext>? _contextRef; // Use WeakReference to prevent memory leaks
 
   AudioPlayer? _audioPlayer;
   StreamSubscription<PlayerState>? _stateSubscription;
@@ -22,8 +42,11 @@ class ContinuousAudioManager {
   final List<AyahMarker> _playQueue = [];
   int _currentIndex = 0;
   double _playbackSpeed = 1.0;
+  bool _autoPlayNext = true;
+  bool _repeatSurah = false;
   int _consecutiveErrors = 0;
-  static const int maxConsecutiveErrors = 5;
+  // Use constant from AudioConstants
+  static int get maxConsecutiveErrors => AudioConstants.maxConsecutiveErrors;
 
   // IMPROVED: Better transition state management
   bool _isTransitioning = false;
@@ -148,6 +171,45 @@ class ContinuousAudioManager {
     ),
   };
 
+  // -------- Settings loading --------
+  
+  Future<void> _loadSettings() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      
+      // Load reciter setting
+      final savedReciter = prefs.getString('selected_reciter');
+      if (savedReciter != null && _reciterConfigs.containsKey(savedReciter)) {
+        _currentReciter = savedReciter;
+        currentReciterNotifier.value = savedReciter;
+        debugPrint('🎵 Loaded reciter: $savedReciter');
+      } else {
+        _currentReciter = _reciterConfigs.keys.first;
+        currentReciterNotifier.value = _currentReciter;
+      }
+      
+      // Load playback speed
+      _playbackSpeed = prefs.getDouble('playback_speed') ?? 1.0;
+      playbackSpeedNotifier.value = _playbackSpeed;
+      
+      // Load auto play next
+      _autoPlayNext = prefs.getBool('auto_play_next') ?? true;
+      
+      // Load repeat surah
+      _repeatSurah = prefs.getBool('repeat_surah') ?? false;
+      
+      debugPrint('⚙️ Settings loaded - Speed: ${_playbackSpeed}x, AutoPlay: $_autoPlayNext, Repeat: $_repeatSurah');
+      
+    } catch (e) {
+      debugPrint('⚠️ Error loading audio settings: $e');
+      // Use defaults
+      _currentReciter = _reciterConfigs.keys.first;
+      _playbackSpeed = 1.0;
+      _autoPlayNext = true;
+      _repeatSurah = false;
+    }
+  }
+
   // -------- Initialization & disposal --------
 
   Future<void> initialize() async {
@@ -157,6 +219,10 @@ class ContinuousAudioManager {
       try {
         await _audioPlayer!.setVolume(0.8);
       } catch (_) {}
+      
+      // Load settings from SharedPreferences
+      await _loadSettings();
+      
       _setupListeners();
       debugPrint('✅ Audio manager initialized successfully');
     } catch (e) {
@@ -166,26 +232,37 @@ class ContinuousAudioManager {
   }
 
   Future<void> dispose() async {
-    // Cancel completion timer
+    debugPrint('🧹 Starting ContinuousAudioManager disposal...');
+    
+    // Cancel completion timer first
     _completionTimer?.cancel();
     _completionTimer = null;
 
-    await _stateSubscription?.cancel();
-    await _positionSubscription?.cancel();
-    await _durationSubscription?.cancel();
+    // Cancel all subscriptions in parallel for faster cleanup
+    try {
+      await Future.wait([
+        _stateSubscription?.cancel() ?? Future.value(),
+        _positionSubscription?.cancel() ?? Future.value(),
+        _durationSubscription?.cancel() ?? Future.value(),
+      ]).timeout(const Duration(seconds: 2));
+    } catch (e) {
+      debugPrint('⚠️ Error canceling subscriptions: $e');
+    }
+    
     _stateSubscription = null;
     _positionSubscription = null;
     _durationSubscription = null;
 
+    // Dispose audio player with timeout to prevent hanging
     try {
-      await _audioPlayer?.dispose();
+      await _audioPlayer?.dispose().timeout(AudioConstants.playerDisposeTimeout);
     } catch (e) {
       debugPrint('⚠️ Error disposing audio player: $e');
     }
     _audioPlayer = null;
 
     _resetState();
-    debugPrint('🧹 ContinuousAudioManager disposed');
+    debugPrint('✅ ContinuousAudioManager disposed successfully');
   }
 
   void _resetState() {
@@ -261,14 +338,26 @@ class ContinuousAudioManager {
       _handleError(error);
     });
 
-    // Position updates
+    // Position updates with safety checks
     _positionSubscription = _audioPlayer!.positionStream.listen((position) {
-      positionNotifier.value = position;
+      try {
+        positionNotifier.value = position;
+      } catch (e) {
+        debugPrint('⚠️ Error updating position: $e');
+      }
+    }, onError: (error) {
+      debugPrint('❌ Position stream error: $error');
     });
 
-    // Duration updates
+    // Duration updates with safety checks
     _durationSubscription = _audioPlayer!.durationStream.listen((duration) {
-      durationNotifier.value = duration ?? Duration.zero;
+      try {
+        durationNotifier.value = duration ?? Duration.zero;
+      } catch (e) {
+        debugPrint('⚠️ Error updating duration: $e');
+      }
+    }, onError: (error) {
+      debugPrint('❌ Duration stream error: $error');
     });
   }
 
@@ -286,7 +375,7 @@ class ContinuousAudioManager {
     _completionTimer?.cancel();
 
     // Debounce completion events to prevent rapid-fire triggering
-    _completionTimer = Timer(const Duration(milliseconds: 200), () {
+    _completionTimer = Timer(AudioConstants.completionDebounceTimeout, () {
       if (!_completionHandled) return; // Double-check in case state changed
 
       debugPrint('🎵 Processing completion for ayah ${_currentAyah?.surah}:${_currentAyah?.ayah}');
@@ -294,17 +383,70 @@ class ContinuousAudioManager {
     });
   }
 
-  // NEW: Separate method for handling errors consistently
+  AudioErrorType _categorizeError(dynamic error) {
+    final errorString = error.toString().toLowerCase();
+    
+    if (errorString.contains('timeout') || errorString.contains('timeoutexception')) {
+      return AudioErrorType.timeout;
+    } else if (errorString.contains('network') || errorString.contains('connection') || 
+               errorString.contains('host') || errorString.contains('resolve')) {
+      return AudioErrorType.network;
+    } else if (errorString.contains('codec') || errorString.contains('format') || 
+               errorString.contains('unsupported')) {
+      return AudioErrorType.codec;
+    } else if (errorString.contains('permission') || errorString.contains('access')) {
+      return AudioErrorType.permission;
+    }
+    return AudioErrorType.unknown;
+  }
+  
+  String _getErrorIcon(AudioErrorType type) {
+    switch (type) {
+      case AudioErrorType.timeout: return '⏱️';
+      case AudioErrorType.network: return '🌐';
+      case AudioErrorType.codec: return '🎵';
+      case AudioErrorType.permission: return '🔒';
+      case AudioErrorType.unknown: return '❓';
+    }
+  }
+
+  // Improved error handling with categorization
   void _handleError(dynamic error) {
     _consecutiveErrors++;
-    debugPrint('❌ Error ($_consecutiveErrors/$maxConsecutiveErrors): $error');
+    
+    final errorType = _categorizeError(error);
+    final errorIcon = _getErrorIcon(errorType);
+    
+    debugPrint('$errorIcon Error ($_consecutiveErrors/$maxConsecutiveErrors) [${errorType.name}]: $error');
+    
+    // Handle specific error types differently
+    switch (errorType) {
+      case AudioErrorType.timeout:
+        debugPrint('⏱️ Timeout error - network may be slow, trying next source faster');
+        break;
+      case AudioErrorType.network:
+        debugPrint('🌐 Network error - connection issues detected');
+        break;
+      case AudioErrorType.codec:
+        debugPrint('🎵 Codec error - audio format issue');
+        break;
+      case AudioErrorType.permission:
+        debugPrint('🔒 Permission error - audio access denied');
+        break;
+      case AudioErrorType.unknown:
+        debugPrint('❓ Unknown error type - investigating...');
+        break;
+    }
 
     if (_consecutiveErrors >= maxConsecutiveErrors) {
-      debugPrint('❌ Too many consecutive errors, stopping playback');
+      debugPrint('🛑 Too many consecutive errors (${errorType.name}), stopping playback');
       Future.microtask(() => stop());
     } else {
-      debugPrint('🔄 Attempting to skip to next ayah due to error');
-      Future.delayed(const Duration(milliseconds: 500), () {
+      // Try to skip to next ayah on error with shorter delay for timeouts
+      final delay = errorType == AudioErrorType.timeout ? 200 : 500;
+      debugPrint('🔄 Attempting to skip to next ayah due to ${errorType.name} error');
+      
+      Future.delayed(Duration(milliseconds: delay), () {
         if (!_isTransitioning) {
           _moveToNextAyah();
         }
@@ -329,7 +471,7 @@ class ContinuousAudioManager {
       _buildPlayQueue(startingAyah, allAyahsInSurah);
 
       if (_playQueue.isNotEmpty) {
-        _currentIndex = 0;
+        // _currentIndex is already set by _buildPlayQueue
         _consecutiveErrors = 0;
         _completionHandled = false;
         playbackSpeedNotifier.value = _playbackSpeed;
@@ -356,15 +498,20 @@ class ContinuousAudioManager {
         .toList()
       ..sort((a, b) => a.ayah.compareTo(b.ayah));
 
-    final startIndex = surahAyahs.indexWhere((ayah) => ayah.ayah >= startingAyah.ayah);
-
-    if (startIndex != -1) {
-      _playQueue.addAll(surahAyahs.sublist(startIndex));
-      debugPrint('📜 Built play queue with ${_playQueue.length} ayahs starting from ${startingAyah.surah}:${startingAyah.ayah}');
-      debugPrint('📜 Queue ayahs: ${_playQueue.map((a) => a.ayah).toList()}');
-    } else {
-      debugPrint('⚠️ Start index not found for startingAyah ${startingAyah.surah}:${startingAyah.ayah}');
+    // Always start from the beginning of the surah, not from the clicked ayah
+    _playQueue.addAll(surahAyahs);
+    
+    // Find the index of the starting ayah to set as current
+    _currentIndex = surahAyahs.indexWhere((ayah) => ayah.ayah == startingAyah.ayah);
+    if (_currentIndex == -1) {
+      // If exact ayah not found, find the closest one
+      _currentIndex = surahAyahs.indexWhere((ayah) => ayah.ayah >= startingAyah.ayah);
+      if (_currentIndex == -1) _currentIndex = 0;
     }
+    
+    debugPrint('📜 Built complete surah queue with ${_playQueue.length} ayahs');
+    debugPrint('📜 Starting from ayah ${startingAyah.surah}:${startingAyah.ayah} (index $_currentIndex)');
+    debugPrint('📜 Queue ayahs: ${_playQueue.map((a) => a.ayah).toList()}');
   }
 
   Future<void> _playCurrentAyah() async {
@@ -395,6 +542,9 @@ class ContinuousAudioManager {
     _currentAyah = ayah;
     currentAyahNotifier.value = ayah;
 
+    // Follow the ayah if enabled (check will be done in the method)
+    _checkAndFollowAyah();
+
     try {
       final config = _reciterConfigs[_currentReciter ?? _reciterConfigs.keys.first]!;
       List<String> urlsToTry = [];
@@ -410,7 +560,7 @@ class ContinuousAudioManager {
       // Stop any current playback and wait for it to complete
       try {
         await _audioPlayer!.stop();
-        await Future.delayed(const Duration(milliseconds: 150));
+        await Future.delayed(AudioConstants.transitionDelay);
       } catch (e) {
         debugPrint('⚠️ Error stopping previous playback: $e');
       }
@@ -423,9 +573,9 @@ class ContinuousAudioManager {
           debugPrint('🎵 Loading ${ayah.surah}:${ayah.ayah} from: $audioUrl ${i > 0 ? "(fallback)" : ""}');
 
           await _audioPlayer!.setUrl(audioUrl).timeout(
-            const Duration(seconds: 15),
+            const Duration(seconds: 8),
             onTimeout: () {
-              throw TimeoutException('URL loading timeout after 15s', const Duration(seconds: 15));
+              throw TimeoutException('URL loading timeout after ${AudioConstants.urlLoadTimeout.inSeconds}s', AudioConstants.urlLoadTimeout);
             },
           );
 
@@ -467,11 +617,45 @@ class ContinuousAudioManager {
     return '$baseUrl/$surahPadded$ayahPadded.mp3';
   }
 
+  // -------- Settings update methods --------
+  
+  Future<void> updateReciter(String reciterName) async {
+    if (_reciterConfigs.containsKey(reciterName)) {
+      _currentReciter = reciterName;
+      currentReciterNotifier.value = reciterName;
+      debugPrint('🎵 Reciter updated to: $reciterName');
+    }
+  }
+  
+  Future<void> updatePlaybackSpeed(double speed) async {
+    _playbackSpeed = speed;
+    playbackSpeedNotifier.value = speed;
+    await _audioPlayer?.setSpeed(speed);
+    debugPrint('🏃 Playback speed updated to: ${speed}x');
+  }
+  
+  Future<void> updateAutoPlayNext(bool enabled) async {
+    _autoPlayNext = enabled;
+    debugPrint('🔄 Auto-play next updated to: $enabled');
+  }
+  
+  Future<void> updateRepeatSurah(bool enabled) async {
+    _repeatSurah = enabled;
+    debugPrint('🔁 Repeat surah updated to: $enabled');
+  }
+
   // -------- IMPROVED Next / Previous handling --------
 
   Future<void> _moveToNextAyah() async {
     if (_isTransitioning) {
       debugPrint('⚠️ Transition in progress, ignoring move to next');
+      return;
+    }
+
+    // Check if auto-play is enabled
+    if (!_autoPlayNext) {
+      debugPrint('⏸️ Auto-play disabled, stopping after current ayah');
+      await stop();
       return;
     }
 
@@ -482,8 +666,17 @@ class ContinuousAudioManager {
       debugPrint('⏭️ Moving from $oldIndex to $_currentIndex: ${nextAyah.surah}:${nextAyah.ayah}');
       await _playCurrentAyah();
     } else {
-      debugPrint('🏁 Reached end of surah, stopping playback');
-      await stop();
+      debugPrint('🏁 Reached end of surah');
+      
+      // Check if repeat surah is enabled
+      if (_repeatSurah && _playQueue.isNotEmpty) {
+        debugPrint('🔄 Repeat surah enabled, restarting from beginning');
+        _currentIndex = 0;
+        await _playCurrentAyah();
+      } else {
+        debugPrint('🛑 Stopping playback');
+        await stop();
+      }
     }
   }
 
@@ -553,6 +746,65 @@ class ContinuousAudioManager {
   bool get hasCurrentAyah => currentAyahNotifier.value != null;
   AyahMarker? get currentAyah => _currentAyah;
   String? get currentReciter => _currentReciter;
+
+  // -------- Page Following Functionality --------
+
+  /// Register page controller and context for follow-the-ayah functionality
+  void registerPageController(PageController? controller, Function(int)? onPageChange, [BuildContext? context]) {
+    _pageController = controller;
+    _onPageChange = onPageChange;
+    _contextRef = context != null ? WeakReference(context) : null;
+  }
+
+  /// Navigate to the page containing the current ayah
+  void _followCurrentAyah() async {
+    final currentAyah = currentAyahNotifier.value;
+    if (currentAyah == null || _pageController == null || _onPageChange == null) return;
+
+    final targetPage = currentAyah.page;
+    
+    // Check if we need to change pages
+    final currentPageIndex = _pageController!.hasClients ? _pageController!.page?.round() ?? 0 : 0;
+    final currentPageNumber = currentPageIndex + 1; // Convert to 1-based page numbering
+    
+    if (currentPageNumber != targetPage) {
+      debugPrint('🔄 Following ayah: navigating to page $targetPage (currently on $currentPageNumber)');
+      
+      try {
+        // Use the page change callback to ensure proper navigation
+        _onPageChange!(targetPage - 1); // Convert back to 0-based for PageView
+      } catch (e) {
+        debugPrint('❌ Error following ayah to page $targetPage: $e');
+      }
+    }
+  }
+
+  /// Check if follow-the-ayah is enabled and follow if needed
+  void _checkAndFollowAyah() {
+    debugPrint('🔍 Checking follow-ayah: context=${_contextRef?.target != null}, controller=${_pageController != null}, callback=${_onPageChange != null}');
+    
+    // Check if follow-the-ayah is enabled
+    final context = _contextRef?.target;
+    if (context != null && context.mounted) {
+      try {
+        final themeManager = Provider.of<ThemeManager>(context, listen: false);
+        debugPrint('📍 Follow-ayah setting: ${themeManager.followAyahOnPlayback}');
+        if (themeManager.followAyahOnPlayback) {
+          _followCurrentAyah();
+        } else {
+          debugPrint('⏸️ Follow-ayah disabled in settings');
+        }
+      } catch (e) {
+        // Fallback: always follow if we can't check the setting
+        debugPrint('⚠️ Could not check follow-ayah setting, following anyway: $e');
+        _followCurrentAyah();
+      }
+    } else {
+      // Fallback: always follow if no context
+      debugPrint('⚠️ No context available, following anyway');
+      _followCurrentAyah();
+    }
+  }
 }
 
 class ReciterConfig {

@@ -10,8 +10,11 @@ import 'models/surah.dart';
 import 'bookmark_manager.dart';
 import 'settings_screen.dart';
 import 'svg_page_viewer.dart';
-import 'widgets/floating_media_player.dart';
+import 'widgets/improved_media_player.dart';
 import 'continuous_audio_manager.dart';
+import 'constants/app_constants.dart';
+import 'utils/animation_utils.dart';
+import 'utils/haptic_utils.dart';
 
 class ViewerScreen extends StatefulWidget {
   const ViewerScreen({super.key});
@@ -21,17 +24,12 @@ class ViewerScreen extends StatefulWidget {
 }
 
 class _ViewerScreenState extends State<ViewerScreen> with TickerProviderStateMixin {
-  static const int totalPages = 604;
-
-  // Layout constants
-  static const double pageVerticalOffset = 50.0;
-  static const double mediaPlayerHeight = 80.0;
+  // Use constants from AppConstants
+  static int get totalPages => AppConstants.totalPages;
+  static double get pageVerticalOffset => AppConstants.pageVerticalOffset;
 
   PageController? _controller;
   ContinuousAudioManager? _audioManager;
-
-  late AnimationController _mediaPlayerAnimationController;
-  late Animation<double> _mediaPlayerAnimation;
 
   Map<int, List<AyahMarker>> _markersByPage = {};
   List<AyahMarker> _allMarkers = [];
@@ -42,42 +40,25 @@ class _ViewerScreenState extends State<ViewerScreen> with TickerProviderStateMix
 
   final ValueNotifier<int> _currentPageNotifier = ValueNotifier(1);
   Timer? _saveTimer;
+  
+  // Performance optimization: Cache expensive computations
+  final Map<int, ({String surahName, String juzNumber})> _pageInfoCache = {};
+  final Map<int, Widget> _cachedPages = {};
 
   @override
   void initState() {
     super.initState();
-    _initializeAnimations();
     _initializeAudioManager();
     _initializeReader();
   }
 
-  void _initializeAnimations() {
-    _mediaPlayerAnimationController = AnimationController(
-      duration: const Duration(milliseconds: 300),
-      vsync: this,
-    );
-
-    _mediaPlayerAnimation = CurvedAnimation(
-      parent: _mediaPlayerAnimationController,
-      curve: Curves.easeInOut,
-    );
-  }
 
   void _initializeAudioManager() {
     _audioManager = ContinuousAudioManager();
     _audioManager!.initialize();
-
-    // Listen to audio manager state changes to control animation
-    _audioManager!.currentAyahNotifier.addListener(_onAudioStateChanged);
+    // Note: Page controller registration moved to _loadLastPage() after controller is created
   }
 
-  void _onAudioStateChanged() {
-    if (_audioManager!.currentAyahNotifier.value != null) {
-      _mediaPlayerAnimationController.forward();
-    } else {
-      _mediaPlayerAnimationController.reverse();
-    }
-  }
 
   Future<void> _initializeReader() async {
     try {
@@ -101,25 +82,18 @@ class _ViewerScreenState extends State<ViewerScreen> with TickerProviderStateMix
 
   @override
   void dispose() {
-    _controller?.dispose();
-    _currentPageNotifier.dispose();
+    // Cancel timer first to prevent any pending saves
     _saveTimer?.cancel();
-    _mediaPlayerAnimationController.dispose();
-
-    // Stop audio and remove listeners
-    _audioManager?.currentAyahNotifier.removeListener(_onAudioStateChanged);
-    // If your ContinuousAudioManager has dispose(), this is ideal; otherwise stop() is a safe fallback.
-    try {
-      // ignore: invalid_use_of_protected_member
-      // Attempt to call dispose if it exists in your implementation.
-      // If not, fall back to stop.
-      // This try/catch avoids hard compile errors across branches.
-      // @ts-ignore (Dart comment placeholder)
-      // ignore_for_file: unnecessary_statements
-      (_audioManager as dynamic)?.dispose?.call();
-    } catch (_) {
-      _audioManager?.stop();
-    }
+    _saveTimer = null;
+    
+    // Dispose controller and notifiers
+    _controller?.dispose();
+    _controller = null;
+    _currentPageNotifier.dispose();
+    
+    // Properly dispose audio manager
+    _audioManager?.dispose();
+    _audioManager = null;
 
     super.dispose();
   }
@@ -187,7 +161,7 @@ class _ViewerScreenState extends State<ViewerScreen> with TickerProviderStateMix
 
   Future<void> _saveLastPageOptimized(int page) async {
     _saveTimer?.cancel();
-    _saveTimer = Timer(const Duration(milliseconds: 500), () async {
+    _saveTimer = Timer(AppConstants.saveDebounceTimeout, () async {
       try {
         final prefs = await SharedPreferences.getInstance();
         await prefs.setInt('last_page', page);
@@ -198,6 +172,7 @@ class _ViewerScreenState extends State<ViewerScreen> with TickerProviderStateMix
   }
 
   Future<void> _loadLastPage() async {
+    
     try {
       final prefs = await SharedPreferences.getInstance();
       final lastPage = prefs.getInt('last_page') ?? 1;
@@ -208,13 +183,34 @@ class _ViewerScreenState extends State<ViewerScreen> with TickerProviderStateMix
       _controller = PageController(
         initialPage: initialIndex,
         viewportFraction: 1.0,
+        keepPage: true,  // Maintain page position
       );
 
       _controller!.addListener(_onPageChanged);
+      
+      // Register page controller for follow-the-ayah functionality after it's created
+      if (_audioManager != null && mounted) {
+        _audioManager!.registerPageController(_controller, (pageIndex) {
+          if (mounted && _controller != null && _controller!.hasClients) {
+            _jumpToPage(pageIndex + 1); // Convert to 1-based page numbering
+          }
+        }, mounted ? context : null);
+        debugPrint('✅ Page controller registered for follow-ayah functionality');
+      }
     } catch (e) {
       debugPrint('Error loading last page: $e');
       _currentPageNotifier.value = 1;
       _controller = PageController(initialPage: 0);
+      
+      // Register page controller for follow-ayah functionality after it's created (error case)
+      if (_audioManager != null && mounted) {
+        _audioManager!.registerPageController(_controller, (pageIndex) {
+          if (mounted && _controller != null && _controller!.hasClients) {
+            _jumpToPage(pageIndex + 1); // Convert to 1-based page numbering
+          }
+        }, mounted ? context : null);
+        debugPrint('✅ Page controller registered for follow-ayah functionality (error fallback)');
+      }
     }
   }
 
@@ -230,9 +226,56 @@ class _ViewerScreenState extends State<ViewerScreen> with TickerProviderStateMix
     if (newPage != _currentPageNotifier.value &&
         newPage > 0 &&
         newPage <= totalPages) {
+      // Add subtle haptic feedback for smooth page turns
+      HapticUtils.lightImpact();
+      
       _currentPageNotifier.value = newPage;
       _saveLastPageOptimized(newPage);
       _checkBookmarkStatus();
+      
+      // Performance: Clean up old cached pages to prevent memory leaks
+      _cleanupPageCache(newPage);
+    }
+  }
+  
+  void _cleanupPageCache(int currentPage) {
+    // Keep only pages within a reasonable range around current page
+    const cacheRange = 5;
+    final keysToRemove = _cachedPages.keys
+        .where((page) => (page - currentPage).abs() > cacheRange)
+        .toList();
+    
+    for (final key in keysToRemove) {
+      _cachedPages.remove(key);
+    }
+    
+    // Also clean page info cache if it gets too large
+    if (_pageInfoCache.length > 50) {
+      final infoKeysToRemove = _pageInfoCache.keys
+          .where((page) => (page - currentPage).abs() > 25)
+          .toList();
+      
+      for (final key in infoKeysToRemove) {
+        _pageInfoCache.remove(key);
+      }
+    }
+  }
+  
+  void _preloadAdjacentPages(int currentPage) {
+    // Preload previous and next pages for smooth swiping
+    final pagesToPreload = [currentPage - 1, currentPage + 1];
+    
+    for (final pageNumber in pagesToPreload) {
+      if (pageNumber > 0 && 
+          pageNumber <= totalPages && 
+          !_cachedPages.containsKey(pageNumber)) {
+        
+        // Cache page info for smoother performance
+        _getInfoForPage(pageNumber);
+        
+        // Note: Actual widget caching happens during build to avoid memory issues
+        // This just ensures the page info is ready
+      }
     }
   }
 
@@ -246,8 +289,15 @@ class _ViewerScreenState extends State<ViewerScreen> with TickerProviderStateMix
   }
 
   ({String surahName, String juzNumber}) _getInfoForPage(int page) {
+    // Check cache first for performance
+    if (_pageInfoCache.containsKey(page)) {
+      return _pageInfoCache[page]!;
+    }
+    
     if (_allSurahs.isEmpty) {
-      return (surahName: '', juzNumber: '');
+      final result = (surahName: '', juzNumber: '');
+      _pageInfoCache[page] = result;
+      return result;
     }
 
     try {
@@ -261,21 +311,28 @@ class _ViewerScreenState extends State<ViewerScreen> with TickerProviderStateMix
           ? surahsOnPage.map((s) => s.nameArabic).join(' / ')
           : primarySurah.nameArabic;
 
-      return (surahName: surahName, juzNumber: "الجزء ${primarySurah.juzNumber}");
+      final result = (surahName: surahName, juzNumber: "الجزء ${primarySurah.juzNumber}");
+      
+      // Cache the result for performance
+      _pageInfoCache[page] = result;
+      return result;
     } catch (e) {
       debugPrint('Error getting page info: $e');
-      return (surahName: '', juzNumber: '');
+      final result = (surahName: '', juzNumber: '');
+      _pageInfoCache[page] = result;
+      return result;
     }
   }
 
   void _jumpToPage(int page) {
     if (page < 1 || page > totalPages || _controller == null) return;
 
+    HapticUtils.pageTurn(); // Haptic feedback for page navigation
     final int index = page - 1;
     _controller!.animateToPage(
       index,
-      duration: const Duration(milliseconds: 300),
-      curve: Curves.easeInOut,
+      duration: AnimationUtils.normal,
+      curve: AnimationUtils.smoothCurve,
     );
   }
 
@@ -321,6 +378,17 @@ class _ViewerScreenState extends State<ViewerScreen> with TickerProviderStateMix
   }
 
   String _getSurahName(int surahNumber) {
+    // Get surah name from loaded surahs data if available
+    if (_allSurahs.isNotEmpty) {
+      try {
+        final surah = _allSurahs.firstWhere((s) => s.number == surahNumber);
+        return surah.nameArabic;
+      } catch (e) {
+        // Fallback to hardcoded names if not found
+      }
+    }
+
+    // Fallback hardcoded names
     const surahNames = {
       1: 'الفاتحة', 2: 'البقرة', 3: 'آل عمران', 4: 'النساء', 5: 'المائدة',
       6: 'الأنعام', 7: 'الأعراف', 8: 'الأنفال', 9: 'التوبة', 10: 'يونس',
@@ -351,6 +419,7 @@ class _ViewerScreenState extends State<ViewerScreen> with TickerProviderStateMix
 
   Future<void> _toggleBookmarkSafe() async {
     try {
+      HapticUtils.bookmark(); // Haptic feedback for bookmark action
       final currentPage = _currentPageNotifier.value;
       final pageInfo = _getInfoForPage(currentPage);
 
@@ -407,6 +476,7 @@ class _ViewerScreenState extends State<ViewerScreen> with TickerProviderStateMix
 
   Future<void> _showBookmarksSafe() async {
     try {
+      HapticUtils.longPress(); // Haptic feedback for long press action
       final bookmarks = await BookmarkManager.getBookmarks().timeout(const Duration(seconds: 10));
 
       if (!mounted) return;
@@ -432,6 +502,10 @@ class _ViewerScreenState extends State<ViewerScreen> with TickerProviderStateMix
         isScrollControlled: true,
         isDismissible: true,
         enableDrag: true,
+        transitionAnimationController: AnimationController(
+          duration: AnimationUtils.normal,
+          vsync: Scaffold.of(context),
+        ),
         builder: (context) => GestureDetector(
           onTap: () => Navigator.of(context).pop(),
           child: SizedBox(
@@ -479,7 +553,11 @@ class _ViewerScreenState extends State<ViewerScreen> with TickerProviderStateMix
                         itemCount: bookmarks.length,
                         itemBuilder: (context, index) {
                           final bookmark = bookmarks[index];
-                          return Dismissible(
+                          return AnimatedListItem(
+                            index: index,
+                            delay: const Duration(milliseconds: 40), // Faster for better UX
+                            duration: AnimationUtils.fast,
+                            child: Dismissible(
                             key: Key('bookmark_${bookmark.page}_${bookmark.createdAt}'),
                             background: Container(
                               color: Theme.of(context).colorScheme.error,
@@ -557,6 +635,7 @@ class _ViewerScreenState extends State<ViewerScreen> with TickerProviderStateMix
                                 _jumpToPage(bookmark.page);
                               },
                             ),
+                            ),
                           );
                         },
                       ),
@@ -584,23 +663,6 @@ class _ViewerScreenState extends State<ViewerScreen> with TickerProviderStateMix
     }
   }
 
-  void _openSettings() async {
-    final result = await Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => const SettingsScreen()),
-    );
-
-    if (result is ThemeMode && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Directionality(
-            textDirection: TextDirection.rtl,
-            child: Text('تم تغيير الثيم'),
-          ),
-        ),
-      );
-    }
-  }
 
   String _formatDate(DateTime date) {
     final now = DateTime.now();
@@ -615,6 +677,18 @@ class _ViewerScreenState extends State<ViewerScreen> with TickerProviderStateMix
     } else {
       return '${date.day}/${date.month}';
     }
+  }
+
+  // Navigate to settings with smooth animation
+  void _openSettings() {
+    HapticUtils.navigation(); // Haptic feedback for navigation
+    Navigator.of(context).push(
+      AnimatedRoute(
+        builder: (context) => const SettingsScreen(),
+        transitionType: PageTransitionType.slideUp,
+        transitionDuration: AnimationUtils.normal,
+      ),
+    );
   }
 
   @override
@@ -645,32 +719,35 @@ class _ViewerScreenState extends State<ViewerScreen> with TickerProviderStateMix
           appBar: _buildAppBar(context, pageInfo.surahName, pageInfo.juzNumber),
           body: Stack(
             children: [
-              // Main content with dynamic padding for media player + safe area
-              ValueListenableBuilder<AyahMarker?>(
-                valueListenable: _audioManager!.currentAyahNotifier,
-                builder: (context, currentAyah, _) {
-                  final hasMediaPlayer = currentAyah != null;
-
-                  return Padding(
-                    padding: EdgeInsets.only(
-                      bottom: bottomSafe + pageVerticalOffset + (hasMediaPlayer ? mediaPlayerHeight : 0),
-                    ),
+              // Main content with safe area padding
+              Padding(
+                padding: EdgeInsets.only(
+                  bottom: bottomSafe + pageVerticalOffset,
+                ),
                     child: PageView.builder(
                       controller: _controller,
                       itemCount: totalPages,
                       reverse: true,
-                      physics: const PageScrollPhysics().applyTo(
-                        const BouncingScrollPhysics(
-                          parent: AlwaysScrollableScrollPhysics(),
-                        ),
+                      physics: const BouncingScrollPhysics(
+                        parent: AlwaysScrollableScrollPhysics(),
                       ),
                       itemBuilder: (context, index) {
                         final pageNumber = index + 1;
+                        
+                        // Performance: Use cached page widget if available
+                        if (_cachedPages.containsKey(pageNumber)) {
+                          return _cachedPages[pageNumber]!;
+                        }
+                        
+                        // Preload adjacent pages for smoother swiping
+                        _preloadAdjacentPages(pageNumber);
+                        
                         final pageNumStr = pageNumber.toString().padLeft(3, '0');
                         final pageMarkers = _markersByPage[pageNumber] ?? [];
                         final pageInfo = _getInfoForPage(pageNumber);
 
-                        return SvgPageViewer(
+                        final pageWidget = SvgPageViewer(
+                          key: ValueKey('page_$pageNumber'), // Add key for better widget recycling
                           svgAssetPath: 'assets/pages/$pageNumStr.svg',
                           markers: pageMarkers,
                           currentPage: pageNumber,
@@ -679,53 +756,41 @@ class _ViewerScreenState extends State<ViewerScreen> with TickerProviderStateMix
                           currentlyPlayingAyah: _audioManager!.currentAyahNotifier,
                           onContinuousPlayRequested: _onContinuousPlayRequested,
                         );
-                      },
-                    ),
-                  );
-                },
-              ),
-
-              // Floating Media Player with safe-area aware positioning
-              Positioned(
-                bottom: bottomSafe + pageVerticalOffset,
-                left: 0,
-                right: 0,
-                child: AnimatedBuilder(
-                  animation: _mediaPlayerAnimation,
-                  builder: (context, child) {
-                    if (_audioManager == null) return const SizedBox.shrink();
-
-                    return ValueListenableBuilder<AyahMarker?>(
-                      valueListenable: _audioManager!.currentAyahNotifier,
-                      builder: (context, currentAyah, _) {
-                        if (currentAyah == null) return const SizedBox.shrink();
-
-                        return Transform.translate(
-                          offset: Offset(0, (1 - _mediaPlayerAnimation.value) * 100),
-                          child: Opacity(
-                            opacity: _mediaPlayerAnimation.value,
-                            child: FloatingMediaPlayer(
-                              currentAyah: currentAyah,
-                              isPlayingNotifier: _audioManager!.isPlayingNotifier,
-                              isBufferingNotifier: _audioManager!.isBufferingNotifier,
-                              currentReciterNotifier: _audioManager!.currentReciterNotifier,
-                              playbackSpeedNotifier: _audioManager!.playbackSpeedNotifier,
-                              positionNotifier: _audioManager!.positionNotifier,
-                              durationNotifier: _audioManager!.durationNotifier,
-                              onPlayPause: () => _audioManager!.togglePlayPause(),
-                              onStop: () => _audioManager!.stop(),
-                              onPrevious: () => _audioManager!.playPrevious(),
-                              onNext: () => _audioManager!.playNext(),
-                              onSpeedChange: () => _audioManager!.changeSpeed(),
-                              onSeek: (position) => _audioManager!.seek(position),
-                            ),
-                          ),
+                        
+                        // Cache the built widget for performance
+                        _cachedPages[pageNumber] = pageWidget;
+                        
+                        // Wrap in RepaintBoundary for performance
+                        return RepaintBoundary(
+                          key: ValueKey('repaint_$pageNumber'),
+                          child: pageWidget,
                         );
                       },
+                ),
+              ),
+
+              // Improved Media Player - collapsible with fixed button functions
+              if (_audioManager != null)
+                ValueListenableBuilder<AyahMarker?>(
+                  valueListenable: _audioManager!.currentAyahNotifier,
+                  builder: (context, currentAyah, _) {
+                    return ImprovedMediaPlayer(
+                      currentAyah: currentAyah,
+                      isPlayingNotifier: _audioManager!.isPlayingNotifier,
+                      isBufferingNotifier: _audioManager!.isBufferingNotifier,
+                      currentReciterNotifier: _audioManager!.currentReciterNotifier,
+                      playbackSpeedNotifier: _audioManager!.playbackSpeedNotifier,
+                      positionNotifier: _audioManager!.positionNotifier,
+                      durationNotifier: _audioManager!.durationNotifier,
+                      onPlayPause: () => _audioManager!.togglePlayPause(),
+                      onStop: () => _audioManager!.stop(),
+                      onPrevious: () => _audioManager!.playPrevious(),
+                      onNext: () => _audioManager!.playNext(),
+                      onSpeedChange: () => _audioManager!.changeSpeed(),
+                      onSeek: (position) => _audioManager!.seek(position),
                     );
                   },
                 ),
-              ),
             ],
           ),
           floatingActionButton: _buildPageNumberButton(currentPage),
@@ -847,8 +912,11 @@ class _ViewerScreenState extends State<ViewerScreen> with TickerProviderStateMix
     );
   }
 
+  /// FIXED: Proper dismissible dialog with smooth animations
   Future<void> _showSurahSelectionDialog(BuildContext context) async {
     if (!mounted) return;
+
+    HapticUtils.dialogOpen(); // Haptic feedback for dialog open
 
     if (_allSurahs.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -857,70 +925,102 @@ class _ViewerScreenState extends State<ViewerScreen> with TickerProviderStateMix
       return;
     }
 
-    await showDialog(
+    await showGeneralDialog(
       context: context,
       barrierDismissible: true,
-      builder: (dialogContext) => GestureDetector(
-        onTap: () => Navigator.of(dialogContext).pop(),
-        child: AlertDialog(
-          title: Text(
-            "اختر السورة",
-            style: TextStyle(
-              color: Theme.of(dialogContext).colorScheme.onSurface,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          content: GestureDetector(
-            onTap: () {},
-            child: SizedBox(
-              width: double.maxFinite,
-              height: 400,
-              child: ListView.builder(
-                itemCount: _allSurahs.length,
-                itemBuilder: (context, index) {
-                  final surah = _allSurahs[index];
-                  return Directionality(
-                    textDirection: TextDirection.rtl,
-                    child: ListTile(
-                      title: Text(
-                        "${surah.number}. ${surah.nameArabic}",
-                        style: TextStyle(
-                          color: Theme.of(context).colorScheme.onSurface,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      subtitle: Text(
-                        surah.nameEnglish,
-                        style: TextStyle(
-                          color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
-                        ),
-                      ),
-                      onTap: () {
-                        Navigator.of(dialogContext).pop();
-                        _jumpToPage(surah.pageNumber);
-                      },
-                    ),
-                  );
-                },
-              ),
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(dialogContext).pop(),
-              child: Text(
-                "إلغاء",
-                style: TextStyle(color: Theme.of(dialogContext).colorScheme.primary),
-              ),
-            ),
-          ],
+      barrierLabel: '',
+      barrierColor: Colors.black54,
+      transitionDuration: AnimationUtils.normal,
+      pageBuilder: (context, animation1, animation2) => Container(),
+      transitionBuilder: (context, animation1, animation2, child) {
+        return AnimationUtils.scaleTransition(
+          animation: animation1,
+          child: AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
         ),
-      ),
+        title: Text(
+          "اختر السورة",
+          style: TextStyle(
+            color: Theme.of(context).colorScheme.onSurface,
+            fontWeight: FontWeight.bold,
+            fontSize: 20,
+          ),
+          textAlign: TextAlign.center,
+        ),
+        content: SizedBox(
+          width: double.maxFinite,
+          height: 400,
+          child: ListView.builder(
+            itemCount: _allSurahs.length,
+            itemBuilder: (context, index) {
+              final surah = _allSurahs[index];
+              return AnimatedListItem(
+                index: index,
+                delay: const Duration(milliseconds: 15), // Much faster for dialogs
+                duration: AnimationUtils.ultraFast,
+                child: Card(
+                margin: const EdgeInsets.only(bottom: 8),
+                elevation: 2,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: ListTile(
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  title: Text(
+                    "${surah.number}. ${surah.nameArabic}",
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.onSurface,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 16,
+                    ),
+                    textDirection: TextDirection.rtl,
+                  ),
+                  subtitle: Text(
+                    surah.nameEnglish,
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
+                      fontSize: 14,
+                    ),
+                  ),
+                  trailing: Text(
+                    "ص ${surah.pageNumber}",
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.primary,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  onTap: () {
+                    HapticUtils.selection(); // Haptic feedback for selection
+                    Navigator.of(context).pop();
+                    _jumpToPage(surah.pageNumber);
+                  },
+                ),
+                ),
+              );
+            },
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: Text(
+              "إلغاء",
+              style: TextStyle(color: Theme.of(context).colorScheme.primary),
+            ),
+          ),
+        ],
+        ),
+        );
+      },
     );
   }
 
+  /// FIXED: Proper dismissible Juz dialog with smooth animations
   Future<void> _showJuzSelectionDialog(BuildContext context) async {
     if (!mounted) return;
+
+    HapticUtils.dialogOpen(); // Haptic feedback for dialog open
 
     if (_juzStartPages.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -929,76 +1029,126 @@ class _ViewerScreenState extends State<ViewerScreen> with TickerProviderStateMix
       return;
     }
 
-    await showDialog(
+    await showGeneralDialog(
       context: context,
       barrierDismissible: true,
-      builder: (dialogContext) => GestureDetector(
-        onTap: () => Navigator.of(dialogContext).pop(),
-        child: AlertDialog(
-          title: Text(
-            "اختر الجزء",
-            style: TextStyle(
-              color: Theme.of(dialogContext).colorScheme.onSurface,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          content: GestureDetector(
-            onTap: () {},
-            child: SizedBox(
-              width: double.maxFinite,
-              height: 400,
-              child: ListView.builder(
-                itemCount: 30,
-                itemBuilder: (context, index) {
-                  final juzNumber = index + 1;
-                  return Directionality(
-                    textDirection: TextDirection.rtl,
-                    child: ListTile(
-                      title: Text(
-                        "الجزء $juzNumber",
-                        style: TextStyle(
-                          color: Theme.of(context).colorScheme.onSurface,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      onTap: () {
-                        Navigator.of(dialogContext).pop();
-                        final page = _juzStartPages[juzNumber];
-                        if (page != null) _jumpToPage(page);
-                      },
-                    ),
-                  );
-                },
-              ),
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(dialogContext).pop(),
-              child: Text(
-                "إلغاء",
-                style: TextStyle(color: Theme.of(dialogContext).colorScheme.primary),
-              ),
-            ),
-          ],
+      barrierLabel: '',
+      barrierColor: Colors.black54,
+      transitionDuration: AnimationUtils.normal,
+      pageBuilder: (context, animation1, animation2) => Container(),
+      transitionBuilder: (context, animation1, animation2, child) {
+        return AnimationUtils.scaleTransition(
+          animation: animation1,
+          child: AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
         ),
-      ),
+        title: Text(
+          "اختر الجزء",
+          style: TextStyle(
+            color: Theme.of(context).colorScheme.onSurface,
+            fontWeight: FontWeight.bold,
+            fontSize: 20,
+          ),
+          textAlign: TextAlign.center,
+        ),
+        content: SizedBox(
+          width: double.maxFinite,
+          height: 400,
+          child: ListView.builder(
+            itemCount: 30,
+            itemBuilder: (context, index) {
+              final juzNumber = index + 1;
+              final pageNumber = _juzStartPages[juzNumber];
+              
+              return AnimatedListItem(
+                index: index,
+                delay: const Duration(milliseconds: 10), // Much faster for dialogs  
+                duration: AnimationUtils.ultraFast,
+                child: Card(
+                margin: const EdgeInsets.only(bottom: 8),
+                elevation: 2,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: ListTile(
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  leading: CircleAvatar(
+                    backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+                    child: Text(
+                      '$juzNumber',
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.onPrimaryContainer,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                  title: Text(
+                    "الجزء $juzNumber",
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.onSurface,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 16,
+                    ),
+                    textDirection: TextDirection.rtl,
+                  ),
+                  trailing: pageNumber != null ? Text(
+                    "ص $pageNumber",
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.primary,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ) : null,
+                  onTap: () {
+                    HapticUtils.selection(); // Haptic feedback for selection
+                    Navigator.of(context).pop();
+                    if (pageNumber != null) _jumpToPage(pageNumber);
+                  },
+                ),
+                ),
+              );
+            },
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: Text(
+              "إلغاء",
+              style: TextStyle(color: Theme.of(context).colorScheme.primary),
+            ),
+          ),
+        ],
+        ),
+        );
+      },
     );
   }
 
   void _showJumpToPageDialog() {
-    showDialog<void>(
+    HapticUtils.dialogOpen(); // Haptic feedback for dialog open
+    showGeneralDialog<void>(
       context: context,
       barrierDismissible: true,
-      builder: (dialogContext) => GestureDetector(
-        onTap: () => Navigator.of(dialogContext).pop(),
-        child: _JumpToPageDialog(
-          onPageJump: _jumpToPage,
-          maxPage: totalPages,
-        ),
-      ),
+      barrierLabel: '',
+      barrierColor: Colors.black54,
+      transitionDuration: AnimationUtils.normal,
+      pageBuilder: (context, animation1, animation2) => Container(),
+      transitionBuilder: (context, animation1, animation2, child) {
+        return AnimationUtils.scaleTransition(
+          animation: animation1,
+          child: GestureDetector(
+            onTap: () => Navigator.of(context).pop(),
+            child: _JumpToPageDialog(
+              onPageJump: _jumpToPage,
+              maxPage: totalPages,
+            ),
+          ),
+        );
+      },
     );
   }
+
 }
 
 class _JumpToPageDialog extends StatefulWidget {
@@ -1117,3 +1267,4 @@ class _JumpToPageDialogState extends State<_JumpToPageDialog> {
     );
   }
 }
+

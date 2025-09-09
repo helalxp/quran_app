@@ -1,20 +1,24 @@
-// lib/theme_manager.dart - FIXED VERSION with better colors
+// lib/theme_manager.dart - ENHANCED with beautiful Islamic theme
 
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'design_system/noor_theme.dart';
+import 'constants/app_constants.dart';
 
-
-enum AppTheme { brown, green, blue }
+enum AppTheme { brown, green, blue, islamic }
 
 class ThemeManager extends ChangeNotifier {
   static const String _themeKey = 'selected_theme';
   static const String _themeModeKey = 'theme_mode';
+  static const String _followAyahKey = 'follow_ayah_on_playback';
 
-  AppTheme _currentTheme = AppTheme.brown;
-  ThemeMode _themeMode = ThemeMode.system;
+  AppTheme _currentTheme = AppConstants.defaultTheme;
+  ThemeMode _themeMode = AppConstants.defaultThemeMode;
+  bool _followAyahOnPlayback = AppConstants.defaultFollowAyahOnPlayback;
 
   AppTheme get currentTheme => _currentTheme;
   ThemeMode get themeMode => _themeMode;
+  bool get followAyahOnPlayback => _followAyahOnPlayback;
 
   ThemeManager() {
     _loadTheme();
@@ -23,14 +27,34 @@ class ThemeManager extends ChangeNotifier {
   Future<void> _loadTheme() async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      final themeIndex = prefs.getInt(_themeKey) ?? 0;
-      final themeModeIndex = prefs.getInt(_themeModeKey) ?? 0;
-
-      _currentTheme = AppTheme.values[themeIndex];
-      _themeMode = ThemeMode.values[themeModeIndex];
+      
+      // Load theme with validation
+      final themeIndex = prefs.getInt(_themeKey);
+      if (themeIndex != null && themeIndex >= 0 && themeIndex < AppTheme.values.length) {
+        _currentTheme = AppTheme.values[themeIndex];
+      } else {
+        _currentTheme = AppConstants.defaultTheme;
+      }
+      
+      // Load theme mode with validation
+      final themeModeIndex = prefs.getInt(_themeModeKey);
+      if (themeModeIndex != null && themeModeIndex >= 0 && themeModeIndex < ThemeMode.values.length) {
+        _themeMode = ThemeMode.values[themeModeIndex];
+      } else {
+        _themeMode = AppConstants.defaultThemeMode;
+      }
+      
+      // Load follow ayah setting
+      _followAyahOnPlayback = prefs.getBool(_followAyahKey) ?? AppConstants.defaultFollowAyahOnPlayback;
+      
       notifyListeners();
     } catch (e) {
       debugPrint('Error loading theme: $e');
+      // Fallback to defaults on error
+      _currentTheme = AppConstants.defaultTheme;
+      _themeMode = AppConstants.defaultThemeMode;
+      _followAyahOnPlayback = AppConstants.defaultFollowAyahOnPlayback;
+      notifyListeners();
     }
   }
 
@@ -59,6 +83,18 @@ class ThemeManager extends ChangeNotifier {
       await prefs.setInt(_themeModeKey, mode.index);
     } catch (e) {
       debugPrint('Error saving theme mode: $e');
+    }
+  }
+
+  Future<void> toggleFollowAyahOnPlayback() async {
+    _followAyahOnPlayback = !_followAyahOnPlayback;
+    notifyListeners();
+
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool(_followAyahKey, _followAyahOnPlayback);
+    } catch (e) {
+      debugPrint('Error saving follow ayah setting: $e');
     }
   }
 
@@ -183,6 +219,8 @@ class ThemeManager extends ChangeNotifier {
         return greenLightTheme;
       case AppTheme.blue:
         return blueLightTheme;
+      case AppTheme.islamic:
+        return NoorDesignSystem.getLightTheme(); // Beautiful Islamic theme!
     }
   }
 
@@ -194,6 +232,8 @@ class ThemeManager extends ChangeNotifier {
         return greenDarkTheme;
       case AppTheme.blue:
         return blueDarkTheme;
+      case AppTheme.islamic:
+        return NoorDesignSystem.getDarkTheme(); // Beautiful Islamic dark theme!
     }
   }
 
@@ -205,6 +245,8 @@ class ThemeManager extends ChangeNotifier {
         return 'الأخضر الإسلامي';
       case AppTheme.blue:
         return 'الأزرق الكلاسيكي';
+      case AppTheme.islamic:
+        return 'نور - التصميم الإسلامي'; // Noor - Islamic Design
     }
   }
 }
