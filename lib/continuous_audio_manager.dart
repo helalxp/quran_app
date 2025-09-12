@@ -1,4 +1,4 @@
-// lib/continuous_audio_manager.dart - FIXED VERSION with proper sequence handling
+// lib/continuous_audio_manager.dart
 
 import 'dart:async';
 import 'package:flutter/material.dart';
@@ -712,6 +712,53 @@ class ContinuousAudioManager {
     } catch (e) {
       debugPrint('❌ togglePlayPause error: $e');
     }
+  }
+
+  /// Play single ayah (for memorization)
+  Future<void> playSingleAyah(AyahMarker ayah, String reciterName) async {
+    try {
+      if (!_reciterConfigs.containsKey(reciterName)) {
+        throw Exception('Reciter not found: $reciterName');
+      }
+      
+      final reciterConfig = _reciterConfigs[reciterName]!;
+
+      // Stop current playback
+      await stop();
+
+      // Update state
+      currentAyahNotifier.value = ayah;
+      isPlayingNotifier.value = false;
+      currentReciterNotifier.value = reciterName;
+
+      // Try to play the ayah  
+      final audioUrl = _buildAudioUrl(ayah, reciterConfig.baseUrl);
+      
+      debugPrint('🎵 Playing single ayah for memorization: ${ayah.surah}:${ayah.ayah} - $audioUrl');
+
+      await _audioPlayer!.setUrl(audioUrl);
+      await _audioPlayer!.play();
+      
+    } catch (e) {
+      debugPrint('❌ Error playing single ayah: $e');
+      rethrow;
+    }
+  }
+
+  /// Set playback speed
+  void setPlaybackSpeed(double speed) {
+    playbackSpeedNotifier.value = speed;
+    _audioPlayer?.setSpeed(speed);
+  }
+
+  /// Pause playback
+  void pause() {
+    _audioPlayer?.pause();
+  }
+
+  /// Resume playback
+  void resume() {
+    _audioPlayer?.play();
   }
 
   Future<void> stop() async {

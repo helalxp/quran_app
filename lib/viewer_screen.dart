@@ -1,7 +1,8 @@
-// lib/viewer_screen.dart - COMPLETELY FIXED VERSION with proper media player positioning
+// lib/viewer_screen.dart
 
 import 'dart:convert';
 import 'dart:async';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -12,7 +13,9 @@ import 'settings_screen.dart';
 import 'svg_page_viewer.dart';
 import 'widgets/improved_media_player.dart';
 import 'continuous_audio_manager.dart';
+import 'memorization_manager.dart';
 import 'constants/app_constants.dart';
+import 'constants/juz_mappings.dart';
 import 'utils/animation_utils.dart';
 import 'utils/haptic_utils.dart';
 
@@ -30,6 +33,7 @@ class _ViewerScreenState extends State<ViewerScreen> with TickerProviderStateMix
 
   PageController? _controller;
   ContinuousAudioManager? _audioManager;
+  MemorizationManager? _memorizationManager;
 
   Map<int, List<AyahMarker>> _markersByPage = {};
   List<AyahMarker> _allMarkers = [];
@@ -56,6 +60,7 @@ class _ViewerScreenState extends State<ViewerScreen> with TickerProviderStateMix
   void _initializeAudioManager() {
     _audioManager = ContinuousAudioManager();
     _audioManager!.initialize();
+    _memorizationManager = MemorizationManager(_audioManager!);
     // Note: Page controller registration moved to _loadLastPage() after controller is created
   }
 
@@ -91,7 +96,8 @@ class _ViewerScreenState extends State<ViewerScreen> with TickerProviderStateMix
     _controller = null;
     _currentPageNotifier.dispose();
     
-    // Properly dispose audio manager
+    // Properly dispose audio manager and memorization manager
+    _memorizationManager?.dispose();
     _audioManager?.dispose();
     _audioManager = null;
 
@@ -106,24 +112,17 @@ class _ViewerScreenState extends State<ViewerScreen> with TickerProviderStateMix
       final List<dynamic> surahsJsonList = json.decode(surahsJsonString);
       _allSurahs = surahsJsonList.map((json) => Surah.fromJson(json)).toList();
 
-      debugPrint('Loaded ${_allSurahs.length} surahs and ${_allMarkers.length} markers');
-
-      if (_allSurahs.isNotEmpty) {
-        _juzStartPages = <int, int>{};
-        for (var juz = 1; juz <= 30; juz++) {
-          try {
-            final firstSurahInJuz = _allSurahs.firstWhere((s) => s.juzNumber == juz);
-            _juzStartPages[juz] = firstSurahInJuz.pageNumber;
-          } catch (e) {
-            _juzStartPages[juz] = _allSurahs.last.pageNumber;
-          }
-        }
+      if (kDebugMode) {
+        debugPrint('Loaded ${_allSurahs.length} surahs and ${_allMarkers.length} markers');
       }
+
+      // Use correct juz mappings instead of calculating from surahs
+      _juzStartPages = Map<int, int>.from(JuzMappings.juzToPage);
     } catch (e) {
       debugPrint('Error loading data: $e');
       _markersByPage = {};
       _allSurahs = [];
-      _juzStartPages = {};
+      _juzStartPages = Map<int, int>.from(JuzMappings.juzToPage);
     }
   }
 
@@ -311,7 +310,9 @@ class _ViewerScreenState extends State<ViewerScreen> with TickerProviderStateMix
           ? surahsOnPage.map((s) => s.nameArabic).join(' / ')
           : primarySurah.nameArabic;
 
-      final result = (surahName: surahName, juzNumber: "الجزء ${primarySurah.juzNumber}");
+      // Get the correct juz for the current page, not just the surah's starting juz
+      final currentJuz = JuzMappings.getJuzForPage(page);
+      final result = (surahName: surahName, juzNumber: "الجزء $currentJuz");
       
       // Cache the result for performance
       _pageInfoCache[page] = result;
@@ -329,11 +330,9 @@ class _ViewerScreenState extends State<ViewerScreen> with TickerProviderStateMix
 
     HapticUtils.pageTurn(); // Haptic feedback for page navigation
     final int index = page - 1;
-    _controller!.animateToPage(
-      index,
-      duration: AnimationUtils.normal,
-      curve: AnimationUtils.smoothCurve,
-    );
+    
+    // Use jumpToPage for instant navigation instead of slow animation
+    _controller!.jumpToPage(index);
   }
 
   void _onContinuousPlayRequested(AyahMarker ayahMarker, String reciterName) async {
@@ -346,21 +345,7 @@ class _ViewerScreenState extends State<ViewerScreen> with TickerProviderStateMix
 
       await _audioManager!.startContinuousPlayback(ayahMarker, reciterName, surahAyahs);
 
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Directionality(
-              textDirection: TextDirection.rtl,
-              child: Text('بدء التشغيل المتواصل من الآية ${ayahMarker.ayah} من سورة ${_getSurahName(ayahMarker.surah)} بصوت $reciterName'),
-            ),
-            duration: const Duration(seconds: 2),
-            action: SnackBarAction(
-              label: 'إيقاف',
-              onPressed: () => _audioManager!.stop(),
-            ),
-          ),
-        );
-      }
+      // Removed annoying snackbar - user can control playback through media player controls
     } catch (e) {
       debugPrint('Error starting continuous playback: $e');
       if (mounted) {
@@ -377,45 +362,6 @@ class _ViewerScreenState extends State<ViewerScreen> with TickerProviderStateMix
     }
   }
 
-  String _getSurahName(int surahNumber) {
-    // Get surah name from loaded surahs data if available
-    if (_allSurahs.isNotEmpty) {
-      try {
-        final surah = _allSurahs.firstWhere((s) => s.number == surahNumber);
-        return surah.nameArabic;
-      } catch (e) {
-        // Fallback to hardcoded names if not found
-      }
-    }
-
-    // Fallback hardcoded names
-    const surahNames = {
-      1: 'الفاتحة', 2: 'البقرة', 3: 'آل عمران', 4: 'النساء', 5: 'المائدة',
-      6: 'الأنعام', 7: 'الأعراف', 8: 'الأنفال', 9: 'التوبة', 10: 'يونس',
-      11: 'هود', 12: 'يوسف', 13: 'الرعد', 14: 'إبراهيم', 15: 'الحجر',
-      16: 'النحل', 17: 'الإسراء', 18: 'الكهف', 19: 'مريم', 20: 'طه',
-      21: 'الأنبياء', 22: 'الحج', 23: 'المؤمنون', 24: 'النور', 25: 'الفرقان',
-      26: 'الشعراء', 27: 'النمل', 28: 'القصص', 29: 'العنكبوت', 30: 'الروم',
-      31: 'لقمان', 32: 'السجدة', 33: 'الأحزاب', 34: 'سبأ', 35: 'فاطر',
-      36: 'يس', 37: 'الصافات', 38: 'ص', 39: 'الزمر', 40: 'غافر',
-      41: 'فصلت', 42: 'الشورى', 43: 'الزخرف', 44: 'الدخان', 45: 'الجاثية',
-      46: 'الأحقاف', 47: 'محمد', 48: 'الفتح', 49: 'الحجرات', 50: 'ق',
-      51: 'الذاريات', 52: 'الطور', 53: 'النجم', 54: 'القمر', 55: 'الرحمن',
-      56: 'الواقعة', 57: 'الحديد', 58: 'المجادلة', 59: 'الحشر', 60: 'الممتحنة',
-      61: 'الصف', 62: 'الجمعة', 63: 'المنافقون', 64: 'التغابن', 65: 'الطلاق',
-      66: 'التحريم', 67: 'الملك', 68: 'القلم', 69: 'الحاقة', 70: 'المعارج',
-      71: 'نوح', 72: 'الجن', 73: 'المزمل', 74: 'المدثر', 75: 'القيامة',
-      76: 'الإنسان', 77: 'المرسلات', 78: 'النبأ', 79: 'النازعات', 80: 'عبس',
-      81: 'التكوير', 82: 'الانفطار', 83: 'المطففين', 84: 'الانشقاق', 85: 'البروج',
-      86: 'الطارق', 87: 'الأعلى', 88: 'الغاشية', 89: 'الفجر', 90: 'البلد',
-      91: 'الشمس', 92: 'الليل', 93: 'الضحى', 94: 'الشرح', 95: 'التين',
-      96: 'العلق', 97: 'القدر', 98: 'البينة', 99: 'الزلزلة', 100: 'العاديات',
-      101: 'القارعة', 102: 'التكاثر', 103: 'العصر', 104: 'الهمزة', 105: 'الفيل',
-      106: 'قريش', 107: 'الماعون', 108: 'الكوثر', 109: 'الكافرون', 110: 'النصر',
-      111: 'المسد', 112: 'الإخلاص', 113: 'الفلق', 114: 'الناس'
-    };
-    return surahNames[surahNumber] ?? 'سورة $surahNumber';
-  }
 
   Future<void> _toggleBookmarkSafe() async {
     try {
@@ -504,7 +450,7 @@ class _ViewerScreenState extends State<ViewerScreen> with TickerProviderStateMix
         enableDrag: true,
         transitionAnimationController: AnimationController(
           duration: AnimationUtils.normal,
-          vsync: Scaffold.of(context),
+          vsync: this,
         ),
         builder: (context) => GestureDetector(
           onTap: () => Navigator.of(context).pop(),
@@ -684,7 +630,7 @@ class _ViewerScreenState extends State<ViewerScreen> with TickerProviderStateMix
     HapticUtils.navigation(); // Haptic feedback for navigation
     Navigator.of(context).push(
       AnimatedRoute(
-        builder: (context) => const SettingsScreen(),
+        builder: (context) => SettingsScreen(memorizationManager: _memorizationManager),
         transitionType: PageTransitionType.slideUp,
         transitionDuration: AnimationUtils.normal,
       ),
@@ -698,6 +644,7 @@ class _ViewerScreenState extends State<ViewerScreen> with TickerProviderStateMix
     if (_isLoading) {
       return Scaffold(
         backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+        resizeToAvoidBottomInset: false, // Keep background static
         body: const Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -717,6 +664,7 @@ class _ViewerScreenState extends State<ViewerScreen> with TickerProviderStateMix
         final pageInfo = _getInfoForPage(currentPage);
         return Scaffold(
           appBar: _buildAppBar(context, pageInfo.surahName, pageInfo.juzNumber),
+          resizeToAvoidBottomInset: false, // Keep background static
           body: Stack(
             children: [
               // Main content with safe area padding
@@ -728,6 +676,7 @@ class _ViewerScreenState extends State<ViewerScreen> with TickerProviderStateMix
                       controller: _controller,
                       itemCount: totalPages,
                       reverse: true,
+                      allowImplicitScrolling: true, // Pre-cache adjacent pages
                       physics: const BouncingScrollPhysics(
                         parent: AlwaysScrollableScrollPhysics(),
                       ),
@@ -755,15 +704,19 @@ class _ViewerScreenState extends State<ViewerScreen> with TickerProviderStateMix
                           juzName: pageInfo.juzNumber,
                           currentlyPlayingAyah: _audioManager!.currentAyahNotifier,
                           onContinuousPlayRequested: _onContinuousPlayRequested,
+                          memorizationManager: _memorizationManager,
                         );
                         
                         // Cache the built widget for performance
                         _cachedPages[pageNumber] = pageWidget;
                         
-                        // Wrap in RepaintBoundary for performance
-                        return RepaintBoundary(
-                          key: ValueKey('repaint_$pageNumber'),
-                          child: pageWidget,
+                        // Wrap in themed container to prevent white flash during loading
+                        return Container(
+                          color: Theme.of(context).scaffoldBackgroundColor,
+                          child: RepaintBoundary(
+                            key: ValueKey('repaint_$pageNumber'),
+                            child: pageWidget,
+                          ),
                         );
                       },
                 ),
@@ -889,8 +842,8 @@ class _ViewerScreenState extends State<ViewerScreen> with TickerProviderStateMix
         width: 70,
         height: 40,
         child: Material(
-          // Use a broadly supported color (surfaceVariant) instead of surfaceContainerHighest
-          color: Theme.of(context).colorScheme.surfaceContainerHighest,
+          // Use surface container color for better compatibility
+          color: Theme.of(context).colorScheme.surface,
           borderRadius: BorderRadius.circular(8),
           elevation: 2.0,
           child: InkWell(
@@ -1127,25 +1080,12 @@ class _ViewerScreenState extends State<ViewerScreen> with TickerProviderStateMix
 
   void _showJumpToPageDialog() {
     HapticUtils.dialogOpen(); // Haptic feedback for dialog open
-    showGeneralDialog<void>(
+    showDialog<void>(
       context: context,
-      barrierDismissible: true,
-      barrierLabel: '',
-      barrierColor: Colors.black54,
-      transitionDuration: AnimationUtils.normal,
-      pageBuilder: (context, animation1, animation2) => Container(),
-      transitionBuilder: (context, animation1, animation2, child) {
-        return AnimationUtils.scaleTransition(
-          animation: animation1,
-          child: GestureDetector(
-            onTap: () => Navigator.of(context).pop(),
-            child: _JumpToPageDialog(
-              onPageJump: _jumpToPage,
-              maxPage: totalPages,
-            ),
-          ),
-        );
-      },
+      builder: (context) => _JumpToPageDialog(
+        onPageJump: _jumpToPage,
+        maxPage: totalPages,
+      ),
     );
   }
 
@@ -1204,66 +1144,63 @@ class _JumpToPageDialogState extends State<_JumpToPageDialog> {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: () {},
-      child: AlertDialog(
-        title: Text(
-          'الذهاب إلى صفحة',
-          style: TextStyle(
-            color: Theme.of(context).colorScheme.onSurface,
-            fontWeight: FontWeight.bold,
-          ),
-          textAlign: TextAlign.right,
+    return AlertDialog(
+      title: Text(
+        'الذهاب إلى صفحة',
+        style: TextStyle(
+          color: Theme.of(context).colorScheme.onSurface,
+          fontWeight: FontWeight.bold,
         ),
-        content: Directionality(
-          textDirection: TextDirection.rtl,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'أدخل رقم الصفحة (1-${widget.maxPage}):',
-                style: TextStyle(
-                  color: Theme.of(context).colorScheme.onSurface,
-                ),
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: _controller,
-                keyboardType: TextInputType.number,
-                textAlign: TextAlign.center,
-                decoration: InputDecoration(
-                  border: const OutlineInputBorder(),
-                  errorText: _errorText,
-                  hintText: 'رقم الصفحة',
-                ),
-                onChanged: (value) {
-                  if (_errorText != null) {
-                    setState(() {
-                      _errorText = null;
-                    });
-                  }
-                },
-                onSubmitted: (value) => _validateAndJump(),
-                autofocus: true,
-              ),
-            ],
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: Text(
-              'إلغاء',
-              style: TextStyle(color: Theme.of(context).colorScheme.primary),
-            ),
-          ),
-          ElevatedButton(
-            onPressed: _validateAndJump,
-            child: const Text('اذهب'),
-          ),
-        ],
+        textAlign: TextAlign.right,
       ),
+      content: Directionality(
+        textDirection: TextDirection.rtl,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'أدخل رقم الصفحة (1-${widget.maxPage}):',
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.onSurface,
+              ),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: _controller,
+              keyboardType: TextInputType.number,
+              textAlign: TextAlign.center,
+              decoration: InputDecoration(
+                border: const OutlineInputBorder(),
+                errorText: _errorText,
+                hintText: 'رقم الصفحة',
+              ),
+              onChanged: (value) {
+                if (_errorText != null) {
+                  setState(() {
+                    _errorText = null;
+                  });
+                }
+              },
+              onSubmitted: (value) => _validateAndJump(),
+              autofocus: true,
+            ),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: Text(
+            'إلغاء',
+            style: TextStyle(color: Theme.of(context).colorScheme.primary),
+          ),
+        ),
+        ElevatedButton(
+          onPressed: _validateAndJump,
+          child: const Text('اذهب'),
+        ),
+      ],
     );
   }
 }

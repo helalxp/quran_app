@@ -1,4 +1,4 @@
-// lib/svg_page_viewer.dart - UPDATED VERSION with no UI interference
+// lib/svg_page_viewer.dart
 
 import 'dart:math';
 import 'package:flutter/material.dart';
@@ -6,6 +6,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:provider/provider.dart';
 import 'models/ayah_marker.dart';
 import 'ayah_actions_sheet.dart';
+import 'memorization_manager.dart';
 import 'theme_manager.dart';
 import 'constants/app_constants.dart';
 import 'dart:async';
@@ -18,6 +19,7 @@ class SvgPageViewer extends StatefulWidget {
   final String juzName;
   final ValueNotifier<AyahMarker?> currentlyPlayingAyah;
   final Function(AyahMarker, String) onContinuousPlayRequested;
+  final MemorizationManager? memorizationManager;
 
 
   // SVG canvas dimensions - use constants
@@ -33,6 +35,7 @@ class SvgPageViewer extends StatefulWidget {
     required this.juzName,
     required this.currentlyPlayingAyah,
     required this.onContinuousPlayRequested,
+    this.memorizationManager,
   });
 
   @override
@@ -85,7 +88,8 @@ class _SvgPageViewerState extends State<SvgPageViewer> with TickerProviderStateM
     final isDark = brightness == Brightness.dark;
 
     if (isDark) {
-      return Theme.of(context).colorScheme.surface;
+      // Use scaffold background color to match app background instead of surface
+      return Theme.of(context).scaffoldBackgroundColor;
     } else {
       return const Color(AppConstants.warmPaperColorValue); // Warm paper-like background
     }
@@ -173,8 +177,12 @@ class _SvgPageViewerState extends State<SvgPageViewer> with TickerProviderStateM
       fit: BoxFit.contain,
       placeholderBuilder: (context) => Container(
         color: _getSvgBackgroundColor(context),
-        child: const Center(
-          child: CircularProgressIndicator(),
+        child: Center(
+          child: CircularProgressIndicator(
+            valueColor: AlwaysStoppedAnimation<Color>(
+              Theme.of(context).colorScheme.primary.withValues(alpha: 0.7),
+            ),
+          ),
         ),
       ),
     );
@@ -296,22 +304,42 @@ class _SvgPageViewerState extends State<SvgPageViewer> with TickerProviderStateM
   DeviceMultiplier _getDeviceMultiplier(BoxConstraints constraints) {
     final double width = constraints.maxWidth;
     final double height = constraints.maxHeight;
-    final bool isLandscape = width > height;
-
-    if (width < 600) {
-      // Phone
-      return isLandscape
-          ? const DeviceMultiplier(scale: 0.98, offset: 0.95)
-          : const DeviceMultiplier(scale: 1.0, offset: 1.0);
-    } else if (width < 1200) {
-      // Tablet
-      return isLandscape
-          ? const DeviceMultiplier(scale: 0.95, offset: 0.9)
-          : const DeviceMultiplier(scale: 0.97, offset: 0.95);
+    
+    // Dynamic calculation based on screen density and size
+    // This ensures consistent behavior across all screen sizes without hardcoding
+    
+    final double diagonal = sqrt(width * width + height * height);
+    final double aspectRatio = max(width, height) / min(width, height);
+    
+    // Base scale factor - closer to 1.0 for better accuracy
+    // Adjust slightly based on screen size to account for rendering differences
+    double scaleMultiplier;
+    double offsetMultiplier;
+    
+    if (diagonal < 800) {
+      // Small screens (phones)
+      scaleMultiplier = 1.0;
+      offsetMultiplier = 1.0;
+    } else if (diagonal < 1400) {
+      // Medium screens (tablets)
+      scaleMultiplier = 0.99;
+      offsetMultiplier = 0.98;
     } else {
-      // Desktop/Large screens
-      return const DeviceMultiplier(scale: 0.92, offset: 0.85);
+      // Large screens (desktop/TV)
+      scaleMultiplier = 0.98;
+      offsetMultiplier = 0.96;
     }
+    
+    // Fine-tune based on aspect ratio (wider screens need slight adjustments)
+    if (aspectRatio > 1.8) {
+      scaleMultiplier *= 0.995;
+      offsetMultiplier *= 0.99;
+    }
+    
+    return DeviceMultiplier(
+      scale: scaleMultiplier,
+      offset: offsetMultiplier,
+    );
   }
 
   double _getReferenceScale() {
@@ -333,11 +361,11 @@ class _SvgPageViewerState extends State<SvgPageViewer> with TickerProviderStateM
         height: rect.height,
         child: Container(
           decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.secondary.withValues(alpha: 0.25),
+            color: Theme.of(context).colorScheme.secondary.withValues(alpha: 0.15),
             borderRadius: BorderRadius.circular(6),
             border: Border.all(
-              color: Theme.of(context).colorScheme.secondary.withValues(alpha: 0.5),
-              width: 2,
+              color: Theme.of(context).colorScheme.secondary.withValues(alpha: 0.4),
+              width: 1.5,
             ),
           ),
         ),
@@ -439,6 +467,7 @@ class _SvgPageViewerState extends State<SvgPageViewer> with TickerProviderStateM
               juzName: widget.juzName,
               currentPage: widget.currentPage,
               onContinuousPlayRequested: widget.onContinuousPlayRequested,
+              memorizationManager: widget.memorizationManager,
             ),
           ),
         ),

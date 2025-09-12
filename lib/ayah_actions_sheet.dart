@@ -1,4 +1,4 @@
-// lib/ayah_actions_sheet.dart - SIMPLIFIED VERSION with single play button
+// lib/ayah_actions_sheet.dart
 
 import 'dart:convert';
 import 'dart:async';
@@ -6,7 +6,9 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'models/ayah_marker.dart';
+import 'constants/surah_names.dart';
 import 'bookmark_manager.dart';
+import 'memorization_manager.dart';
 
 class AyahActionsSheet extends StatefulWidget {
   final AyahMarker ayahMarker;
@@ -14,6 +16,7 @@ class AyahActionsSheet extends StatefulWidget {
   final String juzName;
   final int currentPage;
   final Function(AyahMarker, String) onContinuousPlayRequested;
+  final MemorizationManager? memorizationManager;
 
   const AyahActionsSheet({
     super.key,
@@ -22,6 +25,7 @@ class AyahActionsSheet extends StatefulWidget {
     required this.juzName,
     required this.currentPage,
     required this.onContinuousPlayRequested,
+    this.memorizationManager,
   });
 
   @override
@@ -444,6 +448,31 @@ class _AyahActionsSheetState extends State<AyahActionsSheet> with TickerProvider
     widget.onContinuousPlayRequested(widget.ayahMarker, _defaultReciter);
   }
 
+  // Start memorization session for this ayah
+  void _startMemorization() {
+    if (widget.memorizationManager == null) return;
+    
+    Navigator.of(context).pop(); // Close the sheet
+    
+    // Start single ayah memorization with default settings
+    widget.memorizationManager!.startSingleAyahMemorization(
+      ayah: widget.ayahMarker,
+      reciterName: _defaultReciter,
+    );
+    
+    // Show feedback to user
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Directionality(
+          textDirection: TextDirection.rtl,
+          child: Text('بدء جلسة الحفظ للآية ${widget.ayahMarker.ayah}'),
+        ),
+        backgroundColor: Theme.of(context).colorScheme.secondary,
+        duration: const Duration(seconds: 2),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
@@ -641,7 +670,75 @@ class _AyahActionsSheetState extends State<AyahActionsSheet> with TickerProvider
                           ),
                         ),
 
-                        const SizedBox(height: 24),
+                        const SizedBox(height: 16),
+
+                        // Memorization section
+                        if (widget.memorizationManager != null) ...[
+                          _buildSectionTitle('حفظ الآية'),
+                          const SizedBox(height: 12),
+                          Container(
+                            width: double.infinity,
+                            height: 60,
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                colors: [
+                                  Theme.of(context).colorScheme.secondary,
+                                  Theme.of(context).colorScheme.secondary.withValues(alpha: 0.8),
+                                ],
+                              ),
+                              borderRadius: BorderRadius.circular(16),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Theme.of(context).colorScheme.secondary.withValues(alpha: 0.3),
+                                  blurRadius: 8,
+                                  offset: const Offset(0, 2),
+                                ),
+                              ],
+                            ),
+                            child: Material(
+                              color: Colors.transparent,
+                              child: InkWell(
+                                borderRadius: BorderRadius.circular(16),
+                                onTap: _startMemorization,
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(
+                                      Icons.refresh,
+                                      color: Theme.of(context).colorScheme.onSecondary,
+                                      size: 32,
+                                    ),
+                                    const SizedBox(width: 16),
+                                    Column(
+                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          'تكرار الآية للحفظ',
+                                          style: TextStyle(
+                                            color: Theme.of(context).colorScheme.onSecondary,
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                          textDirection: TextDirection.rtl,
+                                        ),
+                                        Text(
+                                          'تكرار 3 مرات افتراضياً',
+                                          style: TextStyle(
+                                            color: Theme.of(context).colorScheme.onSecondary.withValues(alpha: 0.8),
+                                            fontSize: 12,
+                                          ),
+                                          textDirection: TextDirection.rtl,
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 24),
+                        ],
 
                         // Tafsir section
                         Row(
@@ -672,7 +769,7 @@ class _AyahActionsSheetState extends State<AyahActionsSheet> with TickerProvider
                         if (_tafsirText == null)
                           Card(
                             elevation: 0,
-                            color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                            color: Theme.of(context).colorScheme.surface,
                             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                             child: ListTile(
                               leading: Icon(
@@ -753,32 +850,7 @@ class _AyahActionsSheetState extends State<AyahActionsSheet> with TickerProvider
   }
 
   String _getSurahName(int surahNumber) {
-    const surahNames = {
-      1: 'الفاتحة', 2: 'البقرة', 3: 'آل عمران', 4: 'النساء', 5: 'المائدة',
-      6: 'الأنعام', 7: 'الأعراف', 8: 'الأنفال', 9: 'التوبة', 10: 'يونس',
-      11: 'هود', 12: 'يوسف', 13: 'الرعد', 14: 'إبراهيم', 15: 'الحجر',
-      16: 'النحل', 17: 'الإسراء', 18: 'الكهف', 19: 'مريم', 20: 'طه',
-      21: 'الأنبياء', 22: 'الحج', 23: 'المؤمنون', 24: 'النور', 25: 'الفرقان',
-      26: 'الشعراء', 27: 'النمل', 28: 'القصص', 29: 'العنكبوت', 30: 'الروم',
-      31: 'لقمان', 32: 'السجدة', 33: 'الأحزاب', 34: 'سبأ', 35: 'فاطر',
-      36: 'يس', 37: 'الصافات', 38: 'ص', 39: 'الزمر', 40: 'غافر',
-      41: 'فصلت', 42: 'الشورى', 43: 'الزخرف', 44: 'الدخان', 45: 'الجاثية',
-      46: 'الأحقاف', 47: 'محمد', 48: 'الفتح', 49: 'الحجرات', 50: 'ق',
-      51: 'الذاريات', 52: 'الطور', 53: 'النجم', 54: 'القمر', 55: 'الرحمن',
-      56: 'الواقعة', 57: 'الحديد', 58: 'المجادلة', 59: 'الحشر', 60: 'الممتحنة',
-      61: 'الصف', 62: 'الجمعة', 63: 'المنافقون', 64: 'التغابن', 65: 'الطلاق',
-      66: 'التحريم', 67: 'الملك', 68: 'القلم', 69: 'الحاقة', 70: 'المعارج',
-      71: 'نوح', 72: 'الجن', 73: 'المزمل', 74: 'المدثر', 75: 'القيامة',
-      76: 'الإنسان', 77: 'المرسلات', 78: 'النبأ', 79: 'النازعات', 80: 'عبس',
-      81: 'التكوير', 82: 'الانفطار', 83: 'المطففين', 84: 'الانشقاق', 85: 'البروج',
-      86: 'الطارق', 87: 'الأعلى', 88: 'الغاشية', 89: 'الفجر', 90: 'البلد',
-      91: 'الشمس', 92: 'الليل', 93: 'الضحى', 94: 'الشرح', 95: 'التين',
-      96: 'العلق', 97: 'القدر', 98: 'البينة', 99: 'الزلزلة', 100: 'العاديات',
-      101: 'القارعة', 102: 'التكاثر', 103: 'العصر', 104: 'الهمزة', 105: 'الفيل',
-      106: 'قريش', 107: 'الماعون', 108: 'الكوثر', 109: 'الكافرون', 110: 'النصر',
-      111: 'المسد', 112: 'الإخلاص', 113: 'الفلق', 114: 'الناس'
-    };
-    return surahNames[surahNumber] ?? 'سورة $surahNumber';
+    return SurahNames.getArabicName(surahNumber);
   }
 }
 

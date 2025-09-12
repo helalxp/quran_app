@@ -1,4 +1,4 @@
-// lib/widgets/improved_media_player.dart - Improved media player with collapsible button
+// lib/widgets/improved_media_player.dart
 
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
@@ -256,7 +256,7 @@ class _ImprovedMediaPlayerState extends State<ImprovedMediaPlayer>
           width: 70, // Same size as jump-to-page button
           height: 40, // Same size as jump-to-page button
           decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.surfaceContainerHighest,
+            color: Theme.of(context).colorScheme.surface,
             borderRadius: BorderRadius.circular(8),
             boxShadow: [
               BoxShadow(

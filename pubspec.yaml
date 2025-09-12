@@ -18,11 +18,19 @@ dependencies:
   audio_session: ^0.1.25
   hive: ^2.2.3
   hive_flutter: ^1.1.0
+  url_launcher: ^6.2.5
+  connectivity_plus: ^5.0.2
+  path_provider: ^2.1.2
+  dio: ^5.4.0
+  crypto: ^3.0.3
+  flutter_secure_storage: ^9.0.0
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^6.0.0
+  mockito: ^5.4.4
+  build_runner: ^2.4.7
 
 flutter:
   uses-material-design: true
@@ -30,10 +38,10 @@ flutter:
   # App icon configuration
   # Note: You'll need to add app icons in android/app/src/main/res/ and ios/Runner/Assets.xcassets/
   
-  fonts:
-    - family: Uthmanic
-      fonts:
-        - asset: assets/fonts/UthmanicHafs.ttf
+  # fonts:
+    # - family: Uthmanic
+    #   fonts:
+    #     - asset: assets/fonts/UthmanicHafs.ttf
   
   assets:
     - assets/pages/

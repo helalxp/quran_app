@@ -1,15 +1,21 @@
-// lib/settings_screen.dart - IMPROVED VERSION with detailed tafsir information
+// lib/settings_screen.dart
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'theme_manager.dart';
 import 'continuous_audio_manager.dart';
+import 'memorization_manager.dart';
 import 'utils/animation_utils.dart';
 import 'utils/haptic_utils.dart';
 
 class SettingsScreen extends StatefulWidget {
-  const SettingsScreen({super.key});
+  final MemorizationManager? memorizationManager;
+  
+  const SettingsScreen({
+    super.key,
+    this.memorizationManager,
+  });
 
   @override
   State<SettingsScreen> createState() => _SettingsScreenState();
@@ -24,6 +30,13 @@ class _SettingsScreenState extends State<SettingsScreen> with TickerProviderStat
   bool _autoPlayNext = true;
   bool _repeatSurah = false;
   bool _isLoading = true;
+  
+  // Memorization settings
+  int _memorationRepetitions = 3;
+  double _memorizationSpeed = 1.0;
+  bool _pauseBetweenRepetitions = true;
+  int _pauseDurationSeconds = 2;
+  MemorizationMode _memorationMode = MemorizationMode.singleAyah;
 
   // Enhanced reciter list with more options
   // SYNCHRONIZED: This is now the single source of truth for reciters.
@@ -128,7 +141,7 @@ class _SettingsScreenState extends State<SettingsScreen> with TickerProviderStat
     
     _sectionControllers = AnimationUtils.createStaggeredControllers(
       vsync: this,
-      count: 4, // Number of sections
+      count: 5, // Number of sections (added memorization section)
       duration: AnimationUtils.normal,
     );
     
@@ -158,8 +171,29 @@ class _SettingsScreenState extends State<SettingsScreen> with TickerProviderStat
         _playbackSpeed = prefs.getDouble('playback_speed') ?? 1.0;
         _autoPlayNext = prefs.getBool('auto_play_next') ?? true;
         _repeatSurah = prefs.getBool('repeat_surah') ?? false;
+        
+        // Load memorization settings
+        _memorationRepetitions = prefs.getInt('memorization_repetitions') ?? 3;
+        _memorizationSpeed = prefs.getDouble('memorization_speed') ?? 1.0;
+        _pauseBetweenRepetitions = prefs.getBool('pause_between_repetitions') ?? true;
+        _pauseDurationSeconds = prefs.getInt('pause_duration_seconds') ?? 2;
+        final modeIndex = prefs.getInt('memorization_mode') ?? 0;
+        _memorationMode = MemorizationMode.values[modeIndex];
+        
         _isLoading = false;
       });
+      
+      // Load current settings from memorization manager if available
+      if (widget.memorizationManager != null) {
+        final currentSettings = widget.memorizationManager!.settings;
+        setState(() {
+          _memorationRepetitions = currentSettings.repetitionCount;
+          _memorizationSpeed = currentSettings.playbackSpeed;
+          _pauseBetweenRepetitions = currentSettings.pauseBetweenRepetitions;
+          _pauseDurationSeconds = currentSettings.pauseDuration.inSeconds;
+          _memorationMode = currentSettings.mode;
+        });
+      }
     } catch (e) {
       debugPrint('Error loading settings: $e');
       setState(() {
@@ -270,6 +304,34 @@ class _SettingsScreenState extends State<SettingsScreen> with TickerProviderStat
     }
   }
 
+  // Memorization settings save methods
+  Future<void> _saveMemorizationSettings() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      
+      // Save to SharedPreferences
+      await prefs.setInt('memorization_repetitions', _memorationRepetitions);
+      await prefs.setDouble('memorization_speed', _memorizationSpeed);
+      await prefs.setBool('pause_between_repetitions', _pauseBetweenRepetitions);
+      await prefs.setInt('pause_duration_seconds', _pauseDurationSeconds);
+      await prefs.setInt('memorization_mode', _memorationMode.index);
+      
+      // Update memorization manager if available
+      if (widget.memorizationManager != null) {
+        final newSettings = MemorizationSettings(
+          repetitionCount: _memorationRepetitions,
+          playbackSpeed: _memorizationSpeed,
+          pauseBetweenRepetitions: _pauseBetweenRepetitions,
+          pauseDuration: Duration(seconds: _pauseDurationSeconds),
+          mode: _memorationMode,
+        );
+        await widget.memorizationManager!.updateSettings(newSettings);
+      }
+    } catch (e) {
+      debugPrint('Error saving memorization settings: $e');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
@@ -317,9 +379,25 @@ class _SettingsScreenState extends State<SettingsScreen> with TickerProviderStat
 
                   const SizedBox(height: 32),
 
+                  // Memorization Section - Animated
+                  if (widget.memorizationManager != null)
+                    AnimationUtils.fadeSlideTransition(
+                      animation: _sectionControllers[1],
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          _buildSectionHeader('إعدادات الحفظ'),
+                          const SizedBox(height: 12),
+                          _buildMemorizationSettings(),
+                        ],
+                      ),
+                    ),
+
+                  if (widget.memorizationManager != null) const SizedBox(height: 32),
+
                   // Tafsir Section - Animated
                   AnimationUtils.fadeSlideTransition(
-                    animation: _sectionControllers[1],
+                    animation: _sectionControllers[widget.memorizationManager != null ? 2 : 1],
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -334,7 +412,7 @@ class _SettingsScreenState extends State<SettingsScreen> with TickerProviderStat
 
                   // Theme Section - Animated
                   AnimationUtils.fadeSlideTransition(
-                    animation: _sectionControllers[2],
+                    animation: _sectionControllers[widget.memorizationManager != null ? 3 : 2],
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -351,7 +429,7 @@ class _SettingsScreenState extends State<SettingsScreen> with TickerProviderStat
 
                   // About Section - Animated
                   AnimationUtils.fadeSlideTransition(
-                    animation: _sectionControllers[3],
+                    animation: _sectionControllers[widget.memorizationManager != null ? 4 : 3],
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -511,6 +589,90 @@ class _SettingsScreenState extends State<SettingsScreen> with TickerProviderStat
             subtitle: const Text('معلومات مفصلة عن كل مصدر تفسير'),
             trailing: const Icon(Icons.keyboard_arrow_left),
             onTap: _showAllTafsirSources,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMemorizationSettings() {
+    return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: Column(
+        children: [
+          // Repetition Count
+          ListTile(
+            leading: Icon(
+              Icons.repeat,
+              color: Theme.of(context).colorScheme.primary,
+            ),
+            title: const Text('عدد التكرارات'),
+            subtitle: Text('$_memorationRepetitions مرات'),
+            trailing: const Icon(Icons.keyboard_arrow_down),
+            onTap: _showRepetitionSelection,
+          ),
+          const Divider(height: 1),
+
+          // Memorization Speed
+          ListTile(
+            leading: Icon(
+              Icons.speed,
+              color: Theme.of(context).colorScheme.primary,
+            ),
+            title: const Text('سرعة التلاوة للحفظ'),
+            subtitle: Text(_getSpeedDescription(_memorizationSpeed)),
+            trailing: const Icon(Icons.keyboard_arrow_down),
+            onTap: _showMemorizationSpeedSelection,
+          ),
+          const Divider(height: 1),
+
+          // Pause Between Repetitions
+          SwitchListTile(
+            secondary: Icon(
+              Icons.pause,
+              color: Theme.of(context).colorScheme.primary,
+            ),
+            title: const Text('توقف بين التكرارات'),
+            subtitle: Text(_pauseBetweenRepetitions 
+                ? 'توقف لمدة $_pauseDurationSeconds ثانية' 
+                : 'تشغيل متواصل'),
+            value: _pauseBetweenRepetitions,
+            onChanged: (value) {
+              setState(() {
+                _pauseBetweenRepetitions = value;
+              });
+              _saveMemorizationSettings();
+            },
+          ),
+
+          // Pause Duration (if pause is enabled)
+          if (_pauseBetweenRepetitions) ...[
+            const Divider(height: 1),
+            ListTile(
+              leading: Icon(
+                Icons.timer,
+                color: Theme.of(context).colorScheme.primary,
+              ),
+              title: const Text('مدة التوقف'),
+              subtitle: Text('$_pauseDurationSeconds ثانية'),
+              trailing: const Icon(Icons.keyboard_arrow_down),
+              onTap: _showPauseDurationSelection,
+            ),
+          ],
+
+          const Divider(height: 1),
+
+          // Memorization Mode
+          ListTile(
+            leading: Icon(
+              Icons.playlist_play,
+              color: Theme.of(context).colorScheme.primary,
+            ),
+            title: const Text('نوع الحفظ'),
+            subtitle: Text(_getMemorizationModeDescription(_memorationMode)),
+            trailing: const Icon(Icons.keyboard_arrow_down),
+            onTap: _showMemorizationModeSelection,
           ),
         ],
       ),
@@ -905,39 +1067,41 @@ class _SettingsScreenState extends State<SettingsScreen> with TickerProviderStat
       ),
       builder: (context) => Directionality(
         textDirection: TextDirection.rtl,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(16),
-              child: Text(
-                'اختر سرعة التشغيل',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: Theme.of(context).colorScheme.onSurface,
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(16),
+                child: Text(
+                  'اختر سرعة التشغيل',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Theme.of(context).colorScheme.onSurface,
+                  ),
                 ),
               ),
-            ),
-            const Divider(height: 1),
-            ..._speedOptions.map((speed) {
-              final isSelected = speed == _playbackSpeed;
-              return ListTile(
-                title: Text('${speed}x'),
-                subtitle: Text(_getSpeedDescription(speed)),
-                trailing: isSelected
-                    ? Icon(
-                  Icons.check,
-                  color: Theme.of(context).colorScheme.primary,
-                )
-                    : null,
-                onTap: () {
-                  Navigator.pop(context);
-                  _savePlaybackSpeed(speed);
-                },
-              );
-            }),
-          ],
+              const Divider(height: 1),
+              ..._speedOptions.map((speed) {
+                final isSelected = speed == _playbackSpeed;
+                return ListTile(
+                  title: Text('${speed}x'),
+                  subtitle: Text(_getSpeedDescription(speed)),
+                  trailing: isSelected
+                      ? Icon(
+                    Icons.check,
+                    color: Theme.of(context).colorScheme.primary,
+                  )
+                      : null,
+                  onTap: () {
+                    Navigator.pop(context);
+                    _savePlaybackSpeed(speed);
+                  },
+                );
+              }),
+            ],
+          ),
         ),
       ),
     );
@@ -1004,6 +1168,199 @@ class _SettingsScreenState extends State<SettingsScreen> with TickerProviderStat
         ),
       ),
     );
+  }
+
+  // Memorization helper methods
+  String _getMemorizationModeDescription(MemorizationMode mode) {
+    switch (mode) {
+      case MemorizationMode.singleAyah:
+        return 'آية واحدة';
+      case MemorizationMode.ayahRange:
+        return 'نطاق من الآيات';
+      case MemorizationMode.fullSurah:
+        return 'السورة كاملة';
+    }
+  }
+
+  void _showRepetitionSelection() {
+    HapticUtils.dialogOpen();
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Theme.of(context).colorScheme.surface,
+      builder: (context) => Container(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              'اختر عدد التكرارات',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Theme.of(context).colorScheme.onSurface,
+              ),
+            ),
+            const SizedBox(height: 16),
+            ...List.generate(10, (index) {
+              final count = index + 1;
+              return ListTile(
+                title: Text('$count ${count == 1 ? 'مرة' : 'مرات'}'),
+                trailing: _memorationRepetitions == count 
+                    ? Icon(Icons.check, color: Theme.of(context).colorScheme.primary)
+                    : null,
+                onTap: () {
+                  setState(() {
+                    _memorationRepetitions = count;
+                  });
+                  _saveMemorizationSettings();
+                  Navigator.pop(context);
+                },
+              );
+            }),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showMemorizationSpeedSelection() {
+    HapticUtils.dialogOpen();
+    final speeds = [0.5, 0.75, 1.0, 1.25, 1.5, 2.0];
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Theme.of(context).colorScheme.surface,
+      builder: (context) => Container(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              'اختر سرعة التلاوة للحفظ',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Theme.of(context).colorScheme.onSurface,
+              ),
+            ),
+            const SizedBox(height: 16),
+            ...speeds.map((speed) => ListTile(
+              title: Text('${speed}x - ${_getSpeedDescription(speed)}'),
+              trailing: _memorizationSpeed == speed 
+                  ? Icon(Icons.check, color: Theme.of(context).colorScheme.primary)
+                  : null,
+              onTap: () {
+                setState(() {
+                  _memorizationSpeed = speed;
+                });
+                _saveMemorizationSettings();
+                Navigator.pop(context);
+              },
+            )),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showPauseDurationSelection() {
+    HapticUtils.dialogOpen();
+    final durations = [1, 2, 3, 5, 10];
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Theme.of(context).colorScheme.surface,
+      builder: (context) => Container(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              'اختر مدة التوقف',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Theme.of(context).colorScheme.onSurface,
+              ),
+            ),
+            const SizedBox(height: 16),
+            ...durations.map((duration) => ListTile(
+              title: Text('$duration ${duration == 1 ? 'ثانية' : 'ثوانِ'}'),
+              trailing: _pauseDurationSeconds == duration 
+                  ? Icon(Icons.check, color: Theme.of(context).colorScheme.primary)
+                  : null,
+              onTap: () {
+                setState(() {
+                  _pauseDurationSeconds = duration;
+                });
+                _saveMemorizationSettings();
+                Navigator.pop(context);
+              },
+            )),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showMemorizationModeSelection() {
+    HapticUtils.dialogOpen();
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Theme.of(context).colorScheme.surface,
+      builder: (context) => Container(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              'اختر نوع الحفظ',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Theme.of(context).colorScheme.onSurface,
+              ),
+            ),
+            const SizedBox(height: 16),
+            ...MemorizationMode.values.map((mode) => ListTile(
+              leading: Icon(_getMemorizationModeIcon(mode)),
+              title: Text(_getMemorizationModeDescription(mode)),
+              subtitle: Text(_getMemorizationModeDetails(mode)),
+              trailing: _memorationMode == mode 
+                  ? Icon(Icons.check, color: Theme.of(context).colorScheme.primary)
+                  : null,
+              onTap: () {
+                setState(() {
+                  _memorationMode = mode;
+                });
+                _saveMemorizationSettings();
+                Navigator.pop(context);
+              },
+            )),
+          ],
+        ),
+      ),
+    );
+  }
+
+  IconData _getMemorizationModeIcon(MemorizationMode mode) {
+    switch (mode) {
+      case MemorizationMode.singleAyah:
+        return Icons.looks_one;
+      case MemorizationMode.ayahRange:
+        return Icons.format_list_numbered;
+      case MemorizationMode.fullSurah:
+        return Icons.menu_book;
+    }
+  }
+
+  String _getMemorizationModeDetails(MemorizationMode mode) {
+    switch (mode) {
+      case MemorizationMode.singleAyah:
+        return 'تكرار آية واحدة فقط';
+      case MemorizationMode.ayahRange:
+        return 'تكرار مجموعة من الآيات';
+      case MemorizationMode.fullSurah:
+        return 'تكرار السورة بالكامل';
+    }
   }
 }
 
