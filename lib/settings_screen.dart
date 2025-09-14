@@ -33,7 +33,6 @@ class _SettingsScreenState extends State<SettingsScreen> with TickerProviderStat
   
   // Memorization settings
   int _memorationRepetitions = 3;
-  double _memorizationSpeed = 1.0;
   bool _pauseBetweenRepetitions = true;
   int _pauseDurationSeconds = 2;
   MemorizationMode _memorationMode = MemorizationMode.singleAyah;
@@ -174,7 +173,6 @@ class _SettingsScreenState extends State<SettingsScreen> with TickerProviderStat
         
         // Load memorization settings
         _memorationRepetitions = prefs.getInt('memorization_repetitions') ?? 3;
-        _memorizationSpeed = prefs.getDouble('memorization_speed') ?? 1.0;
         _pauseBetweenRepetitions = prefs.getBool('pause_between_repetitions') ?? true;
         _pauseDurationSeconds = prefs.getInt('pause_duration_seconds') ?? 2;
         final modeIndex = prefs.getInt('memorization_mode') ?? 0;
@@ -188,7 +186,6 @@ class _SettingsScreenState extends State<SettingsScreen> with TickerProviderStat
         final currentSettings = widget.memorizationManager!.settings;
         setState(() {
           _memorationRepetitions = currentSettings.repetitionCount;
-          _memorizationSpeed = currentSettings.playbackSpeed;
           _pauseBetweenRepetitions = currentSettings.pauseBetweenRepetitions;
           _pauseDurationSeconds = currentSettings.pauseDuration.inSeconds;
           _memorationMode = currentSettings.mode;
@@ -214,17 +211,6 @@ class _SettingsScreenState extends State<SettingsScreen> with TickerProviderStat
       final audioManager = ContinuousAudioManager();
       await audioManager.updateReciter(reciter);
 
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Directionality(
-              textDirection: TextDirection.rtl,
-              child: Text('تم تغيير القارئ إلى $reciter'),
-            ),
-            duration: const Duration(seconds: 2),
-          ),
-        );
-      }
     } catch (e) {
       debugPrint('Error saving reciter: $e');
     }
@@ -238,17 +224,6 @@ class _SettingsScreenState extends State<SettingsScreen> with TickerProviderStat
         _selectedTafsir = tafsir;
       });
 
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Directionality(
-              textDirection: TextDirection.rtl,
-              child: Text('تم تغيير مصدر التفسير إلى $tafsir'),
-            ),
-            duration: const Duration(seconds: 2),
-          ),
-        );
-      }
     } catch (e) {
       debugPrint('Error saving tafsir: $e');
     }
@@ -311,22 +286,25 @@ class _SettingsScreenState extends State<SettingsScreen> with TickerProviderStat
       
       // Save to SharedPreferences
       await prefs.setInt('memorization_repetitions', _memorationRepetitions);
-      await prefs.setDouble('memorization_speed', _memorizationSpeed);
       await prefs.setBool('pause_between_repetitions', _pauseBetweenRepetitions);
       await prefs.setInt('pause_duration_seconds', _pauseDurationSeconds);
       await prefs.setInt('memorization_mode', _memorationMode.index);
+      
+      debugPrint('💾 Memorization settings saved: repetitions=$_memorationRepetitions, speed=$_playbackSpeed (universal), pause=$_pauseBetweenRepetitions, duration=$_pauseDurationSeconds, mode=$_memorationMode');
       
       // Update memorization manager if available
       if (widget.memorizationManager != null) {
         final newSettings = MemorizationSettings(
           repetitionCount: _memorationRepetitions,
-          playbackSpeed: _memorizationSpeed,
+          playbackSpeed: _playbackSpeed, // Use universal playback speed
           pauseBetweenRepetitions: _pauseBetweenRepetitions,
           pauseDuration: Duration(seconds: _pauseDurationSeconds),
           mode: _memorationMode,
         );
         await widget.memorizationManager!.updateSettings(newSettings);
+        debugPrint('🧠 Memorization manager updated with new settings');
       }
+      
     } catch (e) {
       debugPrint('Error saving memorization settings: $e');
     }
@@ -614,18 +592,6 @@ class _SettingsScreenState extends State<SettingsScreen> with TickerProviderStat
           ),
           const Divider(height: 1),
 
-          // Memorization Speed
-          ListTile(
-            leading: Icon(
-              Icons.speed,
-              color: Theme.of(context).colorScheme.primary,
-            ),
-            title: const Text('سرعة التلاوة للحفظ'),
-            subtitle: Text(_getSpeedDescription(_memorizationSpeed)),
-            trailing: const Icon(Icons.keyboard_arrow_down),
-            onTap: _showMemorizationSpeedSelection,
-          ),
-          const Divider(height: 1),
 
           // Pause Between Repetitions
           SwitchListTile(
@@ -1189,78 +1155,42 @@ class _SettingsScreenState extends State<SettingsScreen> with TickerProviderStat
       backgroundColor: Theme.of(context).colorScheme.surface,
       builder: (context) => Container(
         padding: const EdgeInsets.all(16),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              'اختر عدد التكرارات',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: Theme.of(context).colorScheme.onSurface,
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                'اختر عدد التكرارات',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Theme.of(context).colorScheme.onSurface,
+                ),
               ),
-            ),
-            const SizedBox(height: 16),
-            ...List.generate(10, (index) {
-              final count = index + 1;
-              return ListTile(
-                title: Text('$count ${count == 1 ? 'مرة' : 'مرات'}'),
-                trailing: _memorationRepetitions == count 
-                    ? Icon(Icons.check, color: Theme.of(context).colorScheme.primary)
-                    : null,
-                onTap: () {
-                  setState(() {
-                    _memorationRepetitions = count;
-                  });
-                  _saveMemorizationSettings();
-                  Navigator.pop(context);
-                },
-              );
-            }),
-          ],
+              const SizedBox(height: 16),
+              ...List.generate(10, (index) {
+                final count = index + 1;
+                return ListTile(
+                  title: Text('$count ${count == 1 ? 'مرة' : 'مرات'}'),
+                  trailing: _memorationRepetitions == count 
+                      ? Icon(Icons.check, color: Theme.of(context).colorScheme.primary)
+                      : null,
+                  onTap: () {
+                    setState(() {
+                      _memorationRepetitions = count;
+                    });
+                    _saveMemorizationSettings();
+                    Navigator.pop(context);
+                  },
+                );
+              }),
+            ],
+          ),
         ),
       ),
     );
   }
 
-  void _showMemorizationSpeedSelection() {
-    HapticUtils.dialogOpen();
-    final speeds = [0.5, 0.75, 1.0, 1.25, 1.5, 2.0];
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Theme.of(context).colorScheme.surface,
-      builder: (context) => Container(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              'اختر سرعة التلاوة للحفظ',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: Theme.of(context).colorScheme.onSurface,
-              ),
-            ),
-            const SizedBox(height: 16),
-            ...speeds.map((speed) => ListTile(
-              title: Text('${speed}x - ${_getSpeedDescription(speed)}'),
-              trailing: _memorizationSpeed == speed 
-                  ? Icon(Icons.check, color: Theme.of(context).colorScheme.primary)
-                  : null,
-              onTap: () {
-                setState(() {
-                  _memorizationSpeed = speed;
-                });
-                _saveMemorizationSettings();
-                Navigator.pop(context);
-              },
-            )),
-          ],
-        ),
-      ),
-    );
-  }
 
   void _showPauseDurationSelection() {
     HapticUtils.dialogOpen();

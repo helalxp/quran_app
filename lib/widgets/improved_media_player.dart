@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import '../models/ayah_marker.dart';
 import '../constants/surah_names.dart';
+import '../constants/app_constants.dart';
 import '../utils/haptic_utils.dart';
 
 class ImprovedMediaPlayer extends StatefulWidget {
@@ -21,6 +22,9 @@ class ImprovedMediaPlayer extends StatefulWidget {
   final VoidCallback onSpeedChange;
   final Function(Duration) onSeek;
   final VoidCallback? onReciterChange;
+  final ValueNotifier<bool>? isMemorizationModeNotifier;
+  final VoidCallback? onMemorizationPause;
+  final VoidCallback? onMemorizationResume;
 
   const ImprovedMediaPlayer({
     super.key,
@@ -38,6 +42,9 @@ class ImprovedMediaPlayer extends StatefulWidget {
     required this.onSpeedChange,
     required this.onSeek,
     this.onReciterChange,
+    this.isMemorizationModeNotifier,
+    this.onMemorizationPause,
+    this.onMemorizationResume,
   });
 
   @override
@@ -59,13 +66,13 @@ class _ImprovedMediaPlayerState extends State<ImprovedMediaPlayer>
     // Controller for expand/collapse animation
     _expandController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 350),
+      duration: AppConstants.longAnimationDuration,
     );
     
     // Controller for slide in/out animation
     _slideController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 300),
+      duration: AppConstants.animationDuration,
     );
     
     _slideAnimation = Tween<Offset>(
@@ -118,8 +125,18 @@ class _ImprovedMediaPlayerState extends State<ImprovedMediaPlayer>
       _isCollapsed = !_isCollapsed;
       if (_isCollapsed) {
         _expandController.reverse();
+        // If collapsing during memorization mode, pause the session
+        final isMemorizationMode = widget.isMemorizationModeNotifier?.value ?? false;
+        if (isMemorizationMode) {
+          widget.onMemorizationPause?.call();
+        }
       } else {
         _expandController.forward();
+        // If expanding during memorization mode, resume the session
+        final isMemorizationMode = widget.isMemorizationModeNotifier?.value ?? false;
+        if (isMemorizationMode) {
+          widget.onMemorizationResume?.call();
+        }
       }
     });
   }
@@ -147,9 +164,15 @@ class _ImprovedMediaPlayerState extends State<ImprovedMediaPlayer>
         debugPrint('🎵 Media player shown for new audio');
       }
     } else if (widget.currentAyah == null && oldWidget.currentAyah != null) {
-      // Audio stopped
-      _hide();
-      debugPrint('⏹️ Media player hidden after audio stop');
+      // Audio stopped - check if we're in memorization mode
+      final isMemorizationMode = widget.isMemorizationModeNotifier?.value ?? false;
+      if (!isMemorizationMode) {
+        // Only hide if not in memorization mode
+        _hide();
+        debugPrint('⏹️ Media player hidden after audio stop');
+      } else {
+        debugPrint('🧠 Media player staying visible during memorization pause');
+      }
     }
   }
 
@@ -166,8 +189,9 @@ class _ImprovedMediaPlayerState extends State<ImprovedMediaPlayer>
 
   @override
   Widget build(BuildContext context) {
-    // Safety check: hide if no audio or not visible
-    if (widget.currentAyah == null || !_isVisible) {
+    // Safety check: hide if no audio or not visible, but stay visible during memorization mode
+    final isMemorizationMode = widget.isMemorizationModeNotifier?.value ?? false;
+    if ((widget.currentAyah == null && !isMemorizationMode) || !_isVisible) {
       return const SizedBox.shrink();
     }
 
@@ -207,7 +231,7 @@ class _ImprovedMediaPlayerState extends State<ImprovedMediaPlayer>
     return Positioned(
       left: 0,
       right: 0,
-      bottom: 80,
+      bottom: AppConstants.mediaPlayerBottomOffset,
       child: FadeTransition(
         opacity: _expandController,
         child: ScaleTransition(
@@ -226,8 +250,8 @@ class _ImprovedMediaPlayerState extends State<ImprovedMediaPlayer>
 
   Widget _buildAnimatedCollapsedButton() {
     return Positioned(
-      left: 16,
-      bottom: 37.0,
+      left: AppConstants.mediaPlayerLeftOffset,
+      bottom: AppConstants.mediaPlayerBottomButtonOffset,
       child: FadeTransition(
         opacity: Tween<double>(
           begin: 1.0,
@@ -253,8 +277,8 @@ class _ImprovedMediaPlayerState extends State<ImprovedMediaPlayer>
       borderRadius: BorderRadius.circular(8),
       color: Colors.transparent,
       child: Container(
-          width: 70, // Same size as jump-to-page button
-          height: 40, // Same size as jump-to-page button
+          width: AppConstants.jumpButtonSize,
+          height: AppConstants.jumpButtonHeight,
           decoration: BoxDecoration(
             color: Theme.of(context).colorScheme.surface,
             borderRadius: BorderRadius.circular(8),
@@ -275,8 +299,8 @@ class _ImprovedMediaPlayerState extends State<ImprovedMediaPlayer>
                 builder: (context, isBuffering, _) {
                   if (isBuffering) {
                     return SizedBox(
-                      width: 24,
-                      height: 24,
+                      width: AppConstants.mediaPlayerIconSize,
+                      height: AppConstants.mediaPlayerIconSize,
                       child: CircularProgressIndicator(
                         strokeWidth: 2,
                         valueColor: AlwaysStoppedAnimation<Color>(
@@ -291,7 +315,7 @@ class _ImprovedMediaPlayerState extends State<ImprovedMediaPlayer>
                     builder: (context, isPlaying, _) => Icon(
                       isPlaying ? Icons.pause_rounded : Icons.play_arrow_rounded,
                       color: Theme.of(context).colorScheme.primary,
-                      size: 28,
+                      size: AppConstants.mediaPlayerPlayIconSize,
                     ),
                   );
                 },
@@ -304,7 +328,7 @@ class _ImprovedMediaPlayerState extends State<ImprovedMediaPlayer>
 
   Widget _buildFullPlayerContent() {
     return Container(
-      margin: const EdgeInsets.all(16),
+      margin: const EdgeInsets.all(AppConstants.mediaPlayerMargin),
       decoration: BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topLeft,
@@ -314,17 +338,17 @@ class _ImprovedMediaPlayerState extends State<ImprovedMediaPlayer>
               Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.8),
             ],
           ),
-          borderRadius: BorderRadius.circular(24),
+          borderRadius: BorderRadius.circular(AppConstants.mediaPlayerBorderRadius),
           boxShadow: [
             BoxShadow(
               color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.2),
-              blurRadius: 20,
+              blurRadius: AppConstants.mediaPlayerBlurRadius,
               offset: const Offset(0, 8),
             ),
           ],
         ),
         child: ClipRRect(
-          borderRadius: BorderRadius.circular(24),
+          borderRadius: BorderRadius.circular(AppConstants.mediaPlayerBorderRadius),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -351,7 +375,9 @@ class _ImprovedMediaPlayerState extends State<ImprovedMediaPlayer>
                 crossAxisAlignment: CrossAxisAlignment.start, // Start from right in RTL
                 children: [
                   Text(
-                    _getSurahName(widget.currentAyah!.surah),
+                    widget.currentAyah != null 
+                        ? _getSurahName(widget.currentAyah!.surah)
+                        : 'وضع الحفظ',
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
@@ -363,7 +389,9 @@ class _ImprovedMediaPlayerState extends State<ImprovedMediaPlayer>
                   ValueListenableBuilder<String?>(
                     valueListenable: widget.currentReciterNotifier,
                     builder: (context, reciter, _) => Text(
-                      'الآية ${widget.currentAyah!.ayah} • ${reciter ?? 'قارئ'}',
+                      widget.currentAyah != null 
+                          ? 'الآية ${widget.currentAyah!.ayah} • ${reciter ?? 'قارئ'}'
+                          : 'متوقف مؤقتًا • ${reciter ?? 'قارئ'}',
                       style: TextStyle(
                         fontSize: 14,
                         color: Theme.of(context).colorScheme.onPrimaryContainer.withValues(alpha: 0.8),
@@ -371,6 +399,48 @@ class _ImprovedMediaPlayerState extends State<ImprovedMediaPlayer>
                       textAlign: TextAlign.right,
                     ),
                   ),
+                  
+                  // Memorization mode indicator
+                  if (widget.isMemorizationModeNotifier != null) ...[
+                    const SizedBox(height: 4),
+                    ValueListenableBuilder<bool>(
+                      valueListenable: widget.isMemorizationModeNotifier!,
+                      builder: (context, isMemorizing, _) {
+                        if (!isMemorizing) return const SizedBox.shrink();
+                        
+                        return Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: Theme.of(context).colorScheme.secondary.withValues(alpha: 0.2),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: Theme.of(context).colorScheme.secondary,
+                              width: 1,
+                            ),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.refresh,
+                                size: 12,
+                                color: Theme.of(context).colorScheme.secondary,
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                'وضع الحفظ',
+                                style: TextStyle(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w500,
+                                  color: Theme.of(context).colorScheme.secondary,
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                      },
+                    ),
+                  ],
                 ],
               ),
             ),

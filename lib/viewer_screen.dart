@@ -16,6 +16,7 @@ import 'continuous_audio_manager.dart';
 import 'memorization_manager.dart';
 import 'constants/app_constants.dart';
 import 'constants/juz_mappings.dart';
+import 'constants/app_strings.dart';
 import 'utils/animation_utils.dart';
 import 'utils/haptic_utils.dart';
 
@@ -48,6 +49,9 @@ class _ViewerScreenState extends State<ViewerScreen> with TickerProviderStateMix
   // Performance optimization: Cache expensive computations
   final Map<int, ({String surahName, String juzNumber})> _pageInfoCache = {};
   final Map<int, Widget> _cachedPages = {};
+  
+  // Memorization mode indicator
+  final ValueNotifier<bool> _isMemorizationModeActive = ValueNotifier(false);
 
   @override
   void initState() {
@@ -61,7 +65,15 @@ class _ViewerScreenState extends State<ViewerScreen> with TickerProviderStateMix
     _audioManager = ContinuousAudioManager();
     _audioManager!.initialize();
     _memorizationManager = MemorizationManager(_audioManager!);
+    
+    // Listen to memorization session changes
+    _memorizationManager!.sessionNotifier.addListener(_updateMemorizationMode);
+    
     // Note: Page controller registration moved to _loadLastPage() after controller is created
+  }
+
+  void _updateMemorizationMode() {
+    _isMemorizationModeActive.value = _memorizationManager!.sessionNotifier.value != null;
   }
 
 
@@ -97,9 +109,11 @@ class _ViewerScreenState extends State<ViewerScreen> with TickerProviderStateMix
     _currentPageNotifier.dispose();
     
     // Properly dispose audio manager and memorization manager
+    _memorizationManager?.sessionNotifier.removeListener(_updateMemorizationMode);
     _memorizationManager?.dispose();
     _audioManager?.dispose();
     _audioManager = null;
+    _isMemorizationModeActive.dispose();
 
     super.dispose();
   }
@@ -337,7 +351,14 @@ class _ViewerScreenState extends State<ViewerScreen> with TickerProviderStateMix
 
   void _onContinuousPlayRequested(AyahMarker ayahMarker, String reciterName) async {
     try {
-      debugPrint('Starting continuous playback for ayah ${ayahMarker.surah}:${ayahMarker.ayah} with $reciterName');
+      // Stop memorization session if active
+      if (_isMemorizationModeActive.value) {
+        await _memorizationManager?.stopSession();
+        _isMemorizationModeActive.value = false;
+        debugPrint('🛑 Stopped memorization session to start normal recitation');
+      }
+      
+      debugPrint('Starting continuous playbook for ayah ${ayahMarker.surah}:${ayahMarker.ayah} with $reciterName');
 
       final surahAyahs = _allMarkers.where((marker) => marker.surah == ayahMarker.surah).toList();
 
@@ -353,7 +374,7 @@ class _ViewerScreenState extends State<ViewerScreen> with TickerProviderStateMix
           SnackBar(
             content: Directionality(
               textDirection: TextDirection.rtl,
-              child: Text('حدث خطأ في بدء التشغيل: ${e.toString()}'),
+              child: Text(ContinuousAudioManager.getUserFriendlyErrorMessage(e)),
             ),
             backgroundColor: Theme.of(context).colorScheme.error,
           ),
@@ -376,9 +397,9 @@ class _ViewerScreenState extends State<ViewerScreen> with TickerProviderStateMix
             const SnackBar(
               content: Directionality(
                 textDirection: TextDirection.rtl,
-                child: Text('تم إزالة الإشارة المرجعية'),
+                child: Text(AppStrings.bookmarkRemoved),
               ),
-              duration: Duration(seconds: 1),
+              duration: AppConstants.snackBarShortDuration,
             ),
           );
         }
@@ -395,9 +416,9 @@ class _ViewerScreenState extends State<ViewerScreen> with TickerProviderStateMix
             const SnackBar(
               content: Directionality(
                 textDirection: TextDirection.rtl,
-                child: Text('تم إضافة الإشارة المرجعية'),
+                child: Text(AppStrings.bookmarkAdded),
               ),
-              duration: Duration(seconds: 1),
+              duration: AppConstants.snackBarShortDuration,
             ),
           );
         }
@@ -411,7 +432,7 @@ class _ViewerScreenState extends State<ViewerScreen> with TickerProviderStateMix
           SnackBar(
             content: Directionality(
               textDirection: TextDirection.rtl,
-              child: Text('حدث خطأ: ${e.toString()}'),
+              child: Text(ContinuousAudioManager.getUserFriendlyErrorMessage(e)),
             ),
             backgroundColor: Theme.of(context).colorScheme.error,
           ),
@@ -432,7 +453,7 @@ class _ViewerScreenState extends State<ViewerScreen> with TickerProviderStateMix
           const SnackBar(
             content: Directionality(
               textDirection: TextDirection.rtl,
-              child: Text('لا توجد إشارات مرجعية محفوظة'),
+              child: Text(AppStrings.bookmarkNoBookmarks),
             ),
           ),
         );
@@ -532,9 +553,9 @@ class _ViewerScreenState extends State<ViewerScreen> with TickerProviderStateMix
                                 const SnackBar(
                                   content: Directionality(
                                     textDirection: TextDirection.rtl,
-                                    child: Text('تم حذف الإشارة المرجعية'),
+                                    child: Text(AppStrings.bookmarkDeleted),
                                   ),
-                                  duration: Duration(seconds: 2),
+                                  duration: AppConstants.snackBarLongDuration,
                                 ),
                               );
                               }
@@ -600,7 +621,7 @@ class _ViewerScreenState extends State<ViewerScreen> with TickerProviderStateMix
           SnackBar(
             content: Directionality(
               textDirection: TextDirection.rtl,
-              child: Text('حدث خطأ: ${e.toString()}'),
+              child: Text(ContinuousAudioManager.getUserFriendlyErrorMessage(e)),
             ),
             backgroundColor: Theme.of(context).colorScheme.error,
           ),
@@ -736,11 +757,34 @@ class _ViewerScreenState extends State<ViewerScreen> with TickerProviderStateMix
                       positionNotifier: _audioManager!.positionNotifier,
                       durationNotifier: _audioManager!.durationNotifier,
                       onPlayPause: () => _audioManager!.togglePlayPause(),
-                      onStop: () => _audioManager!.stop(),
-                      onPrevious: () => _audioManager!.playPrevious(),
-                      onNext: () => _audioManager!.playNext(),
+                      onStop: () {
+                        _audioManager!.stop();
+                        if (_isMemorizationModeActive.value) {
+                          _memorizationManager?.stopSession();
+                          _isMemorizationModeActive.value = false;
+                        }
+                      },
+                      onPrevious: () {
+                        if (_isMemorizationModeActive.value) {
+                          _memorizationManager?.skipToPrevious();
+                        } else {
+                          _audioManager!.playPrevious();
+                        }
+                      },
+                      onNext: () {
+                        if (_isMemorizationModeActive.value) {
+                          _memorizationManager?.skipToNext();
+                        } else {
+                          _audioManager!.playNext();
+                        }
+                      },
                       onSpeedChange: () => _audioManager!.changeSpeed(),
                       onSeek: (position) => _audioManager!.seek(position),
+                      isMemorizationModeNotifier: _memorizationManager != null 
+                          ? _isMemorizationModeActive
+                          : null,
+                      onMemorizationPause: () => _memorizationManager?.pauseSession(),
+                      onMemorizationResume: () => _memorizationManager?.resumeSession(),
                     );
                   },
                 ),
@@ -873,7 +917,7 @@ class _ViewerScreenState extends State<ViewerScreen> with TickerProviderStateMix
 
     if (_allSurahs.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('البيانات لم يتم تحميلها بعد')),
+        const SnackBar(content: Text(AppStrings.dataNotLoaded)),
       );
       return;
     }
@@ -977,7 +1021,7 @@ class _ViewerScreenState extends State<ViewerScreen> with TickerProviderStateMix
 
     if (_juzStartPages.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('البيانات لم يتم تحميلها بعد')),
+        const SnackBar(content: Text(AppStrings.dataNotLoaded)),
       );
       return;
     }

@@ -7,6 +7,8 @@ import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'models/ayah_marker.dart';
 import 'theme_manager.dart';
+import 'constants/app_strings.dart';
+import 'constants/api_constants.dart';
 
 // Constants for better maintainability
 class AudioConstants {
@@ -15,10 +17,68 @@ class AudioConstants {
   static const Duration completionDebounceTimeout = Duration(milliseconds: 200);
   static const Duration urlLoadTimeout = Duration(seconds: 8);
   static const Duration transitionDelay = Duration(milliseconds: 150);
+  
+  // Enhanced timeout controls
+  static const Duration buffetingTimeout = Duration(seconds: 15); // Max buffering time
+  static const Duration loadingStateTimeout = Duration(seconds: 20); // Overall loading timeout
+  static const Duration retryDelay = Duration(seconds: 2); // Delay between retries
+  static const int maxRetryAttempts = 3; // Maximum retry attempts
 }
 
-// Error categorization for better handling
-enum AudioErrorType { network, timeout, codec, permission, unknown }
+// Enhanced error categorization for better handling
+enum AudioErrorType { 
+  networkOffline,     // No internet connection
+  networkDns,         // DNS resolution failure  
+  networkTimeout,     // Network timeout
+  networkServerError, // Server unavailable (404, 500, etc)
+  networkSlow,        // Connection too slow
+  timeout,            // General timeout
+  codec,              // Audio format/codec error
+  permission,         // Audio permission error
+  unknown             // Unknown error type
+}
+
+// User-friendly error messages helper
+class AudioErrorMessages {
+  static String getUserFriendlyMessage(AudioErrorType errorType) {
+    switch (errorType) {
+      case AudioErrorType.networkOffline:
+        return AppStrings.errorNetworkOffline;
+      case AudioErrorType.networkDns:
+        return AppStrings.errorNetworkDns;
+      case AudioErrorType.networkTimeout:
+        return AppStrings.errorNetworkTimeout;
+      case AudioErrorType.networkServerError:
+        return AppStrings.errorNetworkServer;
+      case AudioErrorType.networkSlow:
+        return AppStrings.errorNetworkSlow;
+      case AudioErrorType.timeout:
+        return AppStrings.errorTimeout;
+      case AudioErrorType.codec:
+        return AppStrings.errorCodec;
+      case AudioErrorType.permission:
+        return AppStrings.errorPermission;
+      case AudioErrorType.unknown:
+        return AppStrings.errorUnknown;
+    }
+  }
+  
+  static String getGeneralAudioError() {
+    return AppStrings.errorAudioGeneral;
+  }
+  
+  static String getPlaybackFailedError() {
+    return AppStrings.errorPlaybackFailed;
+  }
+  
+  static String getReciterNotFoundError() {
+    return AppStrings.errorReciterNotFound;
+  }
+  
+  static String getNoAyahsError() {
+    return AppStrings.errorNoAyahs;
+  }
+}
 
 class ContinuousAudioManager {
   // Singleton
@@ -52,6 +112,15 @@ class ContinuousAudioManager {
   bool _isTransitioning = false;
   bool _completionHandled = false; // NEW: Prevent multiple completion events
   Timer? _completionTimer; // NEW: Debounce completion events
+  
+  // Enhanced timeout controls
+  Timer? _loadingTimer; // Track loading timeout
+  Timer? _bufferingTimer; // Track buffering timeout
+  int _currentRetryAttempt = 0; // Track retry attempts
+  
+  // Network recovery tracking
+  bool _networkRecoveryMode = false; // Track if we're in network recovery
+  DateTime? _lastNetworkError; // Track when last network error occurred
 
   // State notifiers
   final ValueNotifier<bool> isPlayingNotifier = ValueNotifier(false);
@@ -66,110 +135,8 @@ class ContinuousAudioManager {
   final List<double> _availableSpeeds = [0.5, 0.75, 1.0, 1.25, 1.5, 2.0];
   int _currentSpeedIndex = 2; // index of 1.0
 
-  // VERIFIED reciter configurations with correct URLs
-  final Map<String, ReciterConfig> _reciterConfigs = {
-    // Abdul Basit Abdul Samad - CORRECTED
-    'عبد الباسط عبد الصمد': ReciterConfig(
-      baseUrl: 'https://www.everyayah.com/data/Abdul_Basit_Murattal_192kbps',
-      hasIndividualAyahs: true,
-      fallbackUrl: 'https://www.everyayah.com/data/AbdulSamad_64kbps_QuranCentral.com',
-    ),
-
-    // Mishary Rashid Alafasy - VERIFIED
-    'مشاري العفاسي': ReciterConfig(
-      baseUrl: 'https://www.everyayah.com/data/Alafasy_128kbps',
-      hasIndividualAyahs: true,
-      fallbackUrl: 'https://www.everyayah.com/data/Alafasy_64kbps',
-    ),
-
-    // Muhammad Siddiq Al-Minshawi - VERIFIED
-    'محمد صديق المنشاوي': ReciterConfig(
-      baseUrl: 'https://www.everyayah.com/data/Minshawi_Murattal_128kbps',
-      hasIndividualAyahs: true,
-    ),
-
-    // Saud Ash-Shuraim - CORRECTED
-    'سعود الشريم': ReciterConfig(
-      baseUrl: 'https://www.everyayah.com/data/Shatri_128kbps',
-      hasIndividualAyahs: true,
-    ),
-
-    // Abdul Rahman As-Sudais - VERIFIED
-    'عبد الرحمن السديس': ReciterConfig(
-      baseUrl: 'https://www.everyayah.com/data/Sudais_128kbps',
-      hasIndividualAyahs: true,
-    ),
-
-    // Maher Al Muaiqly - VERIFIED
-    'ماهر المعيقلي': ReciterConfig(
-      baseUrl: 'https://www.everyayah.com/data/MaherAlMuaiqly128kbps',
-      hasIndividualAyahs: true,
-    ),
-
-    // Ahmad Al Ajmi - CORRECTED
-    'أحمد العجمي': ReciterConfig(
-      baseUrl: 'https://www.everyayah.com/data/Ahmed_ibn_Ali_al-Ajamy_128kbps_ketaballah.net',
-      hasIndividualAyahs: true,
-    ),
-
-    // Muhammad Ayyub - VERIFIED
-    'محمد أيوب': ReciterConfig(
-      baseUrl: 'https://www.everyayah.com/data/Muhammad_Ayyoub_128kbps',
-      hasIndividualAyahs: true,
-      fallbackUrl: 'https://www.everyayah.com/data/Muhammad_Ayyoub_64kbps',
-    ),
-
-    // Abdullah Al Matroud - CORRECTED
-    'عبد الله المطرود': ReciterConfig(
-      baseUrl: 'https://www.everyayah.com/data/Abdullah_Matroud_128kbps',
-      hasIndividualAyahs: true,
-    ),
-
-    // Khalid Al Qahtani - CORRECTED
-    'خالد القحطاني': ReciterConfig(
-      baseUrl: 'https://www.everyayah.com/data/Khalid_Al-Qahtani_192kbps',
-      hasIndividualAyahs: true,
-    ),
-
-    // Nasser Al Qatami - CORRECTED
-    'ناصر القطامي': ReciterConfig(
-      baseUrl: 'https://www.everyayah.com/data/Nasser_Alqatami_128kbps',
-      hasIndividualAyahs: true,
-    ),
-
-    // Saad Al Ghamdi - VERIFIED
-    'سعد الغامدي': ReciterConfig(
-      baseUrl: 'https://www.everyayah.com/data/Ghamadi_40kbps',
-      hasIndividualAyahs: true,
-    ),
-
-    // ADDITIONAL popular reciters with verified URLs:
-
-    // Mahmoud Khalil Al-Hussary
-    'محمود خليل الحصري': ReciterConfig(
-      baseUrl: 'https://www.everyayah.com/data/Husary_128kbps',
-      hasIndividualAyahs: true,
-      fallbackUrl: 'https://www.everyayah.com/data/Husary_64kbps',
-    ),
-
-    // Yasser Al Dosari
-    'ياسر الدوسري': ReciterConfig(
-      baseUrl: 'https://www.everyayah.com/data/Yasser_Ad-Dussary_128kbps',
-      hasIndividualAyahs: true,
-    ),
-
-    // Abdur-Rahman as-Sudais (alternative spelling)
-    'عبدالرحمن السديس': ReciterConfig(
-      baseUrl: 'https://www.everyayah.com/data/Sudais_128kbps',
-      hasIndividualAyahs: true,
-    ),
-
-    // Ahmed Neana
-    'أحمد نعينع': ReciterConfig(
-      baseUrl: 'https://www.everyayah.com/data/Ahmed_Neana_128kbps',
-      hasIndividualAyahs: true,
-    ),
-  };
+  // Use centralized reciter configurations from ApiConstants
+  Map<String, ReciterConfig> get _reciterConfigs => ApiConstants.reciterConfigs;
 
   // -------- Settings loading --------
   
@@ -261,6 +228,14 @@ class ContinuousAudioManager {
     }
     _audioPlayer = null;
 
+    // Cancel timeout timers
+    _loadingTimer?.cancel();
+    _bufferingTimer?.cancel();
+    _completionTimer?.cancel();
+    _loadingTimer = null;
+    _bufferingTimer = null;
+    _completionTimer = null;
+
     _resetState();
     debugPrint('✅ ContinuousAudioManager disposed successfully');
   }
@@ -273,9 +248,15 @@ class ContinuousAudioManager {
     _completionHandled = false;
     _consecutiveErrors = 0;
 
-    // Cancel any pending completion timer
+    // Cancel any pending timers
     _completionTimer?.cancel();
     _completionTimer = null;
+    _clearTimeouts();
+    
+    // Clear network recovery state
+    _networkRecoveryMode = false;
+    _lastNetworkError = null;
+    _currentRetryAttempt = 0;
 
     try {
       currentAyahNotifier.value = null;
@@ -287,6 +268,56 @@ class ContinuousAudioManager {
     } catch (e) {
       debugPrint('⚠️ Error resetting notifiers: $e');
     }
+  }
+
+  // -------- Enhanced Timeout Management --------
+  
+  void _startLoadingTimeout() {
+    _loadingTimer?.cancel();
+    _loadingTimer = Timer(AudioConstants.loadingStateTimeout, () {
+      debugPrint('⏱️ Audio loading timeout - attempting recovery');
+      _handleLoadingTimeout();
+    });
+  }
+  
+  void _startBufferingTimeout() {
+    _bufferingTimer?.cancel();
+    _bufferingTimer = Timer(AudioConstants.buffetingTimeout, () {
+      debugPrint('⏱️ Audio buffering timeout - attempting recovery');
+      _handleBufferingTimeout();
+    });
+  }
+  
+  void _clearTimeouts() {
+    _loadingTimer?.cancel();
+    _bufferingTimer?.cancel();
+    _loadingTimer = null;
+    _bufferingTimer = null;
+  }
+  
+  void _handleLoadingTimeout() {
+    if (_currentRetryAttempt < AudioConstants.maxRetryAttempts) {
+      _currentRetryAttempt++;
+      debugPrint('🔄 Loading timeout - retry attempt $_currentRetryAttempt/${AudioConstants.maxRetryAttempts}');
+      
+      Future.delayed(AudioConstants.retryDelay, () {
+        if (_currentAyah != null && _currentReciter != null && _currentReciter!.isNotEmpty) {
+          playSingleAyah(_currentAyah!, _currentReciter!);
+        } else {
+          debugPrint('⚠️ Cannot retry - current ayah or reciter is null');
+          _handleError(Exception('Cannot retry playback - missing ayah or reciter'));
+        }
+      });
+    } else {
+      debugPrint('❌ Max retry attempts reached - moving to next ayah');
+      _currentRetryAttempt = 0;
+      _handleError(TimeoutException('Audio loading failed after ${AudioConstants.maxRetryAttempts} attempts'));
+    }
+  }
+  
+  void _handleBufferingTimeout() {
+    debugPrint('⏱️ Buffering timeout - attempting to recover');
+    _handleError(TimeoutException('Audio buffering timeout'));
   }
 
   // -------- IMPROVED Listeners & streams --------
@@ -307,10 +338,29 @@ class ContinuousAudioManager {
 
         // Handle different processing states
         switch (state.processingState) {
+          case ProcessingState.loading:
+            debugPrint('⏳ Audio loading...');
+            _startLoadingTimeout();
+            break;
+            
+          case ProcessingState.buffering:
+            debugPrint('📡 Audio buffering...');
+            _startBufferingTimeout();
+            break;
+            
           case ProcessingState.ready:
             _consecutiveErrors = 0;
+            _currentRetryAttempt = 0; // Reset retry attempts on success
             _isTransitioning = false;
             _completionHandled = false; // Reset for next completion
+            _clearTimeouts(); // Clear any pending timeouts
+            
+            // Check if we should exit network recovery mode
+            if (_shouldExitNetworkRecovery()) {
+              _networkRecoveryMode = false;
+              debugPrint('🔧 Network recovery mode deactivated - connection stable');
+            }
+            
             debugPrint('✅ Player ready, transition complete');
             break;
 
@@ -325,9 +375,6 @@ class ContinuousAudioManager {
             }
             break;
 
-          default:
-          // Other states (loading, buffering) are handled by the UI state updates
-            break;
         }
       } catch (e) {
         debugPrint('❌ Error in state listener: $e');
@@ -386,11 +433,34 @@ class ContinuousAudioManager {
   AudioErrorType _categorizeError(dynamic error) {
     final errorString = error.toString().toLowerCase();
     
-    if (errorString.contains('timeout') || errorString.contains('timeoutexception')) {
+    // Network-specific error categorization
+    if (errorString.contains('failed host lookup') || 
+        errorString.contains('name resolution failed') ||
+        errorString.contains('dns') || errorString.contains('resolve')) {
+      return AudioErrorType.networkDns;
+    } else if (errorString.contains('no internet connection') ||
+               errorString.contains('network is unreachable') ||
+               errorString.contains('connection refused') ||
+               errorString.contains('offline')) {
+      return AudioErrorType.networkOffline;
+    } else if (errorString.contains('http') && (errorString.contains('404') || 
+               errorString.contains('500') || errorString.contains('503') ||
+               errorString.contains('server error') || errorString.contains('not found'))) {
+      return AudioErrorType.networkServerError;
+    } else if (errorString.contains('connection timeout') ||
+               errorString.contains('read timeout') ||
+               errorString.contains('socket timeout')) {
+      return AudioErrorType.networkTimeout;
+    } else if (errorString.contains('connection reset') ||
+               errorString.contains('broken pipe') ||
+               errorString.contains('connection aborted')) {
+      return AudioErrorType.networkSlow;
+    } else if (errorString.contains('timeout') || errorString.contains('timeoutexception')) {
       return AudioErrorType.timeout;
     } else if (errorString.contains('network') || errorString.contains('connection') || 
-               errorString.contains('host') || errorString.contains('resolve')) {
-      return AudioErrorType.network;
+               errorString.contains('host')) {
+      // Generic network error fallback
+      return AudioErrorType.networkOffline;
     } else if (errorString.contains('codec') || errorString.contains('format') || 
                errorString.contains('unsupported')) {
       return AudioErrorType.codec;
@@ -402,8 +472,12 @@ class ContinuousAudioManager {
   
   String _getErrorIcon(AudioErrorType type) {
     switch (type) {
+      case AudioErrorType.networkOffline: return '📶';
+      case AudioErrorType.networkDns: return '🔍';
+      case AudioErrorType.networkTimeout: return '🌐⏱️';
+      case AudioErrorType.networkServerError: return '🔴';
+      case AudioErrorType.networkSlow: return '🐌';
       case AudioErrorType.timeout: return '⏱️';
-      case AudioErrorType.network: return '🌐';
       case AudioErrorType.codec: return '🎵';
       case AudioErrorType.permission: return '🔒';
       case AudioErrorType.unknown: return '❓';
@@ -419,22 +493,37 @@ class ContinuousAudioManager {
     
     debugPrint('$errorIcon Error ($_consecutiveErrors/$maxConsecutiveErrors) [${errorType.name}]: $error');
     
-    // Handle specific error types differently
+    // Track network-related errors for recovery mode
+    _trackNetworkError(errorType);
+    
+    // Handle specific error types with tailored strategies
     switch (errorType) {
-      case AudioErrorType.timeout:
-        debugPrint('⏱️ Timeout error - network may be slow, trying next source faster');
+      case AudioErrorType.networkOffline:
+        debugPrint('📶 Device appears offline - will retry when connection returns');
         break;
-      case AudioErrorType.network:
-        debugPrint('🌐 Network error - connection issues detected');
+      case AudioErrorType.networkDns:
+        debugPrint('🔍 DNS resolution failed - trying fallback servers');
+        break;
+      case AudioErrorType.networkTimeout:
+        debugPrint('🌐⏱️ Network timeout - connection is slow, reducing timeout for next attempt');
+        break;
+      case AudioErrorType.networkServerError:
+        debugPrint('🔴 Server error - trying different reciter source');
+        break;
+      case AudioErrorType.networkSlow:
+        debugPrint('🐌 Connection unstable - switching to lower quality if available');
+        break;
+      case AudioErrorType.timeout:
+        debugPrint('⏱️ General timeout - trying next source faster');
         break;
       case AudioErrorType.codec:
-        debugPrint('🎵 Codec error - audio format issue');
+        debugPrint('🎵 Codec error - audio format issue, trying different source');
         break;
       case AudioErrorType.permission:
         debugPrint('🔒 Permission error - audio access denied');
         break;
       case AudioErrorType.unknown:
-        debugPrint('❓ Unknown error type - investigating...');
+        debugPrint('❓ Unknown error type - applying general recovery strategy');
         break;
     }
 
@@ -442,9 +531,9 @@ class ContinuousAudioManager {
       debugPrint('🛑 Too many consecutive errors (${errorType.name}), stopping playback');
       Future.microtask(() => stop());
     } else {
-      // Try to skip to next ayah on error with shorter delay for timeouts
-      final delay = errorType == AudioErrorType.timeout ? 200 : 500;
-      debugPrint('🔄 Attempting to skip to next ayah due to ${errorType.name} error');
+      // Intelligent retry delay based on error type
+      final delay = _getRetryDelayForErrorType(errorType);
+      debugPrint('🔄 Attempting to skip to next ayah due to ${errorType.name} error (delay: ${delay}ms)');
       
       Future.delayed(Duration(milliseconds: delay), () {
         if (!_isTransitioning) {
@@ -454,11 +543,112 @@ class ContinuousAudioManager {
     }
   }
 
+  // Get user-friendly error message for any exception
+  static String getUserFriendlyErrorMessage(dynamic error) {
+    // First check if it's already a user-friendly message (contains Arabic)
+    if (RegExp(r'[\u0600-\u06FF]').hasMatch(error.toString())) {
+      return error.toString().replaceFirst('Exception: ', '');
+    }
+    
+    // Categorize the error and get user-friendly message
+    final errorType = _categorizeErrorStatic(error);
+    return AudioErrorMessages.getUserFriendlyMessage(errorType);
+  }
+  
+  // Static version of error categorization for public access
+  static AudioErrorType _categorizeErrorStatic(dynamic error) {
+    final errorString = error.toString().toLowerCase();
+    
+    // Network-specific error categorization
+    if (errorString.contains('failed host lookup') || 
+        errorString.contains('name resolution failed') ||
+        errorString.contains('dns') || errorString.contains('resolve')) {
+      return AudioErrorType.networkDns;
+    } else if (errorString.contains('no internet connection') ||
+               errorString.contains('network is unreachable') ||
+               errorString.contains('connection refused') ||
+               errorString.contains('offline')) {
+      return AudioErrorType.networkOffline;
+    } else if (errorString.contains('http') && (errorString.contains('404') || 
+               errorString.contains('500') || errorString.contains('503') ||
+               errorString.contains('server error') || errorString.contains('not found'))) {
+      return AudioErrorType.networkServerError;
+    } else if (errorString.contains('connection timeout') ||
+               errorString.contains('read timeout') ||
+               errorString.contains('socket timeout')) {
+      return AudioErrorType.networkTimeout;
+    } else if (errorString.contains('connection reset') ||
+               errorString.contains('broken pipe') ||
+               errorString.contains('connection aborted')) {
+      return AudioErrorType.networkSlow;
+    } else if (errorString.contains('timeout') || errorString.contains('timeoutexception')) {
+      return AudioErrorType.timeout;
+    } else if (errorString.contains('network') || errorString.contains('connection') || 
+               errorString.contains('host')) {
+      // Generic network error fallback
+      return AudioErrorType.networkOffline;
+    } else if (errorString.contains('codec') || errorString.contains('format') || 
+               errorString.contains('unsupported')) {
+      return AudioErrorType.codec;
+    } else if (errorString.contains('permission') || errorString.contains('access')) {
+      return AudioErrorType.permission;
+    }
+    return AudioErrorType.unknown;
+  }
+
+  // Track network errors for recovery mode
+  void _trackNetworkError(AudioErrorType errorType) {
+    final isNetworkError = [
+      AudioErrorType.networkOffline,
+      AudioErrorType.networkDns,
+      AudioErrorType.networkTimeout,
+      AudioErrorType.networkServerError,
+      AudioErrorType.networkSlow,
+    ].contains(errorType);
+    
+    if (isNetworkError) {
+      _networkRecoveryMode = true;
+      _lastNetworkError = DateTime.now();
+      debugPrint('🔧 Network recovery mode activated');
+    }
+  }
+  
+  // Check if we should exit network recovery mode
+  bool _shouldExitNetworkRecovery() {
+    if (!_networkRecoveryMode || _lastNetworkError == null) return false;
+    
+    final timeSinceLastError = DateTime.now().difference(_lastNetworkError!);
+    return timeSinceLastError.inSeconds > 30; // Exit after 30 seconds of no network errors
+  }
+
+  // Intelligent retry delay strategy based on error type  
+  int _getRetryDelayForErrorType(AudioErrorType errorType) {
+    // Apply longer delays if in network recovery mode
+    final baseDelay = switch (errorType) {
+      AudioErrorType.networkOffline => 3000,  // Wait longer for connection to return
+      AudioErrorType.networkDns => 1000,     // Quick retry for DNS issues
+      AudioErrorType.networkTimeout => 2000, // Moderate delay for timeouts
+      AudioErrorType.networkServerError => 1500, // Quick retry for server issues
+      AudioErrorType.networkSlow => 2500,    // Wait for connection to stabilize
+      AudioErrorType.timeout => 200,         // Fast retry for general timeouts
+      AudioErrorType.codec => 500,           // Quick retry for codec issues
+      AudioErrorType.permission => 5000,     // Long delay for permission issues
+      AudioErrorType.unknown => 1000,        // Standard delay for unknown errors
+    };
+    
+    // Apply network recovery multiplier if needed
+    return _networkRecoveryMode ? (baseDelay * 1.5).round() : baseDelay;
+  }
+
   // -------- Playback control API (public) --------
 
   Future<void> startContinuousPlayback(AyahMarker startingAyah, String reciterName, List<AyahMarker> allAyahsInSurah) async {
     try {
       await initialize();
+      
+      // Reset timeout counters for new playback session
+      _currentRetryAttempt = 0;
+      _clearTimeouts();
 
       if (!_reciterConfigs.containsKey(reciterName)) {
         _currentReciter = _reciterConfigs.keys.first;
@@ -482,7 +672,7 @@ class ContinuousAudioManager {
         await _playCurrentAyah();
       } else {
         debugPrint('❌ Play queue is empty');
-        throw Exception('لا توجد آيات للتشغيل');
+        throw Exception(AudioErrorMessages.getNoAyahsError());
       }
     } catch (e) {
       debugPrint('❌ Error starting continuous playback: $e');
@@ -549,13 +739,13 @@ class ContinuousAudioManager {
       final config = _reciterConfigs[_currentReciter ?? _reciterConfigs.keys.first]!;
       List<String> urlsToTry = [];
 
-      urlsToTry.add(_buildAudioUrl(ayah, config.baseUrl));
-      if (config.fallbackUrl != null) {
-        urlsToTry.add(_buildAudioUrl(ayah, config.fallbackUrl!));
+      urlsToTry.add(config.getAyahUrl(ayah.surah, ayah.ayah));
+      final fallbackUrl = config.getFallbackAyahUrl(ayah.surah, ayah.ayah);
+      if (fallbackUrl != null) {
+        urlsToTry.add(fallbackUrl);
       }
 
       bool playbackStarted = false;
-      String? lastError;
 
       // Stop any current playback and wait for it to complete
       try {
@@ -572,10 +762,15 @@ class ContinuousAudioManager {
         try {
           debugPrint('🎵 Loading ${ayah.surah}:${ayah.ayah} from: $audioUrl ${i > 0 ? "(fallback)" : ""}');
 
+          // Progressive timeout reduction during network issues
+          final timeoutDuration = _networkRecoveryMode 
+              ? const Duration(seconds: 5)  // Shorter timeout during network recovery
+              : const Duration(seconds: 8); // Normal timeout
+              
           await _audioPlayer!.setUrl(audioUrl).timeout(
-            const Duration(seconds: 8),
+            timeoutDuration,
             onTimeout: () {
-              throw TimeoutException('URL loading timeout after ${AudioConstants.urlLoadTimeout.inSeconds}s', AudioConstants.urlLoadTimeout);
+              throw TimeoutException('URL loading timeout after ${timeoutDuration.inSeconds}s', timeoutDuration);
             },
           );
 
@@ -587,7 +782,6 @@ class ContinuousAudioManager {
           break;
 
         } catch (e) {
-          lastError = e.toString();
           debugPrint('⚠️ Failed to load $audioUrl: $e');
 
           if (i < urlsToTry.length - 1) {
@@ -601,7 +795,7 @@ class ContinuousAudioManager {
       }
 
       if (!playbackStarted) {
-        throw Exception('فشل في تحميل جميع المصادر الصوتية: $lastError');
+        throw Exception(AudioErrorMessages.getPlaybackFailedError());
       }
 
     } catch (e) {
@@ -611,11 +805,6 @@ class ContinuousAudioManager {
     }
   }
 
-  String _buildAudioUrl(AyahMarker ayah, String baseUrl) {
-    final surahPadded = ayah.surah.toString().padLeft(3, '0');
-    final ayahPadded = ayah.ayah.toString().padLeft(3, '0');
-    return '$baseUrl/$surahPadded$ayahPadded.mp3';
-  }
 
   // -------- Settings update methods --------
   
@@ -717,8 +906,12 @@ class ContinuousAudioManager {
   /// Play single ayah (for memorization)
   Future<void> playSingleAyah(AyahMarker ayah, String reciterName) async {
     try {
+      // Reset timeout counters for new playback
+      _currentRetryAttempt = 0;
+      _clearTimeouts();
+      
       if (!_reciterConfigs.containsKey(reciterName)) {
-        throw Exception('Reciter not found: $reciterName');
+        throw Exception(AudioErrorMessages.getReciterNotFoundError());
       }
       
       final reciterConfig = _reciterConfigs[reciterName]!;
@@ -732,7 +925,7 @@ class ContinuousAudioManager {
       currentReciterNotifier.value = reciterName;
 
       // Try to play the ayah  
-      final audioUrl = _buildAudioUrl(ayah, reciterConfig.baseUrl);
+      final audioUrl = reciterConfig.getAyahUrl(ayah.surah, ayah.ayah);
       
       debugPrint('🎵 Playing single ayah for memorization: ${ayah.surah}:${ayah.ayah} - $audioUrl');
 
@@ -765,6 +958,7 @@ class ContinuousAudioManager {
     try {
       _completionTimer?.cancel();
       _completionTimer = null;
+      _clearTimeouts(); // Clear all timeout timers
       await _audioPlayer?.stop();
     } catch (e) {
       debugPrint('❌ Error stopping player: $e');
@@ -854,14 +1048,3 @@ class ContinuousAudioManager {
   }
 }
 
-class ReciterConfig {
-  final String baseUrl;
-  final bool hasIndividualAyahs;
-  final String? fallbackUrl;
-
-  ReciterConfig({
-    required this.baseUrl,
-    this.hasIndividualAyahs = true,
-    this.fallbackUrl,
-  });
-}

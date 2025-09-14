@@ -7,6 +7,9 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'models/ayah_marker.dart';
 import 'constants/surah_names.dart';
+import 'constants/app_strings.dart';
+import 'constants/app_constants.dart';
+import 'constants/api_constants.dart';
 import 'bookmark_manager.dart';
 import 'memorization_manager.dart';
 
@@ -109,9 +112,9 @@ class _AyahActionsSheetState extends State<AyahActionsSheet> with TickerProvider
       // Strategy 1: AlQuran.cloud (most reliable)
           () async {
         final response = await http.get(
-          Uri.parse('https://api.alquran.cloud/v1/ayah/${widget.ayahMarker.surah}:${widget.ayahMarker.ayah}/ar.asad'),
+          Uri.parse(ApiConstants.getAyahTranslation(widget.ayahMarker.surah, widget.ayahMarker.ayah, 'ar.asad')),
           headers: {'Accept': 'application/json', 'User-Agent': 'QuranApp/1.0'},
-        ).timeout(const Duration(seconds: 8));
+        ).timeout(AppConstants.apiTimeout);
 
         if (response.statusCode == 200) {
           final data = json.decode(response.body);
@@ -123,9 +126,9 @@ class _AyahActionsSheetState extends State<AyahActionsSheet> with TickerProvider
       // Strategy 2: Alternative AlQuran endpoint
           () async {
         final response = await http.get(
-          Uri.parse('https://api.alquran.cloud/v1/ayah/${widget.ayahMarker.surah}:${widget.ayahMarker.ayah}'),
+          Uri.parse(ApiConstants.getAyahSimple(widget.ayahMarker.surah, widget.ayahMarker.ayah)),
           headers: {'Accept': 'application/json'},
-        ).timeout(const Duration(seconds: 8));
+        ).timeout(AppConstants.apiTimeout);
 
         if (response.statusCode == 200) {
           final data = json.decode(response.body);
@@ -137,9 +140,9 @@ class _AyahActionsSheetState extends State<AyahActionsSheet> with TickerProvider
       // Strategy 3: Quran.com API
           () async {
         final response = await http.get(
-          Uri.parse('https://api.quran.com/api/v4/verses/by_key/${widget.ayahMarker.surah}:${widget.ayahMarker.ayah}?fields=text_uthmani'),
+          Uri.parse(ApiConstants.getVerseUthmani(widget.ayahMarker.surah, widget.ayahMarker.ayah)),
           headers: {'Accept': 'application/json'},
-        ).timeout(const Duration(seconds: 8));
+        ).timeout(AppConstants.apiTimeout);
 
         if (response.statusCode == 200) {
           final data = json.decode(response.body);
@@ -274,9 +277,9 @@ class _AyahActionsSheetState extends State<AyahActionsSheet> with TickerProvider
         name: 'تفسير ابن كثير',
         apiCall: () async {
           final response = await http.get(
-            Uri.parse('https://api.alquran.cloud/v1/ayah/${widget.ayahMarker.surah}:${widget.ayahMarker.ayah}/ar.katheer'),
+            Uri.parse(ApiConstants.getAyahTranslation(widget.ayahMarker.surah, widget.ayahMarker.ayah, 'ar.katheer')),
             headers: {'Accept': 'application/json'},
-          ).timeout(const Duration(seconds: 10));
+          ).timeout(AppConstants.tafsirTimeout);
 
           if (response.statusCode == 200) {
             final data = json.decode(response.body);
@@ -291,9 +294,9 @@ class _AyahActionsSheetState extends State<AyahActionsSheet> with TickerProvider
         name: 'تفسير الجلالين',
         apiCall: () async {
           final response = await http.get(
-            Uri.parse('https://api.alquran.cloud/v1/ayah/${widget.ayahMarker.surah}:${widget.ayahMarker.ayah}/ar.jalalayn'),
+            Uri.parse(ApiConstants.getAyahTranslation(widget.ayahMarker.surah, widget.ayahMarker.ayah, 'ar.jalalayn')),
             headers: {'Accept': 'application/json'},
-          ).timeout(const Duration(seconds: 10));
+          ).timeout(AppConstants.tafsirTimeout);
 
           if (response.statusCode == 200) {
             final data = json.decode(response.body);
@@ -308,9 +311,9 @@ class _AyahActionsSheetState extends State<AyahActionsSheet> with TickerProvider
         name: 'التفسير الميسر',
         apiCall: () async {
           final response = await http.get(
-            Uri.parse('https://api.alquran.cloud/v1/ayah/${widget.ayahMarker.surah}:${widget.ayahMarker.ayah}/ar.muyassar'),
+            Uri.parse(ApiConstants.getAyahTranslation(widget.ayahMarker.surah, widget.ayahMarker.ayah, 'ar.muyassar')),
             headers: {'Accept': 'application/json'},
-          ).timeout(const Duration(seconds: 10));
+          ).timeout(AppConstants.tafsirTimeout);
 
           if (response.statusCode == 200) {
             final data = json.decode(response.body);
@@ -325,9 +328,9 @@ class _AyahActionsSheetState extends State<AyahActionsSheet> with TickerProvider
         name: 'تفسير السعدي',
         apiCall: () async {
           final response = await http.get(
-            Uri.parse('https://api.quran.com/api/v4/verses/by_key/${widget.ayahMarker.surah}:${widget.ayahMarker.ayah}?translations=171'),
+            Uri.parse(ApiConstants.getVerseTranslation(widget.ayahMarker.surah, widget.ayahMarker.ayah, 171)),
             headers: {'Accept': 'application/json'},
-          ).timeout(const Duration(seconds: 10));
+          ).timeout(AppConstants.tafsirTimeout);
 
           if (response.statusCode == 200) {
             final data = json.decode(response.body);
@@ -344,9 +347,9 @@ class _AyahActionsSheetState extends State<AyahActionsSheet> with TickerProvider
         name: 'تفسير الطبري',
         apiCall: () async {
           final response = await http.get(
-            Uri.parse('https://api.alquran.cloud/v1/ayah/${widget.ayahMarker.surah}:${widget.ayahMarker.ayah}/ar.tabary'),
+            Uri.parse(ApiConstants.getAyahTranslation(widget.ayahMarker.surah, widget.ayahMarker.ayah, 'ar.tabary')),
             headers: {'Accept': 'application/json'},
-          ).timeout(const Duration(seconds: 10));
+          ).timeout(AppConstants.tafsirTimeout);
 
           if (response.statusCode == 200) {
             final data = json.decode(response.body);
@@ -361,9 +364,9 @@ class _AyahActionsSheetState extends State<AyahActionsSheet> with TickerProvider
         name: 'تفسير القرطبي',
         apiCall: () async {
           final response = await http.get(
-            Uri.parse('https://api.alquran.cloud/v1/ayah/${widget.ayahMarker.surah}:${widget.ayahMarker.ayah}/ar.qurtubi'),
+            Uri.parse(ApiConstants.getAyahTranslation(widget.ayahMarker.surah, widget.ayahMarker.ayah, 'ar.qurtubi')),
             headers: {'Accept': 'application/json'},
-          ).timeout(const Duration(seconds: 10));
+          ).timeout(AppConstants.tafsirTimeout);
 
           if (response.statusCode == 200) {
             final data = json.decode(response.body);
@@ -412,7 +415,7 @@ class _AyahActionsSheetState extends State<AyahActionsSheet> with TickerProvider
               textDirection: TextDirection.rtl,
               child: Text('تم إزالة إشارة الآية المرجعية'),
             ),
-            duration: Duration(seconds: 1),
+            duration: AppConstants.snackBarShortDuration,
           ),
         );
       }
@@ -434,7 +437,7 @@ class _AyahActionsSheetState extends State<AyahActionsSheet> with TickerProvider
               textDirection: TextDirection.rtl,
               child: Text('تم إضافة إشارة الآية المرجعية'),
             ),
-            duration: Duration(seconds: 1),
+            duration: AppConstants.snackBarShortDuration,
           ),
         );
       }
@@ -452,25 +455,70 @@ class _AyahActionsSheetState extends State<AyahActionsSheet> with TickerProvider
   void _startMemorization() {
     if (widget.memorizationManager == null) return;
     
+    final currentMode = widget.memorizationManager!.settings.mode;
+    
     Navigator.of(context).pop(); // Close the sheet
     
-    // Start single ayah memorization with default settings
-    widget.memorizationManager!.startSingleAyahMemorization(
-      ayah: widget.ayahMarker,
-      reciterName: _defaultReciter,
-    );
-    
-    // Show feedback to user
+    // Check memorization mode and act accordingly
+    switch (currentMode) {
+      case MemorizationMode.singleAyah:
+        // Start single ayah memorization
+        widget.memorizationManager!.startSingleAyahMemorization(
+          ayah: widget.ayahMarker,
+          reciterName: _defaultReciter,
+        );
+        _showMemorizationFeedback('بدء جلسة الحفظ للآية ${widget.ayahMarker.ayah}');
+        break;
+        
+      case MemorizationMode.ayahRange:
+        // Show range selection dialog
+        _showAyahRangeDialog();
+        break;
+        
+      case MemorizationMode.fullSurah:
+        // Start full surah memorization - for now start with single ayah until we get all surah ayahs
+        widget.memorizationManager!.startSingleAyahMemorization(
+          ayah: widget.ayahMarker,
+          reciterName: _defaultReciter,
+        );
+        _showMemorizationFeedback('بدء جلسة الحفظ للسورة كاملة');
+        break;
+    }
+  }
+
+  void _showMemorizationFeedback(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Directionality(
           textDirection: TextDirection.rtl,
-          child: Text('بدء جلسة الحفظ للآية ${widget.ayahMarker.ayah}'),
+          child: Text(message),
         ),
         backgroundColor: Theme.of(context).colorScheme.secondary,
-        duration: const Duration(seconds: 2),
+        duration: AppConstants.snackBarLongDuration,
       ),
     );
+  }
+
+  void _showAyahRangeDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => _AyahRangeDialog(
+        startAyah: widget.ayahMarker,
+        surahName: widget.surahName,
+        memorizationManager: widget.memorizationManager!,
+        defaultReciter: _defaultReciter,
+      ),
+    );
+  }
+
+  String _getMemorizationSubtitle() {
+    if (widget.memorizationManager == null) return 'تكرار 3 مرات افتراضياً';
+    
+    final settings = widget.memorizationManager!.settings;
+    final count = settings.repetitionCount;
+    final times = count == 1 ? 'مرة' : 'مرات';
+    
+    return 'تكرار $count $times';
   }
 
   @override
@@ -493,12 +541,12 @@ class _AyahActionsSheetState extends State<AyahActionsSheet> with TickerProvider
                 children: [
                   // Handle bar
                   Container(
-                    width: 40,
-                    height: 4,
+                    width: AppConstants.actionSheetHandleWidth,
+                    height: AppConstants.actionSheetHandleHeight,
                     margin: const EdgeInsets.symmetric(vertical: 12),
                     decoration: BoxDecoration(
                       color: Theme.of(context).colorScheme.outline,
-                      borderRadius: BorderRadius.circular(2),
+                      borderRadius: BorderRadius.circular(AppConstants.actionSheetHandleBorderRadius),
                     ),
                   ),
 
@@ -512,12 +560,12 @@ class _AyahActionsSheetState extends State<AyahActionsSheet> with TickerProvider
                           color: Theme.of(context).colorScheme.primary,
                           size: 24,
                         ),
-                        const SizedBox(width: 12),
+                        const SizedBox(width: AppConstants.actionSheetSpacing),
                         Expanded(
                           child: Text(
                             'سورة ${_getSurahName(widget.ayahMarker.surah)} - آية ${widget.ayahMarker.ayah}',
                             style: TextStyle(
-                              fontSize: 18,
+                              fontSize: AppConstants.actionSheetTitleFontSize,
                               fontWeight: FontWeight.bold,
                               color: Theme.of(context).colorScheme.onSurface,
                             ),
@@ -537,18 +585,18 @@ class _AyahActionsSheetState extends State<AyahActionsSheet> with TickerProvider
                     ),
                   ),
 
-                  const Divider(height: 1),
+                  const Divider(height: AppConstants.actionSheetDividerHeight),
 
                   // Content
                   Expanded(
                     child: ListView(
                       controller: scrollController,
-                      padding: const EdgeInsets.all(16),
+                      padding: const EdgeInsets.all(AppConstants.actionSheetPadding),
                       children: [
                         // Error display
                         if (_error != null)
                           Container(
-                            padding: const EdgeInsets.all(12),
+                            padding: const EdgeInsets.all(AppConstants.actionSheetInnerPadding),
                             margin: const EdgeInsets.only(bottom: 16),
                             decoration: BoxDecoration(
                               color: Theme.of(context).colorScheme.errorContainer,
@@ -572,7 +620,7 @@ class _AyahActionsSheetState extends State<AyahActionsSheet> with TickerProvider
                                 ),
                                 TextButton(
                                   onPressed: () => _loadAyahText(),
-                                  child: const Text('إعادة المحاولة'),
+                                  child: const Text(AppStrings.retry),
                                 ),
                               ],
                             ),
@@ -583,7 +631,7 @@ class _AyahActionsSheetState extends State<AyahActionsSheet> with TickerProvider
                           const Center(child: CircularProgressIndicator())
                         else if (_ayahText != null) ...[
                           Container(
-                            padding: const EdgeInsets.all(16),
+                            padding: const EdgeInsets.all(AppConstants.actionSheetPadding),
                             decoration: BoxDecoration(
                               color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
                               borderRadius: BorderRadius.circular(12),
@@ -723,7 +771,7 @@ class _AyahActionsSheetState extends State<AyahActionsSheet> with TickerProvider
                                           textDirection: TextDirection.rtl,
                                         ),
                                         Text(
-                                          'تكرار 3 مرات افتراضياً',
+                                          _getMemorizationSubtitle(),
                                           style: TextStyle(
                                             color: Theme.of(context).colorScheme.onSecondary.withValues(alpha: 0.8),
                                             fontSize: 12,
@@ -796,7 +844,7 @@ class _AyahActionsSheetState extends State<AyahActionsSheet> with TickerProvider
                           )
                         else
                           Container(
-                            padding: const EdgeInsets.all(16),
+                            padding: const EdgeInsets.all(AppConstants.actionSheetPadding),
                             decoration: BoxDecoration(
                               color: Theme.of(context).colorScheme.surface,
                               borderRadius: BorderRadius.circular(12),
@@ -819,7 +867,7 @@ class _AyahActionsSheetState extends State<AyahActionsSheet> with TickerProvider
                                     padding: const EdgeInsets.only(top: 12),
                                     child: ElevatedButton(
                                       onPressed: _loadTafsir,
-                                      child: const Text('إعادة المحاولة'),
+                                      child: const Text(AppStrings.retry),
                                     ),
                                   ),
                               ],
@@ -871,4 +919,268 @@ class TafsirStrategy {
   final Future<String?> Function() apiCall;
 
   TafsirStrategy({required this.name, required this.apiCall});
+}
+
+// Smart Ayah Range Selection Dialog
+class _AyahRangeDialog extends StatefulWidget {
+  final AyahMarker startAyah;
+  final String surahName;
+  final MemorizationManager memorizationManager;
+  final String defaultReciter;
+
+  const _AyahRangeDialog({
+    required this.startAyah,
+    required this.surahName,
+    required this.memorizationManager,
+    required this.defaultReciter,
+  });
+
+  @override
+  State<_AyahRangeDialog> createState() => _AyahRangeDialogState();
+}
+
+class _AyahRangeDialogState extends State<_AyahRangeDialog> {
+  late int _fromAyah;
+  late int _toAyah;
+  late int _maxAyahInSurah;
+  String? _validationError;
+  
+  late TextEditingController _toAyahController;
+
+  @override
+  void initState() {
+    super.initState();
+    _fromAyah = widget.startAyah.ayah;
+    _toAyah = widget.startAyah.ayah; // Default to same ayah
+    _maxAyahInSurah = SurahNames.getAyahCount(widget.startAyah.surah);
+    _toAyahController = TextEditingController(text: _toAyah.toString());
+  }
+  
+  @override
+  void dispose() {
+    _toAyahController.dispose();
+    super.dispose();
+  }
+  
+  void _validateInput(String value, bool isToAyah) {
+    setState(() {
+      _validationError = null;
+    });
+    
+    final num = int.tryParse(value);
+    if (num == null) {
+      setState(() {
+        _validationError = 'يرجى إدخال رقم صحيح';
+      });
+      return;
+    }
+    
+    if (num <= 0) {
+      setState(() {
+        _validationError = 'رقم الآية يجب أن يكون أكبر من صفر';
+      });
+      return;
+    }
+    
+    if (num > _maxAyahInSurah) {
+      setState(() {
+        _validationError = 'رقم الآية يجب أن يكون بين 1 و $_maxAyahInSurah (عدد آيات السورة)';
+      });
+      return;
+    }
+    
+    if (isToAyah && num < _fromAyah) {
+      setState(() {
+        _validationError = 'آية النهاية يجب أن تكون أكبر من أو تساوي آية البداية ($_fromAyah)';
+      });
+      return;
+    }
+    
+    // Input is valid
+    setState(() {
+      if (isToAyah) {
+        _toAyah = num;
+      } else {
+        _fromAyah = num;
+        if (_toAyah < _fromAyah) {
+          _toAyah = _fromAyah;
+          _toAyahController.text = _toAyah.toString();
+        }
+      }
+    });
+  }
+
+  void _startRangeMemorization() {
+    Navigator.of(context).pop();
+    
+    // Create ayah markers for the range
+    final List<AyahMarker> rangeAyahs = [];
+    for (int ayahNum = _fromAyah; ayahNum <= _toAyah; ayahNum++) {
+      rangeAyahs.add(AyahMarker(
+        surah: widget.startAyah.surah,
+        ayah: ayahNum,
+        page: widget.startAyah.page,
+        bboxes: [], // Empty bounding boxes for memorization-only markers
+      ));
+    }
+    
+    widget.memorizationManager.startRangeMemorization(
+      ayahs: rangeAyahs,
+      reciterName: widget.defaultReciter,
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: Text(
+        'تحديد نطاق الآيات للحفظ',
+        style: TextStyle(
+          color: Theme.of(context).colorScheme.onSurface,
+          fontWeight: FontWeight.bold,
+        ),
+        textAlign: TextAlign.right,
+      ),
+      content: Directionality(
+        textDirection: TextDirection.rtl,
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+            Text(
+              'السورة: ${SurahNames.getArabicName(widget.startAyah.surah)}',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                color: Theme.of(context).colorScheme.primary,
+              ),
+            ),
+            const SizedBox(height: 16),
+            
+            // From Ayah
+            Row(
+              children: [
+                const Expanded(child: Text(AppStrings.fromAyah)),
+                SizedBox(
+                  width: 80,
+                  child: TextField(
+                    controller: TextEditingController(text: _fromAyah.toString()),
+                    keyboardType: TextInputType.number,
+                    textAlign: TextAlign.center,
+                    decoration: const InputDecoration(
+                      border: OutlineInputBorder(),
+                      contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                    ),
+                    onChanged: (value) => _validateInput(value, false),
+                  ),
+                ),
+              ],
+            ),
+            
+            const SizedBox(height: 12),
+            
+            // To Ayah
+            Row(
+              children: [
+                const Expanded(child: Text(AppStrings.toAyah)),
+                SizedBox(
+                  width: 80,
+                  child: TextField(
+                    controller: _toAyahController,
+                    keyboardType: TextInputType.number,
+                    textAlign: TextAlign.center,
+                    decoration: const InputDecoration(
+                      border: OutlineInputBorder(),
+                      contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                    ),
+                    onChanged: (value) => _validateInput(value, true),
+                  ),
+                ),
+              ],
+            ),
+            
+            const SizedBox(height: 16),
+            
+            // Show acceptable range info
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.3),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(
+                  color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.3),
+                ),
+              ),
+              child: Text(
+                'النطاق المتاح: من 1 إلى $_maxAyahInSurah (${SurahNames.getArabicName(widget.startAyah.surah)})',
+                style: TextStyle(
+                  fontSize: 14,
+                  color: Theme.of(context).colorScheme.onPrimaryContainer,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ),
+            
+            if (_validationError != null) ...[
+              const SizedBox(height: 12),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.errorContainer.withValues(alpha: 0.3),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(
+                    color: Theme.of(context).colorScheme.error.withValues(alpha: 0.3),
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.warning_amber_rounded,
+                      color: Theme.of(context).colorScheme.error,
+                      size: 20,
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        _validationError!,
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Theme.of(context).colorScheme.onErrorContainer,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ] else ...[
+              const SizedBox(height: 12),
+              Text(
+                'سيتم تكرار الآيات من $_fromAyah إلى $_toAyah',
+                style: TextStyle(
+                  fontSize: 14,
+                  color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ],
+        ),
+      ),
+    ),
+    actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: Text(
+            'إلغاء',
+            style: TextStyle(color: Theme.of(context).colorScheme.primary),
+          ),
+        ),
+        ElevatedButton(
+          onPressed: _validationError != null ? null : _startRangeMemorization,
+          child: const Text(AppStrings.startMemorization),
+        ),
+      ],
+    );
+  }
 }
