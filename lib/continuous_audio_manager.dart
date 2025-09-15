@@ -9,14 +9,17 @@ import 'models/ayah_marker.dart';
 import 'theme_manager.dart';
 import 'constants/app_strings.dart';
 import 'constants/api_constants.dart';
+import 'audio_cache_manager.dart';
+import 'audio_download_manager.dart';
 
 // Constants for better maintainability
 class AudioConstants {
   static const int maxConsecutiveErrors = 5;
   static const Duration playerDisposeTimeout = Duration(seconds: 3);
-  static const Duration completionDebounceTimeout = Duration(milliseconds: 200);
+  static const Duration completionDebounceTimeout = Duration.zero; // Instant transitions
   static const Duration urlLoadTimeout = Duration(seconds: 8);
   static const Duration transitionDelay = Duration(milliseconds: 150);
+  static const Duration crossfadeDuration = Duration(milliseconds: 50); // Crossfade time
   
   // Enhanced timeout controls
   static const Duration buffetingTimeout = Duration(seconds: 15); // Max buffering time
@@ -121,6 +124,17 @@ class ContinuousAudioManager {
   // Network recovery tracking
   bool _networkRecoveryMode = false; // Track if we're in network recovery
   DateTime? _lastNetworkError; // Track when last network error occurred
+  
+  // Seamless playback enhancement
+  bool _isPreloadingNext = false;
+  int? _preloadedIndex;
+  String? _preloadedAudioUrl;
+  AudioSource? _preloadedAudioSource; // Pre-initialized AudioSource for instant switching
+  bool _seamlessModeEnabled = true;
+  
+  // Audio cache and download managers
+  final AudioCacheManager _cacheManager = AudioCacheManager();
+  final AudioDownloadManager _downloadManager = AudioDownloadManager();
 
   // State notifiers
   final ValueNotifier<bool> isPlayingNotifier = ValueNotifier(false);
@@ -137,6 +151,137 @@ class ContinuousAudioManager {
 
   // Use centralized reciter configurations from ApiConstants
   Map<String, ReciterConfig> get _reciterConfigs => ApiConstants.reciterConfigs;
+
+  // -------- Seamless Transition Methods --------
+  
+  /// Smart preloading based on ayah position
+  void _checkForSmartPreload(Duration position) {
+    if (!_seamlessModeEnabled || _isPreloadingNext || _preloadedIndex == _currentIndex + 1) return;
+    
+    final duration = durationNotifier.value;
+    if (duration == Duration.zero) return;
+    
+    // Start preloading when 30% through current ayah for maximum preparation time
+    final progressRatio = position.inMilliseconds / duration.inMilliseconds;
+    if (progressRatio >= 0.3) {
+      debugPrint('📅 Smart preload triggered at ${(progressRatio * 100).toStringAsFixed(1)}%');
+      _preloadNextAyah(); // This will set _isPreloadingNext=true, preventing repeated calls
+    }
+  }
+  
+  /// Preload the next ayah for seamless playback
+  Future<void> _preloadNextAyah() async {
+    if (_isPreloadingNext) return;
+    
+    // Calculate next ayah index
+    final nextIndex = _currentIndex + 1;
+    if (nextIndex >= _playQueue.length) {
+      // If repeat is enabled, preload first ayah
+      if (_repeatSurah && _playQueue.isNotEmpty) {
+        await _preloadAyahAtIndex(0);
+      }
+      return;
+    }
+    
+    await _preloadAyahAtIndex(nextIndex);
+  }
+  
+  Future<void> _preloadAyahAtIndex(int index) async {
+    if (_isPreloadingNext || index >= _playQueue.length) return;
+    
+    _isPreloadingNext = true;
+    final ayah = _playQueue[index];
+    
+    try {
+      final reciterName = _currentReciter ?? _reciterConfigs.keys.first;
+      
+      // Check cache first
+      String? urlToPreload = _cacheManager.getCachedFilePath(reciterName, ayah.surah, ayah.ayah);
+      
+      if (urlToPreload != null) {
+        debugPrint('📦 Preloaded cached ayah ${ayah.surah}:${ayah.ayah}');
+      } else {
+        // Use network URL and trigger background caching
+        final config = _reciterConfigs[reciterName]!;
+        urlToPreload = config.getAyahUrl(ayah.surah, ayah.ayah);
+        debugPrint('📦 Preloaded network ayah ${ayah.surah}:${ayah.ayah}');
+        
+        // Start background caching for future use
+        _cacheManager.cacheAyahAudio(
+          reciter: reciterName,
+          surah: ayah.surah,
+          ayah: ayah.ayah,
+          url: urlToPreload,
+          preloadToMemory: true,
+        );
+      }
+      
+      // Try to get audio from memory buffer for fastest access
+      final memoryData = _cacheManager.getFromMemoryBuffer(reciterName, ayah.surah, ayah.ayah);
+      
+      if (memoryData != null) {
+        // Ultra-fast: Create AudioSource from memory buffer
+        debugPrint('🚀 Using memory buffer for ultra-fast access');
+        _preloadedAudioSource = AudioSource.uri(Uri.dataFromBytes(memoryData));
+      } else if (urlToPreload.startsWith('file://')) {
+        // Fast: Create AudioSource from cached file
+        _preloadedAudioSource = AudioSource.uri(Uri.parse(urlToPreload));
+      } else {
+        // Standard: Create AudioSource from network URL
+        _preloadedAudioSource = AudioSource.uri(Uri.parse(urlToPreload));
+      }
+      
+      _preloadedAudioUrl = urlToPreload;
+      _preloadedIndex = index;
+      
+      debugPrint('✅ AudioSource pre-initialized for ayah ${ayah.surah}:${ayah.ayah}');
+    } catch (e) {
+      debugPrint('⚠️ Failed to prepare ayah ${ayah.surah}:${ayah.ayah}: $e');
+      _preloadedIndex = null;
+      _preloadedAudioUrl = null;
+      _preloadedAudioSource = null;
+    } finally {
+      _isPreloadingNext = false;
+    }
+  }
+  
+  /// Ultra-fast transition with pre-initialized AudioSource
+  Future<bool> _instantTransitionToPreloaded() async {
+    if (_preloadedIndex == null || _preloadedIndex != _currentIndex) {
+      return false;
+    }
+    
+    debugPrint('⚡ Starting ultra-fast transition');
+    
+    try {
+      // Try AudioSource first for fastest loading, fallback to URL if needed
+      if (_preloadedAudioSource != null) {
+        await _audioPlayer!.setAudioSource(_preloadedAudioSource!);
+      } else if (_preloadedAudioUrl != null) {
+        await _audioPlayer!.setUrl(_preloadedAudioUrl!);
+      } else {
+        return false;
+      }
+      
+      // Set speed and play in parallel operations where possible
+      final speedFuture = _audioPlayer!.setSpeed(_playbackSpeed);
+      final playFuture = _audioPlayer!.play();
+      
+      await Future.wait([speedFuture, playFuture]);
+      
+      debugPrint('⚡ Ultra-fast transition completed');
+      
+      // Clear preloaded data
+      _preloadedIndex = null;
+      _preloadedAudioUrl = null;
+      _preloadedAudioSource = null;
+      return true;
+      
+    } catch (e) {
+      debugPrint('⚠️ Ultra-fast transition failed: $e');
+      return false;
+    }
+  }
 
   // -------- Settings loading --------
   
@@ -190,8 +335,12 @@ class ContinuousAudioManager {
       // Load settings from SharedPreferences
       await _loadSettings();
       
+      // Initialize cache and download managers
+      await _cacheManager.initialize();
+      await _downloadManager.initialize();
+      
       _setupListeners();
-      debugPrint('✅ Audio manager initialized successfully');
+      debugPrint('✅ Audio manager initialized successfully with caching and seamless preloading');
     } catch (e) {
       debugPrint('❌ Error initializing audio manager: $e');
       rethrow;
@@ -236,6 +385,10 @@ class ContinuousAudioManager {
     _bufferingTimer = null;
     _completionTimer = null;
 
+    // Dispose cache and download managers
+    await _cacheManager.dispose();
+    await _downloadManager.dispose();
+    
     _resetState();
     debugPrint('✅ ContinuousAudioManager disposed successfully');
   }
@@ -247,6 +400,10 @@ class ContinuousAudioManager {
     _isTransitioning = false;
     _completionHandled = false;
     _consecutiveErrors = 0;
+    _isPreloadingNext = false;
+    _preloadedIndex = null;
+    _preloadedAudioUrl = null;
+    _preloadedAudioSource = null;
 
     // Cancel any pending timers
     _completionTimer?.cancel();
@@ -389,6 +546,7 @@ class ContinuousAudioManager {
     _positionSubscription = _audioPlayer!.positionStream.listen((position) {
       try {
         positionNotifier.value = position;
+        _checkForSmartPreload(position);
       } catch (e) {
         debugPrint('⚠️ Error updating position: $e');
       }
@@ -408,7 +566,7 @@ class ContinuousAudioManager {
     });
   }
 
-  // NEW: Improved completion handling with debouncing
+  // Ultra-fast completion handling - no debounce delays
   void _handleCompletion() {
     if (_completionHandled) {
       debugPrint('🎵 Completion already handled, ignoring');
@@ -416,18 +574,10 @@ class ContinuousAudioManager {
     }
 
     _completionHandled = true;
-    debugPrint('🎵 Ayah completed, preparing to move to next');
+    debugPrint('🎵 Ayah completed, moving to next instantly');
 
-    // Cancel any existing completion timer
-    _completionTimer?.cancel();
-
-    // Debounce completion events to prevent rapid-fire triggering
-    _completionTimer = Timer(AudioConstants.completionDebounceTimeout, () {
-      if (!_completionHandled) return; // Double-check in case state changed
-
-      debugPrint('🎵 Processing completion for ayah ${_currentAyah?.surah}:${_currentAyah?.ayah}');
-      _moveToNextAyah();
-    });
+    // Move to next ayah immediately - no timer delays
+    _moveToNextAyah();
   }
 
   AudioErrorType _categorizeError(dynamic error) {
@@ -747,20 +897,37 @@ class ContinuousAudioManager {
 
       bool playbackStarted = false;
 
-      // Stop any current playback and wait for it to complete
+      // Stop any current playback quickly
       try {
         await _audioPlayer!.stop();
-        await Future.delayed(AudioConstants.transitionDelay);
+        // Remove artificial delay for faster transitions
       } catch (e) {
         debugPrint('⚠️ Error stopping previous playback: $e');
       }
 
+      // Try cache first, then network
+      String? urlToLoad;
+      
+      // Check cache first
+      final reciterName = _currentReciter ?? _reciterConfigs.keys.first;
+      final cachedPath = _cacheManager.getCachedFilePath(reciterName, ayah.surah, ayah.ayah);
+      
+      if (cachedPath != null) {
+        urlToLoad = cachedPath;
+        debugPrint('💾 Loading ${ayah.surah}:${ayah.ayah} from cache: $cachedPath');
+      } else {
+        // Try network URLs
+        debugPrint('🌐 Loading ${ayah.surah}:${ayah.ayah} from network...');
+      }
+
       // Try each URL until one works
       for (int i = 0; i < urlsToTry.length; i++) {
-        final audioUrl = urlsToTry[i];
+        final audioUrl = urlToLoad ?? urlsToTry[i];
 
         try {
-          debugPrint('🎵 Loading ${ayah.surah}:${ayah.ayah} from: $audioUrl ${i > 0 ? "(fallback)" : ""}');
+          if (urlToLoad == null) {
+            debugPrint('🎵 Loading ${ayah.surah}:${ayah.ayah} from: ${urlsToTry[i]} ${i > 0 ? "(fallback)" : ""}');
+          }
 
           // Progressive timeout reduction during network issues
           final timeoutDuration = _networkRecoveryMode 
@@ -779,10 +946,38 @@ class ContinuousAudioManager {
 
           debugPrint('✅ Successfully started ${ayah.surah}:${ayah.ayah}');
           playbackStarted = true;
+          
+          // Cache the ayah if loaded from network and start intelligent buffering
+          if (urlToLoad == null) {
+            final originalUrl = urlsToTry[i];
+            _cacheManager.cacheAyahAudio(
+              reciter: reciterName,
+              surah: ayah.surah,
+              ayah: ayah.ayah,
+              url: originalUrl,
+              preloadToMemory: true,
+            );
+          }
+          
+          // Start intelligent buffering around current ayah
+          _cacheManager.bufferAroundCurrentAyah(
+            reciter: reciterName,
+            playlist: _playQueue,
+            currentIndex: _currentIndex,
+          );
+          
+          // Start preloading next ayah for seamless transition
+          _preloadNextAyah();
           break;
 
         } catch (e) {
           debugPrint('⚠️ Failed to load $audioUrl: $e');
+          
+          // If cached file failed, try network
+          if (urlToLoad != null) {
+            urlToLoad = null;
+            continue;
+          }
 
           if (i < urlsToTry.length - 1) {
             try {
@@ -833,6 +1028,85 @@ class ContinuousAudioManager {
     debugPrint('🔁 Repeat surah updated to: $enabled');
   }
 
+  // -------- Cache Management Methods --------
+  
+  /// Get cache statistics for UI display
+  Map<String, dynamic> getCacheStats() {
+    return _cacheManager.getCacheStats();
+  }
+  
+  /// Clear all cached audio
+  Future<void> clearAudioCache() async {
+    await _cacheManager.clearCache();
+    debugPrint('🧹 Audio cache cleared by user request');
+  }
+  
+  /// Check if specific ayah is cached
+  bool isAyahCached(String reciter, int surah, int ayah) {
+    return _cacheManager.isAyahCached(reciter, surah, ayah);
+  }
+  
+  // -------- Download Management Methods --------
+  
+  /// Download complete surah for offline playback
+  Future<String> downloadSurah(int surahNumber, String reciter) async {
+    return await _downloadManager.downloadSurah(surahNumber, reciter);
+  }
+  
+  /// Download complete juz for offline playback
+  Future<String> downloadJuz(int juzNumber, String reciter) async {
+    return await _downloadManager.downloadJuz(juzNumber, reciter);
+  }
+  
+  /// Get all download tasks
+  List<DownloadTask> getDownloadTasks() {
+    return _downloadManager.getAllDownloadTasks();
+  }
+  
+  /// Get download progress stream
+  Stream<DownloadTask> getDownloadProgress(String taskId) {
+    return _downloadManager.getDownloadProgress(taskId);
+  }
+  
+  /// Cancel download
+  Future<void> cancelDownload(String taskId) async {
+    await _downloadManager.cancelDownload(taskId);
+  }
+  
+  /// Pause download
+  Future<void> pauseDownload(String taskId) async {
+    await _downloadManager.pauseDownload(taskId);
+  }
+  
+  /// Resume download
+  Future<void> resumeDownload(String taskId) async {
+    await _downloadManager.resumeDownload(taskId);
+  }
+  
+  /// Delete download and cached files
+  Future<void> deleteDownload(String taskId) async {
+    await _downloadManager.deleteDownload(taskId);
+  }
+  
+  /// Check if surah/juz is downloaded
+  bool isDownloaded(DownloadType type, int number, String reciter) {
+    return _downloadManager.isDownloaded(type, number, reciter);
+  }
+  
+  /// Get download statistics
+  Map<String, dynamic> getDownloadStats() {
+    return _downloadManager.getDownloadStats();
+  }
+  
+  /// Enable/disable seamless mode
+  void setSeamlessMode(bool enabled) {
+    _seamlessModeEnabled = enabled;
+    debugPrint('🎜️ Seamless mode ${enabled ? "enabled" : "disabled"}');
+  }
+  
+  /// Get current seamless mode status
+  bool get isSeamlessModeEnabled => _seamlessModeEnabled;
+  
   // -------- IMPROVED Next / Previous handling --------
 
   Future<void> _moveToNextAyah() async {
@@ -853,6 +1127,24 @@ class ContinuousAudioManager {
       _currentIndex++;
       final nextAyah = _playQueue[_currentIndex];
       debugPrint('⏭️ Moving from $oldIndex to $_currentIndex: ${nextAyah.surah}:${nextAyah.ayah}');
+      
+      // Try instant seamless transition first
+      if (_seamlessModeEnabled && _preloadedIndex == _currentIndex) {
+        final success = await _instantTransitionToPreloaded();
+        if (success) {
+          // Update current ayah info
+          final nextAyah = _playQueue[_currentIndex];
+          _currentAyah = nextAyah;
+          currentAyahNotifier.value = nextAyah;
+          _checkAndFollowAyah();
+          
+          // Start preloading next ayah in background
+          _preloadNextAyah();
+          return;
+        }
+      }
+      
+      // Fall back to regular loading
       await _playCurrentAyah();
     } else {
       debugPrint('🏁 Reached end of surah');
@@ -949,7 +1241,7 @@ class ContinuousAudioManager {
     _audioPlayer?.pause();
   }
 
-  /// Resume playback
+  /// Resume playbook
   void resume() {
     _audioPlayer?.play();
   }

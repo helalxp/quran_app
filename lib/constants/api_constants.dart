@@ -9,7 +9,7 @@ class ApiConstants {
   /// Base URLs for different API services
   static const String alquranCloudBase = 'https://api.alquran.cloud/v1';
   static const String quranComBase = 'https://api.quran.com/api/v4';
-  static const String everyAyahBase = 'https://www.everyayah.com/data';
+  static const String everyAyahBase = 'https://everyayah.com/data';
   
   /// Al-Quran Cloud API endpoints
   static String getAyahTranslation(int surah, int ayah, String edition) {
@@ -29,6 +29,29 @@ class ApiConstants {
     return '$quranComBase/verses/by_key/$surah:$ayah?translations=$translationId';
   }
   
+  /// Mapping from API codes to Arabic reciter names
+  static const Map<String, String> apiCodeToArabicName = {
+    'Abdul_Basit_Murattal_192kbps': 'عبد الباسط عبد الصمد',
+    'AbdulSamad_64kbps_QuranCentral.com': 'عبد الباسط عبد الصمد',
+    'Alafasy_128kbps': 'مشاري راشد العفاسي',
+    'Alafasy_64kbps': 'مشاري راشد العفاسي',
+    'Minshawi_Murattal_128kbps': 'محمد صديق المنشاوي',
+    'Shatri_128kbps': 'أبو بكر الشاطري',
+    'Sudais_128kbps': 'عبد الرحمن السديس',
+    'MaherAlMuaiqly128kbps': 'ماهر المعيقلي',
+    'Ahmed_ibn_Ali_al-Ajamy_128kbps_ketaballah.net': 'أحمد العجمي',
+    'Muhammad_Ayyoub_128kbps': 'محمد أيوب',
+    'Muhammad_Ayyoub_64kbps': 'محمد أيوب',
+    'Abdullah_Matroud_128kbps': 'عبد الله المطرود',
+    'Khalid_Al-Qahtani_192kbps': 'خالد القحطاني',
+    'Nasser_Alqatami_128kbps': 'ناصر القطامي',
+    'Ghamadi_40kbps': 'سعد الغامدي',
+    'Husary_128kbps': 'محمود خليل الحصري',
+    'Husary_64kbps': 'محمود خليل الحصري',
+    'Yasser_Ad-Dussary_128kbps': 'ياسر الدوسري',
+    'Ahmed_Neana_128kbps': 'أحمد نعينع',
+  };
+
   /// Audio reciter configurations
   static const Map<String, ReciterConfig> reciterConfigs = {
     'عبد الباسط عبد الصمد': ReciterConfig(
@@ -116,6 +139,13 @@ class ApiConstants {
   static const Duration defaultTimeout = Duration(seconds: 10);
   static const Duration audioTimeout = Duration(seconds: 30);
   static const Duration tafsirTimeout = Duration(seconds: 15);
+
+  /// Get reciter configuration by API code
+  static ReciterConfig? getReciterConfigByApiCode(String apiCode) {
+    final arabicName = apiCodeToArabicName[apiCode];
+    if (arabicName == null) return null;
+    return reciterConfigs[arabicName];
+  }
 }
 
 /// Configuration for audio reciter

@@ -48,6 +48,11 @@ class _SvgPageViewerState extends State<SvgPageViewer> with TickerProviderStateM
   late Animation<double> _pulseAnimation;
   Timer? _highlightRemovalTimer;
 
+  // Zoom functionality
+  late TransformationController _transformationController;
+  late AnimationController _zoomResetController;
+  late Animation<Matrix4> _zoomResetAnimation;
+
   // Calibration constants - optimized for better responsiveness
   static double get _baseScaleMultiplier => AppConstants.svgBaseScaleMultiplier;
   static double get _baseYOffset => AppConstants.svgBaseYOffset;
@@ -73,14 +78,51 @@ class _SvgPageViewerState extends State<SvgPageViewer> with TickerProviderStateM
     ));
 
     _pulseController.repeat(reverse: true);
+
+    // Initialize zoom functionality
+    _transformationController = TransformationController();
+    _zoomResetController = AnimationController(
+      duration: const Duration(milliseconds: 300),
+      vsync: this,
+    );
+
+    _zoomResetAnimation = Matrix4Tween(
+      begin: Matrix4.identity(),
+      end: Matrix4.identity(),
+    ).animate(CurvedAnimation(
+      parent: _zoomResetController,
+      curve: Curves.easeInOut,
+    ));
+
+    _zoomResetAnimation.addListener(() {
+      _transformationController.value = _zoomResetAnimation.value;
+    });
   }
 
   @override
   void dispose() {
     _pulseController.dispose();
+    _zoomResetController.dispose();
+    _transformationController.dispose();
     _highlightRemovalTimer?.cancel();
     _highlightRemovalTimer = null; // Prevent memory leaks
     super.dispose();
+  }
+
+  void _resetZoom() {
+    final currentTransform = _transformationController.value;
+    if (currentTransform != Matrix4.identity()) {
+      _zoomResetAnimation = Matrix4Tween(
+        begin: currentTransform,
+        end: Matrix4.identity(),
+      ).animate(CurvedAnimation(
+        parent: _zoomResetController,
+        curve: Curves.easeInOut,
+      ));
+
+      _zoomResetController.reset();
+      _zoomResetController.forward();
+    }
   }
 
   Color _getSvgBackgroundColor(BuildContext context) {
@@ -134,30 +176,39 @@ class _SvgPageViewerState extends State<SvgPageViewer> with TickerProviderStateM
       builder: (context, themeManager, child) {
         return LayoutBuilder(
           builder: (context, constraints) {
-            return GestureDetector(
-              onTap: () {
-                // Close any open modal sheets when tapping outside
-                if (ModalRoute.of(context)?.isCurrent == false) {
-                  Navigator.of(context).popUntil((route) => route.isCurrent);
-                }
+            return InteractiveViewer(
+              transformationController: _transformationController,
+              minScale: 1.0,
+              maxScale: 3.0,
+              onInteractionEnd: (details) {
+                // Reset zoom when fingers are lifted
+                _resetZoom();
               },
-              child: Container(
-                // Full screen container - no padding/margin that could interfere
-                width: constraints.maxWidth,
-                height: constraints.maxHeight,
-                color: _getSvgBackgroundColor(context),
-                child: Stack(
-                  children: [
-                    // Layer 1: The SVG Page
-                    Positioned.fill(
-                      child: _buildSvgLayer(constraints, themeManager),
-                    ),
+              child: GestureDetector(
+                onTap: () {
+                  // Close any open modal sheets when tapping outside
+                  if (ModalRoute.of(context)?.isCurrent == false) {
+                    Navigator.of(context).popUntil((route) => route.isCurrent);
+                  }
+                },
+                child: Container(
+                  // Full screen container - no padding/margin that could interfere
+                  width: constraints.maxWidth,
+                  height: constraints.maxHeight,
+                  color: _getSvgBackgroundColor(context),
+                  child: Stack(
+                    children: [
+                      // Layer 1: The SVG Page
+                      Positioned.fill(
+                        child: _buildSvgLayer(constraints, themeManager),
+                      ),
 
-                    // Layer 2: Interactive Overlay
-                    Positioned.fill(
-                      child: _buildInteractiveOverlay(constraints),
-                    ),
-                  ],
+                      // Layer 2: Interactive Overlay
+                      Positioned.fill(
+                        child: _buildInteractiveOverlay(constraints),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             );
@@ -304,18 +355,18 @@ class _SvgPageViewerState extends State<SvgPageViewer> with TickerProviderStateM
   DeviceMultiplier _getDeviceMultiplier(BoxConstraints constraints) {
     final double width = constraints.maxWidth;
     final double height = constraints.maxHeight;
-    
+
     // Dynamic calculation based on screen density and size
     // This ensures consistent behavior across all screen sizes without hardcoding
-    
+
     final double diagonal = sqrt(width * width + height * height);
     final double aspectRatio = max(width, height) / min(width, height);
-    
+
     // Base scale factor - closer to 1.0 for better accuracy
     // Adjust slightly based on screen size to account for rendering differences
     double scaleMultiplier;
     double offsetMultiplier;
-    
+
     if (diagonal < 800) {
       // Small screens (phones)
       scaleMultiplier = 1.0;
@@ -329,13 +380,13 @@ class _SvgPageViewerState extends State<SvgPageViewer> with TickerProviderStateM
       scaleMultiplier = 0.98;
       offsetMultiplier = 0.96;
     }
-    
+
     // Fine-tune based on aspect ratio (wider screens need slight adjustments)
     if (aspectRatio > 1.8) {
       scaleMultiplier *= 0.995;
       offsetMultiplier *= 0.99;
     }
-    
+
     return DeviceMultiplier(
       scale: scaleMultiplier,
       offset: offsetMultiplier,
@@ -460,7 +511,7 @@ class _SvgPageViewerState extends State<SvgPageViewer> with TickerProviderStateM
           maxChildSize: 0.9,
           builder: (context, scrollController) => GestureDetector(
             // Prevent taps on the sheet content from closing it
-            onTap: () {}, 
+            onTap: () {},
             child: AyahActionsSheet(
               ayahMarker: marker,
               surahName: widget.surahName,
