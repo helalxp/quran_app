@@ -1,5 +1,5 @@
-name: quran_reader
-description: "A beautiful Quran reader app with audio recitation and bookmarking features."
+name: hilal
+description: "Hilal - A beautiful Quran reader app with audio recitation and bookmarking features."
 publish_to: 'none'
 
 version: 1.0.0+1
@@ -47,4 +47,4 @@ flutter:
     - assets/pages/
     - assets/surah.json
     - assets/markers.json
-    # Add assets/images/ folder when you have app icons to include
+    - assets/app_icon.png

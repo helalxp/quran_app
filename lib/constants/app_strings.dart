@@ -45,6 +45,7 @@ class AppStrings {
   static const String audioStopped = 'متوقف';
   static const String audioBuffering = 'جاري التحميل...';
   static const String audioLoading = 'جاري تحضير الملف...';
+  static const String loading = 'جاري التحميل...';
   
   // Dialog Actions
   static const String cancel = 'إلغاء';

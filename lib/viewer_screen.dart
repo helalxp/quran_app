@@ -19,6 +19,9 @@ import 'constants/juz_mappings.dart';
 import 'constants/app_strings.dart';
 import 'utils/animation_utils.dart';
 import 'utils/haptic_utils.dart';
+import 'widgets/loading_states.dart';
+import 'widgets/jump_to_page_dialog.dart';
+import 'managers/page_cache_manager.dart';
 
 class ViewerScreen extends StatefulWidget {
   const ViewerScreen({super.key});
@@ -48,7 +51,7 @@ class _ViewerScreenState extends State<ViewerScreen> with TickerProviderStateMix
   
   // Performance optimization: Cache expensive computations
   final Map<int, ({String surahName, String juzNumber})> _pageInfoCache = {};
-  final Map<int, Widget> _cachedPages = {};
+  final PageCacheManager _pageCacheManager = PageCacheManager();
   
   // Memorization mode indicator
   final ValueNotifier<bool> _isMemorizationModeActive = ValueNotifier(false);
@@ -247,47 +250,19 @@ class _ViewerScreenState extends State<ViewerScreen> with TickerProviderStateMix
       _checkBookmarkStatus();
       
       // Performance: Clean up old cached pages to prevent memory leaks
-      _cleanupPageCache(newPage);
+      _pageCacheManager.cleanupCache(newPage);
     }
   }
   
-  void _cleanupPageCache(int currentPage) {
-    // Keep only pages within a reasonable range around current page
-    const cacheRange = 5;
-    final keysToRemove = _cachedPages.keys
-        .where((page) => (page - currentPage).abs() > cacheRange)
-        .toList();
-    
-    for (final key in keysToRemove) {
-      _cachedPages.remove(key);
-    }
-    
-    // Also clean page info cache if it gets too large
-    if (_pageInfoCache.length > 50) {
-      final infoKeysToRemove = _pageInfoCache.keys
-          .where((page) => (page - currentPage).abs() > 25)
-          .toList();
-      
-      for (final key in infoKeysToRemove) {
-        _pageInfoCache.remove(key);
-      }
-    }
-  }
   
   void _preloadAdjacentPages(int currentPage) {
-    // Preload previous and next pages for smooth swiping
+    _pageCacheManager.preloadAdjacentPages(currentPage);
+
+    // Still preload page info for UI display
     final pagesToPreload = [currentPage - 1, currentPage + 1];
-    
     for (final pageNumber in pagesToPreload) {
-      if (pageNumber > 0 && 
-          pageNumber <= totalPages && 
-          !_cachedPages.containsKey(pageNumber)) {
-        
-        // Cache page info for smoother performance
+      if (pageNumber > 0 && pageNumber <= totalPages) {
         _getInfoForPage(pageNumber);
-        
-        // Note: Actual widget caching happens during build to avoid memory issues
-        // This just ensures the page info is ready
       }
     }
   }
@@ -666,15 +641,8 @@ class _ViewerScreenState extends State<ViewerScreen> with TickerProviderStateMix
       return Scaffold(
         backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         resizeToAvoidBottomInset: false, // Keep background static
-        body: const Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              CircularProgressIndicator(),
-              SizedBox(height: 16),
-              Text('Loading Quran...', style: TextStyle(fontSize: 16)),
-            ],
-          ),
+        body: LoadingStates.fullScreen(
+          message: 'جاري تحميل المصحف...',
         ),
       );
     }
@@ -704,10 +672,7 @@ class _ViewerScreenState extends State<ViewerScreen> with TickerProviderStateMix
                       itemBuilder: (context, index) {
                         final pageNumber = index + 1;
                         
-                        // Performance: Use cached page widget if available
-                        if (_cachedPages.containsKey(pageNumber)) {
-                          return _cachedPages[pageNumber]!;
-                        }
+                        // Performance optimization handled by PageCacheManager
                         
                         // Preload adjacent pages for smoother swiping
                         _preloadAdjacentPages(pageNumber);
@@ -728,8 +693,7 @@ class _ViewerScreenState extends State<ViewerScreen> with TickerProviderStateMix
                           memorizationManager: _memorizationManager,
                         );
                         
-                        // Cache the built widget for performance
-                        _cachedPages[pageNumber] = pageWidget;
+                        // Widget caching now handled by PageCacheManager
                         
                         // Wrap in themed container to prevent white flash during loading
                         return Container(
@@ -1126,126 +1090,12 @@ class _ViewerScreenState extends State<ViewerScreen> with TickerProviderStateMix
     HapticUtils.dialogOpen(); // Haptic feedback for dialog open
     showDialog<void>(
       context: context,
-      builder: (context) => _JumpToPageDialog(
-        onPageJump: _jumpToPage,
-        maxPage: totalPages,
+      builder: (context) => JumpToPageDialog(
+        currentPage: _currentPageNotifier.value,
+        totalPages: totalPages,
+        onPageSelected: _jumpToPage,
       ),
     );
   }
 
 }
-
-class _JumpToPageDialog extends StatefulWidget {
-  final Function(int) onPageJump;
-  final int maxPage;
-
-  const _JumpToPageDialog({
-    required this.onPageJump,
-    required this.maxPage,
-  });
-
-  @override
-  _JumpToPageDialogState createState() => _JumpToPageDialogState();
-}
-
-class _JumpToPageDialogState extends State<_JumpToPageDialog> {
-  final TextEditingController _controller = TextEditingController();
-  String? _errorText;
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  void _validateAndJump() {
-    final input = _controller.text.trim();
-    if (input.isEmpty) {
-      setState(() {
-        _errorText = 'يرجى إدخال رقم الصفحة';
-      });
-      return;
-    }
-
-    final pageNumber = int.tryParse(input);
-    if (pageNumber == null) {
-      setState(() {
-        _errorText = 'يرجى إدخال رقم صحيح';
-      });
-      return;
-    }
-
-    if (pageNumber < 1 || pageNumber > widget.maxPage) {
-      setState(() {
-        _errorText = 'رقم الصفحة يجب أن يكون بين 1 و ${widget.maxPage}';
-      });
-      return;
-    }
-
-    Navigator.of(context).pop();
-    widget.onPageJump(pageNumber);
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return AlertDialog(
-      title: Text(
-        'الذهاب إلى صفحة',
-        style: TextStyle(
-          color: Theme.of(context).colorScheme.onSurface,
-          fontWeight: FontWeight.bold,
-        ),
-        textAlign: TextAlign.right,
-      ),
-      content: Directionality(
-        textDirection: TextDirection.rtl,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'أدخل رقم الصفحة (1-${widget.maxPage}):',
-              style: TextStyle(
-                color: Theme.of(context).colorScheme.onSurface,
-              ),
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: _controller,
-              keyboardType: TextInputType.number,
-              textAlign: TextAlign.center,
-              decoration: InputDecoration(
-                border: const OutlineInputBorder(),
-                errorText: _errorText,
-                hintText: 'رقم الصفحة',
-              ),
-              onChanged: (value) {
-                if (_errorText != null) {
-                  setState(() {
-                    _errorText = null;
-                  });
-                }
-              },
-              onSubmitted: (value) => _validateAndJump(),
-              autofocus: true,
-            ),
-          ],
-        ),
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.of(context).pop(),
-          child: Text(
-            'إلغاء',
-            style: TextStyle(color: Theme.of(context).colorScheme.primary),
-          ),
-        ),
-        ElevatedButton(
-          onPressed: _validateAndJump,
-          child: const Text('اذهب'),
-        ),
-      ],
-    );
-  }
-}
-

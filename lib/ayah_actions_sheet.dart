@@ -12,6 +12,8 @@ import 'constants/app_constants.dart';
 import 'constants/api_constants.dart';
 import 'bookmark_manager.dart';
 import 'memorization_manager.dart';
+import 'widgets/loading_states.dart';
+import 'utils/input_sanitizer.dart';
 
 class AyahActionsSheet extends StatefulWidget {
   final AyahMarker ayahMarker;
@@ -467,7 +469,7 @@ class _AyahActionsSheetState extends State<AyahActionsSheet> with TickerProvider
           ayah: widget.ayahMarker,
           reciterName: _defaultReciter,
         );
-        _showMemorizationFeedback('بدء جلسة الحفظ للآية ${widget.ayahMarker.ayah}');
+        _showMemorizationFeedback('بدء جلسة التحفيظ للآية ${widget.ayahMarker.ayah}');
         break;
         
       case MemorizationMode.ayahRange:
@@ -481,7 +483,7 @@ class _AyahActionsSheetState extends State<AyahActionsSheet> with TickerProvider
           ayah: widget.ayahMarker,
           reciterName: _defaultReciter,
         );
-        _showMemorizationFeedback('بدء جلسة الحفظ للسورة كاملة');
+        _showMemorizationFeedback('بدء جلسة التحفيظ للسورة كاملة');
         break;
     }
   }
@@ -628,7 +630,7 @@ class _AyahActionsSheetState extends State<AyahActionsSheet> with TickerProvider
 
                         // Ayah text
                         if (_isLoadingAyahText)
-                          const Center(child: CircularProgressIndicator())
+                          Center(child: LoadingStates.circular(size: 24))
                         else if (_ayahText != null) ...[
                           Container(
                             padding: const EdgeInsets.all(AppConstants.actionSheetPadding),
@@ -722,7 +724,7 @@ class _AyahActionsSheetState extends State<AyahActionsSheet> with TickerProvider
 
                         // Memorization section
                         if (widget.memorizationManager != null) ...[
-                          _buildSectionTitle('حفظ الآية'),
+                          _buildSectionTitle('التحفيظ'),
                           const SizedBox(height: 12),
                           Container(
                             width: double.infinity,
@@ -762,7 +764,7 @@ class _AyahActionsSheetState extends State<AyahActionsSheet> with TickerProvider
                                       crossAxisAlignment: CrossAxisAlignment.start,
                                       children: [
                                         Text(
-                                          'تكرار الآية للحفظ',
+                                          'التحفيظ',
                                           style: TextStyle(
                                             color: Theme.of(context).colorScheme.onSecondary,
                                             fontSize: 16,
@@ -1034,7 +1036,7 @@ class _AyahRangeDialogState extends State<_AyahRangeDialog> {
   Widget build(BuildContext context) {
     return AlertDialog(
       title: Text(
-        'تحديد نطاق الآيات للحفظ',
+        'تحديد نطاق الآيات للتحفيظ',
         style: TextStyle(
           color: Theme.of(context).colorScheme.onSurface,
           fontWeight: FontWeight.bold,
@@ -1064,15 +1066,31 @@ class _AyahRangeDialogState extends State<_AyahRangeDialog> {
                 const Expanded(child: Text(AppStrings.fromAyah)),
                 SizedBox(
                   width: 80,
-                  child: TextField(
+                  child: TextFormField(
                     controller: TextEditingController(text: _fromAyah.toString()),
                     keyboardType: TextInputType.number,
                     textAlign: TextAlign.center,
+                    maxLength: 3,
                     decoration: const InputDecoration(
                       border: OutlineInputBorder(),
                       contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                      counterText: '', // Hide character counter
                     ),
-                    onChanged: (value) => _validateInput(value, false),
+                    validator: InputSanitizer.createValidator(
+                      fieldName: 'الآية الأولى',
+                      required: true,
+                      isNumeric: true,
+                      minValue: 1,
+                      maxValue: _maxAyahInSurah,
+                    ),
+                    onChanged: (value) {
+                      final formatted = QuranInputFormatters.formatAyahNumber(value, _maxAyahInSurah);
+                      if (formatted != value) {
+                        final controller = TextEditingController(text: formatted);
+                        controller.selection = TextSelection.collapsed(offset: formatted.length);
+                      }
+                      _validateInput(formatted, false);
+                    },
                   ),
                 ),
               ],
@@ -1086,15 +1104,33 @@ class _AyahRangeDialogState extends State<_AyahRangeDialog> {
                 const Expanded(child: Text(AppStrings.toAyah)),
                 SizedBox(
                   width: 80,
-                  child: TextField(
+                  child: TextFormField(
                     controller: _toAyahController,
                     keyboardType: TextInputType.number,
                     textAlign: TextAlign.center,
+                    maxLength: 3,
                     decoration: const InputDecoration(
                       border: OutlineInputBorder(),
                       contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                      counterText: '', // Hide character counter
                     ),
-                    onChanged: (value) => _validateInput(value, true),
+                    validator: InputSanitizer.createValidator(
+                      fieldName: 'الآية الأخيرة',
+                      required: true,
+                      isNumeric: true,
+                      minValue: 1,
+                      maxValue: _maxAyahInSurah,
+                    ),
+                    onChanged: (value) {
+                      final formatted = QuranInputFormatters.formatAyahNumber(value, _maxAyahInSurah);
+                      if (formatted != value) {
+                        _toAyahController.value = _toAyahController.value.copyWith(
+                          text: formatted,
+                          selection: TextSelection.collapsed(offset: formatted.length),
+                        );
+                      }
+                      _validateInput(formatted, true);
+                    },
                   ),
                 ),
               ],

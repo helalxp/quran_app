@@ -7,9 +7,12 @@ import 'theme_manager.dart';
 import 'continuous_audio_manager.dart';
 import 'memorization_manager.dart';
 import 'audio_download_manager.dart';
-import 'constants/api_constants.dart';
+import 'constants/settings_data.dart';
 import 'utils/animation_utils.dart';
 import 'utils/haptic_utils.dart';
+import 'widgets/loading_states.dart';
+import 'screens/tafsir_sources_screen.dart';
+import 'widgets/download_manager_sheet.dart';
 
 class SettingsScreen extends StatefulWidget {
   final MemorizationManager? memorizationManager;
@@ -61,77 +64,10 @@ class _SettingsScreenState extends State<SettingsScreen> with TickerProviderStat
     'عبد الله المطرود': ReciterInfo('Abdullah Al-Matroud', 'Abdullah_Matroud_128kbps'),
   };
 
-  // CORRECTED: Replace the _tafsirSources map with this complete version.
-  final Map<String, TafsirInfo> _tafsirSources = {
-    'التفسير الميسر': TafsirInfo(
-      englishName: 'Al-Muyassar',
-      fullArabicName: 'التفسير الميسر',
-      author: 'نخبة من علماء التفسير',
-      authorLifespan: 'معاصر',
-      description: 'تفسير مبسط ومعاصر بلغة سهلة.',
-      methodology: 'منهج تبسيطي يركز على المعنى العام',
-      features: ['البساطة والوضوح', 'اللغة المعاصرة', 'التركيز على المعاني العملية'],
-      difficulty: 'مبتدئ',
-      volumes: 'مجلد واحد',
-    ),
-    'تفسير الجلالين': TafsirInfo(
-      englishName: 'Jalalayn',
-      fullArabicName: 'تفسير الجلالين',
-      author: 'الجلال المحلي والجلال السيوطي',
-      authorLifespan: '(791-864 هـ) و (849-911 هـ)',
-      description: 'تفسير مختصر وواضح مناسب للمبتدئين.',
-      methodology: 'تفسير مختصر بأسلوب سهل ومباشر',
-      features: ['الإيجاز والوضوح', 'تفسير المفردات', 'المعاني الأساسية'],
-      difficulty: 'مبتدئ إلى متوسط',
-      volumes: 'مجلد واحد',
-    ),
-    'تفسير السعدي': TafsirInfo(
-      englishName: 'As-Sa\'di',
-      fullArabicName: 'تيسير الكريم الرحمن في تفسير كلام المنان',
-      author: 'الشيخ عبد الرحمن السعدي',
-      authorLifespan: '(1307-1376 هـ)',
-      description: 'تفسير متوسط الطول يجمع بين الوضوح والعمق.',
-      methodology: 'منهج سلفي معتدل مع التركيز على الهداية العملية',
-      features: ['الوضوح والاعتدال', 'الفوائد العملية', 'التطبيق المعاصر'],
-      difficulty: 'متوسط',
-      volumes: 'مجلد واحد',
-    ),
-    'تفسير ابن كثير': TafsirInfo(
-      englishName: 'Ibn Kathir',
-      fullArabicName: 'تفسير القرآن العظيم',
-      author: 'الحافظ ابن كثير الدمشقي',
-      authorLifespan: '(701-774 هـ)',
-      description: 'تفسير شامل ومفصل يعتمد على القرآن والسنة والأثر.',
-      methodology: 'منهج السلف في التفسير بالمأثور',
-      features: ['تفسير بالقرآن والسنة', 'أسباب النزول', 'الأحاديث الصحيحة'],
-      difficulty: 'متوسط إلى متقدم',
-      volumes: '8 مجلدات',
-    ),
-    'تفسير الطبري': TafsirInfo(
-      englishName: 'At-Tabari',
-      fullArabicName: 'جامع البيان عن تأويل آي القرآن',
-      author: 'الإمام أبو جعفر الطبري',
-      authorLifespan: '(224-310 هـ)',
-      description: 'أول تفسير تاريخي مفصل وأكثرها شمولية.',
-      methodology: 'التفسير بالمأثور مع ذكر الأقوال المختلفة',
-      features: ['الشمولية التاريخية', 'الأسانيد المفصلة', 'الأقوال المتنوعة'],
-      difficulty: 'متقدم',
-      volumes: '24 مجلد',
-    ),
-    'تفسير القرطبي': TafsirInfo(
-      englishName: 'Al-Qurtubi',
-      fullArabicName: 'الجامع لأحكام القرآن',
-      author: 'الإمام القرطبي المالكي',
-      authorLifespan: '(600-671 هـ)',
-      description: 'تفسير فقهي وتاريخي يركز على الأحكام الشرعية.',
-      methodology: 'استنباط الأحكام الفقهية من الآيات',
-      features: ['الأحكام الفقهية', 'المذاهب الأربعة', 'القضايا الاجتماعية'],
-      difficulty: 'متوسط إلى متقدم',
-      volumes: '20 مجلد',
-    ),
-  };
+  // Use tafsir sources from SettingsData
+  Map<String, TafsirInfo> get _tafsirSources => SettingsData.tafsirInfo;
 
-  final List<double> _speedOptions = [0.5, 0.75, 1.0, 1.25, 1.5, 2.0];
+  // Use speed options from SettingsData
 
   @override
   void initState() {
@@ -323,7 +259,7 @@ class _SettingsScreenState extends State<SettingsScreen> with TickerProviderStat
     if (_isLoading) {
       return Scaffold(
         backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-        body: const Center(child: CircularProgressIndicator()),
+        body: LoadingStates.fullScreen(message: 'جاري تحميل الإعدادات...'),
       );
     }
 
@@ -939,64 +875,118 @@ class _SettingsScreenState extends State<SettingsScreen> with TickerProviderStat
     final tafsirInfo = _tafsirSources[tafsirName];
     if (tafsirInfo == null) return;
 
-    showDialog(
+    showModalBottomSheet(
       context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
       builder: (context) => Directionality(
         textDirection: TextDirection.rtl,
-        child: AlertDialog(
-          title: Text(tafsirName),
-          content: SingleChildScrollView(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                _buildInfoRow('الاسم الكامل:', tafsirInfo.fullArabicName),
-                const SizedBox(height: 8),
-                _buildInfoRow('المؤلف:', tafsirInfo.author),
-                const SizedBox(height: 8),
-                _buildInfoRow('فترة الحياة:', tafsirInfo.authorLifespan),
-                const SizedBox(height: 8),
-                _buildInfoRow('الوصف:', tafsirInfo.description),
-                const SizedBox(height: 8),
-                _buildInfoRow('المنهج:', tafsirInfo.methodology),
-                const SizedBox(height: 8),
-                _buildInfoRow('مستوى الصعوبة:', tafsirInfo.difficulty),
-                const SizedBox(height: 8),
-                _buildInfoRow('عدد المجلدات:', tafsirInfo.volumes),
-                const SizedBox(height: 12),
-
-                const Text(
-                  'الميزات الرئيسية:',
-                  style: TextStyle(fontWeight: FontWeight.bold),
+        child: Container(
+          margin: const EdgeInsets.all(16),
+          constraints: BoxConstraints(
+            maxHeight: MediaQuery.of(context).size.height * 0.7,
+          ),
+          decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.surface,
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Handle bar
+              Container(
+                width: 40,
+                height: 4,
+                margin: const EdgeInsets.only(top: 12, bottom: 20),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.3),
+                  borderRadius: BorderRadius.circular(2),
                 ),
-                const SizedBox(height: 4),
-                ...tafsirInfo.features.map((feature) => Padding(
-                  padding: const EdgeInsets.only(right: 16, bottom: 2),
-                  child: Row(
+              ),
+
+              // Title
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                child: Text(
+                  tafsirName,
+                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 16),
+
+              // Content
+              Expanded(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.symmetric(horizontal: 24),
+                  child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text('• '),
-                      Expanded(child: Text(feature)),
+                      _buildInfoRow('الاسم الكامل:', tafsirInfo.fullArabicName),
+                      const SizedBox(height: 8),
+                      _buildInfoRow('المؤلف:', tafsirInfo.author),
+                      const SizedBox(height: 8),
+                      _buildInfoRow('فترة الحياة:', tafsirInfo.authorLifespan),
+                      const SizedBox(height: 8),
+                      _buildInfoRow('الوصف:', tafsirInfo.description),
+                      const SizedBox(height: 8),
+                      _buildInfoRow('المنهج:', tafsirInfo.methodology),
+                      const SizedBox(height: 8),
+                      _buildInfoRow('مستوى الصعوبة:', tafsirInfo.difficulty),
+                      const SizedBox(height: 8),
+                      _buildInfoRow('عدد المجلدات:', tafsirInfo.volumes),
+                      const SizedBox(height: 12),
+
+                      const Text(
+                        'الميزات الرئيسية:',
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                      const SizedBox(height: 4),
+                      ...tafsirInfo.features.map((feature) => Padding(
+                        padding: const EdgeInsets.only(right: 16, bottom: 2),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text('• '),
+                            Expanded(child: Text(feature)),
+                          ],
+                        ),
+                      )),
                     ],
                   ),
-                )),
-              ],
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('حسناً'),
-            ),
-            if (tafsirName != _selectedTafsir)
-              ElevatedButton(
-                onPressed: () {
-                  Navigator.pop(context);
-                  _saveTafsir(tafsirName);
-                },
-                child: const Text('اختيار هذا التفسير'),
+                ),
               ),
-          ],
+
+              // Actions
+              Padding(
+                padding: const EdgeInsets.all(24),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: () => Navigator.pop(context),
+                        child: const Text('حسناً'),
+                      ),
+                    ),
+                    if (tafsirName != _selectedTafsir) ...[
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: ElevatedButton(
+                          onPressed: () {
+                            Navigator.pop(context);
+                            _saveTafsir(tafsirName);
+                          },
+                          child: const Text('اختيار هذا التفسير'),
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -1057,7 +1047,7 @@ class _SettingsScreenState extends State<SettingsScreen> with TickerProviderStat
                 ),
               ),
               const Divider(height: 1),
-              ..._speedOptions.map((speed) {
+              ...SettingsData.speedOptions.map((speed) {
                 final isSelected = speed == _playbackSpeed;
                 return ListTile(
                   title: Text('${speed}x'),
@@ -1295,981 +1285,4 @@ class _SettingsScreenState extends State<SettingsScreen> with TickerProviderStat
 }
 
 // Helper classes for better organization
-class ReciterInfo {
-  final String englishName;
-  final String apiCode;
 
-  ReciterInfo(this.englishName, this.apiCode);
-}
-
-class TafsirInfo {
-  final String englishName;
-  final String fullArabicName;
-  final String author;
-  final String authorLifespan;
-  final String description;
-  final String methodology;
-  final List<String> features;
-  final String difficulty;
-  final String volumes;
-
-  TafsirInfo({
-    required this.englishName,
-    required this.fullArabicName,
-    required this.author,
-    required this.authorLifespan,
-    required this.description,
-    required this.methodology,
-    required this.features,
-    required this.difficulty,
-    required this.volumes,
-  });
-}
-
-// New screen for detailed tafsir sources
-class TafsirSourcesScreen extends StatelessWidget {
-  final Map<String, TafsirInfo> tafsirSources;
-  final String currentSelection;
-  final Function(String) onTafsirSelected;
-
-  const TafsirSourcesScreen({
-    super.key,
-    required this.tafsirSources,
-    required this.currentSelection,
-    required this.onTafsirSelected,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Directionality(
-      textDirection: TextDirection.rtl,
-      child: Scaffold(
-        backgroundColor: Theme
-            .of(context)
-            .scaffoldBackgroundColor,
-        appBar: AppBar(
-          backgroundColor: Theme
-              .of(context)
-              .scaffoldBackgroundColor,
-          elevation: 0,
-          title: const Text(
-            'مصادر التفسير',
-            style: TextStyle(
-              fontSize: 22,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          centerTitle: true,
-        ),
-        body: ListView.builder(
-          padding: const EdgeInsets.all(16),
-          itemCount: tafsirSources.length,
-          itemBuilder: (context, index) {
-            final tafsirName = tafsirSources.keys.elementAt(index);
-            final tafsirInfo = tafsirSources[tafsirName]!;
-            final isSelected = tafsirName == currentSelection;
-
-            return Card(
-              elevation: 2,
-              margin: const EdgeInsets.only(bottom: 12),
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12)),
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Title row
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            tafsirName,
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              color: isSelected
-                                  ? Theme
-                                  .of(context)
-                                  .colorScheme
-                                  .primary
-                                  : Theme
-                                  .of(context)
-                                  .colorScheme
-                                  .onSurface,
-                            ),
-                          ),
-                        ),
-                        if (isSelected)
-                          Icon(
-                            Icons.check_circle,
-                            color: Theme
-                                .of(context)
-                                .colorScheme
-                                .primary,
-                          ),
-                      ],
-                    ),
-
-                    const SizedBox(height: 8),
-
-                    // Author and timespan
-                    Text(
-                      '${tafsirInfo.author} ${tafsirInfo.authorLifespan}',
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                        color: Theme
-                            .of(context)
-                            .colorScheme
-                            .onSurface
-                            .withValues(alpha: 0.8),
-                      ),
-                    ),
-
-                    const SizedBox(height: 8),
-
-                    // Description
-                    Text(
-                      tafsirInfo.description,
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Theme
-                            .of(context)
-                            .colorScheme
-                            .onSurface
-                            .withValues(alpha: 0.7),
-                      ),
-                    ),
-
-                    const SizedBox(height: 12),
-
-                    // Info chips
-                    Wrap(
-                      spacing: 8,
-                      runSpacing: 4,
-                      children: [
-                        _buildInfoChip(
-                          context,
-                          Icons.school,
-                          tafsirInfo.difficulty,
-                        ),
-                        _buildInfoChip(
-                          context,
-                          Icons.library_books,
-                          tafsirInfo.volumes,
-                        ),
-                      ],
-                    ),
-
-                    const SizedBox(height: 12),
-
-                    // Action buttons
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.end,
-                      children: [
-                        TextButton.icon(
-                          onPressed: () =>
-                              _showDetailedInfo(
-                                  context, tafsirName, tafsirInfo),
-                          icon: const Icon(Icons.info_outline, size: 16),
-                          label: const Text('تفاصيل أكثر'),
-                        ),
-                        const SizedBox(width: 8),
-                        if (!isSelected)
-                          ElevatedButton(
-                            onPressed: () {
-                              onTafsirSelected(tafsirName);
-                              Navigator.pop(context);
-                            },
-                            child: const Text('اختيار'),
-                          ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            );
-          },
-        ),
-      ),
-    );
-  }
-
-  Widget _buildInfoChip(BuildContext context, IconData icon, String label) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(
-        color: Theme
-            .of(context)
-            .colorScheme
-            .primaryContainer
-            .withValues(alpha: 0.3),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: Theme
-              .of(context)
-              .colorScheme
-              .outline
-              .withValues(alpha: 0.2),
-        ),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(
-            icon,
-            size: 14,
-            color: Theme
-                .of(context)
-                .colorScheme
-                .onSurface
-                .withValues(alpha: 0.7),
-          ),
-          const SizedBox(width: 4),
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 12,
-              color: Theme
-                  .of(context)
-                  .colorScheme
-                  .onSurface
-                  .withValues(alpha: 0.7),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _showDetailedInfo(BuildContext context, String tafsirName,
-      TafsirInfo tafsirInfo) {
-    showDialog(
-      context: context,
-      builder: (context) =>
-          Directionality(
-            textDirection: TextDirection.rtl,
-            child: AlertDialog(
-              title: Text(tafsirName),
-              content: SingleChildScrollView(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    _buildDetailRow('الاسم الكامل:', tafsirInfo.fullArabicName),
-                    const SizedBox(height: 8),
-                    _buildDetailRow('المؤلف:', tafsirInfo.author),
-                    const SizedBox(height: 8),
-                    _buildDetailRow('فترة الحياة:', tafsirInfo.authorLifespan),
-                    const SizedBox(height: 8),
-                    _buildDetailRow('الوصف:', tafsirInfo.description),
-                    const SizedBox(height: 8),
-                    _buildDetailRow('المنهج:', tafsirInfo.methodology),
-                    const SizedBox(height: 8),
-                    _buildDetailRow('مستوى الصعوبة:', tafsirInfo.difficulty),
-                    const SizedBox(height: 8),
-                    _buildDetailRow('عدد المجلدات:', tafsirInfo.volumes),
-                    const SizedBox(height: 12),
-
-                    const Text(
-                      'الميزات الرئيسية:',
-                      style: TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                    const SizedBox(height: 4),
-                    ...tafsirInfo.features.map((feature) =>
-                        Padding(
-                          padding: const EdgeInsets.only(right: 16, bottom: 2),
-                          child: Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Text('• '),
-                              Expanded(child: Text(feature)),
-                            ],
-                          ),
-                        )),
-                  ],
-                ),
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: const Text('إغلاق'),
-                ),
-                if (tafsirName != currentSelection)
-                  ElevatedButton(
-                    onPressed: () {
-                      Navigator.pop(context); // Close dialog
-                      onTafsirSelected(tafsirName);
-                      Navigator.pop(context); // Close sources screen
-                    },
-                    child: const Text('اختيار هذا التفسير'),
-                  ),
-              ],
-            ),
-          ),
-    );
-  }
-
-  Widget _buildDetailRow(String label, String value) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: const TextStyle(fontWeight: FontWeight.w600),
-        ),
-        const SizedBox(width: 8),
-        Expanded(
-          child: Text(value),
-        ),
-      ],
-    );
-  }
-}
-
-class DownloadManagerBottomSheet extends StatefulWidget {
-  final AudioDownloadManager downloadManager;
-  final String selectedReciter;
-  final Map<String, ReciterInfo> reciters;
-
-  const DownloadManagerBottomSheet({
-    super.key,
-    required this.downloadManager,
-    required this.selectedReciter,
-    required this.reciters,
-  });
-
-  @override
-  State<DownloadManagerBottomSheet> createState() => _DownloadManagerBottomSheetState();
-}
-
-class _DownloadManagerBottomSheetState extends State<DownloadManagerBottomSheet> {
-  int _selectedTab = 0;
-  bool _isDownloading = false;
-  double _downloadProgress = 0.0;
-  String _downloadStatus = '';
-
-  @override
-  Widget build(BuildContext context) {
-    return Directionality(
-      textDirection: TextDirection.rtl,
-      child: Container(
-        height: MediaQuery.of(context).size.height * 0.85,
-        decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.surface,
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-        ),
-        child: Column(
-          children: [
-            // Handle bar
-            Container(
-              margin: const EdgeInsets.only(top: 12, bottom: 8),
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.4),
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-
-            // Header
-            Container(
-              padding: const EdgeInsets.all(20),
-              child: Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: Theme.of(context).colorScheme.primary,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Icon(
-                      Icons.download_rounded,
-                      color: Theme.of(context).colorScheme.onPrimary,
-                      size: 28,
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'إدارة التحميلات',
-                          style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          'تحميل ومتابعة تلاوة القرآن الكريم',
-                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-            // Content
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                child: Column(
-                  children: [
-                      // Tabs
-                      Container(
-                        padding: const EdgeInsets.all(4),
-                        decoration: BoxDecoration(
-                          color: Theme.of(context).colorScheme.surfaceContainerHighest,
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Row(
-                          children: [
-                            Expanded(
-                              child: _buildTab('السور', 0, Icons.book),
-                            ),
-                            Expanded(
-                              child: _buildTab('الأجزاء', 1, Icons.menu_book),
-                            ),
-                            Expanded(
-                              child: _buildTab('التحميلات', 2, Icons.download_done),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 20),
-
-                      // Content
-                      Expanded(
-                        child: _selectedTab == 0
-                            ? _buildSurahsList()
-                            : _selectedTab == 1
-                                ? _buildJuzsList()
-                                : _buildDownloadsManagerList(),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-
-            // Download status
-            if (_isDownloading) ...[
-              Container(
-                margin: const EdgeInsets.all(20),
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.secondaryContainer,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Column(
-                  children: [
-                    Row(
-                      children: [
-                        SizedBox(
-                          width: 24,
-                          height: 24,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2.5,
-                            valueColor: AlwaysStoppedAnimation<Color>(
-                              Theme.of(context).colorScheme.primary,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Text(
-                            _downloadStatus,
-                            style: TextStyle(
-                              color: Theme.of(context).colorScheme.onSecondaryContainer,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-                    LinearProgressIndicator(
-                      value: _downloadProgress,
-                      backgroundColor: Theme.of(context).colorScheme.onSecondaryContainer.withValues(alpha: 0.2),
-                      valueColor: AlwaysStoppedAnimation<Color>(
-                        Theme.of(context).colorScheme.primary,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-
-            // Bottom safe area
-            SizedBox(height: MediaQuery.of(context).padding.bottom),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildTab(String title, int index, IconData icon) {
-    final isSelected = _selectedTab == index;
-    return GestureDetector(
-      onTap: () => setState(() => _selectedTab = index),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-        decoration: BoxDecoration(
-          color: isSelected
-              ? Theme.of(context).colorScheme.primary
-              : Colors.transparent,
-          borderRadius: BorderRadius.circular(8),
-          boxShadow: isSelected
-              ? [
-                  BoxShadow(
-                    color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.3),
-                    blurRadius: 8,
-                    offset: const Offset(0, 2),
-                  ),
-                ]
-              : null,
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              icon,
-              size: 20,
-              color: isSelected
-                  ? Theme.of(context).colorScheme.onPrimary
-                  : Theme.of(context).colorScheme.onSurface,
-            ),
-            const SizedBox(height: 4),
-            Text(
-              title,
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 12,
-                color: isSelected
-                    ? Theme.of(context).colorScheme.onPrimary
-                    : Theme.of(context).colorScheme.onSurface,
-                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildSurahsList() {
-    return ListView.builder(
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      itemCount: 114, // Total Surahs
-      itemBuilder: (context, index) {
-        final surahNumber = index + 1;
-        return Container(
-          margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-          decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.surface,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(
-              color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.2),
-            ),
-          ),
-          child: ListTile(
-            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            leading: Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.primaryContainer,
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Center(
-                child: Text(
-                  '$surahNumber',
-                  style: TextStyle(
-                    color: Theme.of(context).colorScheme.onPrimaryContainer,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-            ),
-            title: Text(
-              'سورة ${getSurahName(surahNumber)}',
-              style: const TextStyle(fontWeight: FontWeight.w600),
-            ),
-            subtitle: Text(
-              widget.reciters[widget.selectedReciter]?.englishName ?? widget.selectedReciter,
-              style: TextStyle(
-                color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
-              ),
-            ),
-            trailing: Container(
-              decoration: BoxDecoration(
-                color: _isDownloading
-                    ? Theme.of(context).colorScheme.outline.withValues(alpha: 0.1)
-                    : Theme.of(context).colorScheme.primary,
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: IconButton(
-                icon: Icon(
-                  Icons.download_rounded,
-                  color: _isDownloading
-                      ? Theme.of(context).colorScheme.outline
-                      : Theme.of(context).colorScheme.onPrimary,
-                ),
-                onPressed: _isDownloading ? null : () => _downloadSurah(surahNumber),
-              ),
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _buildJuzsList() {
-    return ListView.builder(
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      itemCount: 30, // Total Juz
-      itemBuilder: (context, index) {
-        final juzNumber = index + 1;
-        return Container(
-          margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-          decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.surface,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(
-              color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.2),
-            ),
-          ),
-          child: ListTile(
-            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            leading: Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.secondaryContainer,
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Center(
-                child: Text(
-                  '$juzNumber',
-                  style: TextStyle(
-                    color: Theme.of(context).colorScheme.onSecondaryContainer,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-            ),
-            title: Text(
-              'الجزء $juzNumber',
-              style: const TextStyle(fontWeight: FontWeight.w600),
-            ),
-            subtitle: Text(
-              widget.reciters[widget.selectedReciter]?.englishName ?? widget.selectedReciter,
-              style: TextStyle(
-                color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
-              ),
-            ),
-            trailing: Container(
-              decoration: BoxDecoration(
-                color: _isDownloading
-                    ? Theme.of(context).colorScheme.outline.withValues(alpha: 0.1)
-                    : Theme.of(context).colorScheme.primary,
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: IconButton(
-                icon: Icon(
-                  Icons.download_rounded,
-                  color: _isDownloading
-                      ? Theme.of(context).colorScheme.outline
-                      : Theme.of(context).colorScheme.onPrimary,
-                ),
-                onPressed: _isDownloading ? null : () => _downloadJuz(juzNumber),
-              ),
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _buildDownloadsManagerList() {
-    final completedDownloads = widget.downloadManager.getCompletedDownloads();
-
-    if (completedDownloads.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.download_done,
-              size: 64,
-              color: Theme.of(context).colorScheme.outline,
-            ),
-            const SizedBox(height: 16),
-            Text(
-              'لا توجد تحميلات',
-              style: TextStyle(
-                fontSize: 18,
-                color: Theme.of(context).colorScheme.outline,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'ستظهر هنا التحميلات المكتملة',
-              style: TextStyle(
-                fontSize: 14,
-                color: Theme.of(context).colorScheme.outline,
-              ),
-              textAlign: TextAlign.center,
-            ),
-          ],
-        ),
-      );
-    }
-
-    return ListView.builder(
-      itemCount: completedDownloads.length,
-      itemBuilder: (context, index) {
-        final download = completedDownloads[index];
-        final isJuz = download.type == DownloadType.juz;
-        final title = isJuz
-            ? 'الجزء ${download.number}'
-            : 'سورة ${getSurahName(download.number)}';
-        final subtitle = '${widget.reciters.values.firstWhere((r) => r.apiCode == download.reciter, orElse: () => ReciterInfo('غير معروف', download.reciter)).englishName} • ${download.ayahs.length} آية';
-
-        return Card(
-          margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-          child: ListTile(
-            leading: CircleAvatar(
-              backgroundColor: Theme.of(context).colorScheme.primary,
-              child: Icon(
-                isJuz ? Icons.menu_book : Icons.book,
-                color: Theme.of(context).colorScheme.onPrimary,
-              ),
-            ),
-            title: Text(title),
-            subtitle: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(subtitle),
-                const SizedBox(height: 4),
-                Row(
-                  children: [
-                    Icon(
-                      Icons.check_circle,
-                      size: 16,
-                      color: Colors.green,
-                    ),
-                    const SizedBox(width: 4),
-                    Text(
-                      'مكتمل',
-                      style: TextStyle(
-                        color: Colors.green,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                    const Spacer(),
-                    if (download.completionTime != null)
-                      Text(
-                        _formatDate(download.completionTime!),
-                        style: TextStyle(
-                          color: Theme.of(context).colorScheme.outline,
-                          fontSize: 12,
-                        ),
-                      ),
-                  ],
-                ),
-              ],
-            ),
-            trailing: PopupMenuButton<String>(
-              onSelected: (value) async {
-                if (value == 'delete') {
-                  final confirm = await _showDeleteConfirmation(title);
-                  if (confirm) {
-                    await _deleteDownload(download.id, title);
-                  }
-                }
-              },
-              itemBuilder: (context) => [
-                PopupMenuItem<String>(
-                  value: 'delete',
-                  child: Row(
-                    children: [
-                      Icon(Icons.delete, color: Colors.red),
-                      const SizedBox(width: 8),
-                      Text('حذف', style: TextStyle(color: Colors.red)),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-            isThreeLine: true,
-          ),
-        );
-      },
-    );
-  }
-
-  String _formatDate(DateTime date) {
-    final now = DateTime.now();
-    final today = DateTime(now.year, now.month, now.day);
-    final downloadDate = DateTime(date.year, date.month, date.day);
-
-    if (downloadDate == today) {
-      return 'اليوم';
-    } else if (downloadDate == today.subtract(const Duration(days: 1))) {
-      return 'أمس';
-    } else {
-      return '${date.day}/${date.month}/${date.year}';
-    }
-  }
-
-  Future<bool> _showDeleteConfirmation(String title) async {
-    return await showDialog<bool>(
-      context: context,
-      builder: (context) => Directionality(
-        textDirection: TextDirection.rtl,
-        child: AlertDialog(
-          title: const Text('تأكيد الحذف'),
-          content: Text('هل أنت متأكد من حذف $title؟\nسيتم حذف جميع الملفات المحملة.'),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context, false),
-              child: const Text('إلغاء'),
-            ),
-            TextButton(
-              onPressed: () => Navigator.pop(context, true),
-              style: TextButton.styleFrom(foregroundColor: Colors.red),
-              child: const Text('حذف'),
-            ),
-          ],
-        ),
-      ),
-    ) ?? false;
-  }
-
-  Future<void> _deleteDownload(String taskId, String title) async {
-    try {
-      await widget.downloadManager.deleteDownload(taskId);
-      setState(() {}); // Refresh the list
-
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('تم حذف $title بنجاح'),
-            backgroundColor: Colors.green,
-          ),
-        );
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('فشل في حذف $title: $e'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
-    }
-  }
-
-  Future<void> _downloadSurah(int surahNumber) async {
-    setState(() {
-      _isDownloading = true;
-      _downloadProgress = 0.0;
-      _downloadStatus = 'تحميل سورة ${getSurahName(surahNumber)}...';
-    });
-
-    try {
-      final reciterCode = widget.reciters[widget.selectedReciter]?.apiCode ?? 'Abdul_Basit_Murattal_192kbps';
-      final arabicName = ApiConstants.apiCodeToArabicName[reciterCode] ?? 'عبد الباسط عبد الصمد';
-
-      debugPrint('📥 Starting download for Surah $surahNumber with reciter: $arabicName (API: $reciterCode)');
-
-      await widget.downloadManager.downloadSurah(surahNumber, arabicName);
-
-      setState(() {
-        _downloadStatus = 'تم تحميل سورة ${getSurahName(surahNumber)} بنجاح';
-        _downloadProgress = 1.0;
-      });
-
-      // Show success message briefly
-      await Future.delayed(const Duration(seconds: 2));
-
-    } catch (e) {
-      setState(() {
-        _downloadStatus = 'فشل تحميل سورة ${getSurahName(surahNumber)}: $e';
-      });
-    } finally {
-      setState(() {
-        _isDownloading = false;
-      });
-    }
-  }
-
-  Future<void> _downloadJuz(int juzNumber) async {
-    setState(() {
-      _isDownloading = true;
-      _downloadProgress = 0.0;
-      _downloadStatus = 'تحميل الجزء $juzNumber...';
-    });
-
-    try {
-      final reciterCode = widget.reciters[widget.selectedReciter]?.apiCode ?? 'Abdul_Basit_Murattal_192kbps';
-      final arabicName = ApiConstants.apiCodeToArabicName[reciterCode] ?? 'عبد الباسط عبد الصمد';
-
-      debugPrint('📥 Starting download for Juz $juzNumber with reciter: $arabicName (API: $reciterCode)');
-
-      await widget.downloadManager.downloadJuz(juzNumber, arabicName);
-
-      setState(() {
-        _downloadStatus = 'تم تحميل الجزء $juzNumber بنجاح';
-        _downloadProgress = 1.0;
-      });
-
-      // Show success message briefly
-      await Future.delayed(const Duration(seconds: 2));
-
-    } catch (e) {
-      setState(() {
-        _downloadStatus = 'فشل تحميل الجزء $juzNumber: $e';
-      });
-    } finally {
-      setState(() {
-        _isDownloading = false;
-      });
-    }
-  }
-
-
-  String getSurahName(int surahNumber) {
-    // Basic surah names mapping - would normally come from a constants file
-    const surahNames = [
-      'الفاتحة', 'البقرة', 'آل عمران', 'النساء', 'المائدة', 'الأنعام', 'الأعراف', 'الأنفال',
-      'التوبة', 'يونس', 'هود', 'يوسف', 'الرعد', 'إبراهيم', 'الحجر', 'النحل', 'الإسراء',
-      'الكهف', 'مريم', 'طه', 'الأنبياء', 'الحج', 'المؤمنون', 'النور', 'الفرقان', 'الشعراء',
-      'النمل', 'القصص', 'العنكبوت', 'الروم', 'لقمان', 'السجدة', 'الأحزاب', 'سبأ', 'فاطر',
-      'يس', 'الصافات', 'ص', 'الزمر', 'غافر', 'فصلت', 'الشورى', 'الزخرف', 'الدخان', 'الجاثية',
-      'الأحقاف', 'محمد', 'الفتح', 'الحجرات', 'ق', 'الذاريات', 'الطور', 'النجم', 'القمر',
-      'الرحمن', 'الواقعة', 'الحديد', 'المجادلة', 'الحشر', 'الممتحنة', 'الصف', 'الجمعة',
-      'المنافقون', 'التغابن', 'الطلاق', 'التحريم', 'الملك', 'القلم', 'الحاقة', 'المعارج',
-      'نوح', 'الجن', 'المزمل', 'المدثر', 'القيامة', 'الإنسان', 'المرسلات', 'النبأ', 'النازعات',
-      'عبس', 'التكوير', 'الانفطار', 'المطففين', 'الانشقاق', 'البروج', 'الطارق', 'الأعلى',
-      'الغاشية', 'الفجر', 'البلد', 'الشمس', 'الليل', 'الضحى', 'الشرح', 'التين', 'العلق',
-      'القدر', 'البينة', 'الزلزلة', 'العاديات', 'القارعة', 'التكاثر', 'العصر', 'الهمزة',
-      'الفيل', 'قريش', 'الماعون', 'الكوثر', 'الكافرون', 'النصر', 'المسد', 'الإخلاص',
-      'الفلق', 'الناس'
-    ];
-
-    if (surahNumber >= 1 && surahNumber <= surahNames.length) {
-      return surahNames[surahNumber - 1];
-    }
-    return 'سورة $surahNumber';
-  }
-}
