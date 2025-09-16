@@ -48,3 +48,4 @@ flutter:
     - assets/surah.json
     - assets/markers.json
     - assets/app_icon.png
+    - assets/experimental/
