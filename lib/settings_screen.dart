@@ -465,6 +465,8 @@ class _SettingsScreenState extends State<SettingsScreen> with TickerProviderStat
             trailing: const Icon(Icons.keyboard_arrow_left),
             onTap: _showDownloadDialog,
           ),
+          const Divider(height: 1),
+
         ],
       ),
     );
@@ -1090,6 +1092,7 @@ class _SettingsScreenState extends State<SettingsScreen> with TickerProviderStat
       ),
     );
   }
+
 
   void _showHelpDialog() {
     showDialog(

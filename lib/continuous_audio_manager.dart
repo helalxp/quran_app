@@ -1,16 +1,19 @@
 // lib/continuous_audio_manager.dart
 
 import 'dart:async';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:audio_service/audio_service.dart';
 import 'models/ayah_marker.dart';
 import 'theme_manager.dart';
 import 'constants/app_strings.dart';
 import 'constants/api_constants.dart';
 import 'audio_cache_manager.dart';
 import 'audio_download_manager.dart';
+import 'services/audio_service_handler.dart';
 
 // Constants for better maintainability
 class AudioConstants {
@@ -98,6 +101,9 @@ class ContinuousAudioManager {
   StreamSubscription<PlayerState>? _stateSubscription;
   StreamSubscription<Duration>? _positionSubscription;
   StreamSubscription<Duration?>? _durationSubscription;
+
+  // Audio service handler
+  late AudioServiceHandler _audioServiceHandler;
 
   // Current playback state
   AyahMarker? _currentAyah;
@@ -332,15 +338,31 @@ class ContinuousAudioManager {
         await _audioPlayer!.setVolume(0.8);
       } catch (_) {}
       
+      // Initialize audio service handler with error handling
+      try {
+        // Only initialize if AudioService was successfully started
+        if (!kIsWeb) {
+          // Use the singleton instance that was created in main.dart
+          debugPrint('🔄 Getting AudioServiceHandler instance...');
+          _audioServiceHandler = AudioServiceHandler();
+          debugPrint('🔄 Initializing AudioServiceHandler with player...');
+          _audioServiceHandler.initialize(_audioPlayer!);
+          debugPrint('✅ Audio service handler connected successfully');
+        }
+      } catch (e) {
+        debugPrint('❌ Failed to initialize audio service handler: $e');
+        // Continue without audio service if it fails
+      }
+
       // Load settings from SharedPreferences
       await _loadSettings();
-      
+
       // Initialize cache and download managers
       await _cacheManager.initialize();
       await _downloadManager.initialize();
-      
+
       _setupListeners();
-      debugPrint('✅ Audio manager initialized successfully with caching and seamless preloading');
+      debugPrint('✅ Audio manager initialized successfully with background audio service');
     } catch (e) {
       debugPrint('❌ Error initializing audio manager: $e');
       rethrow;
@@ -944,6 +966,20 @@ class ContinuousAudioManager {
           await _audioPlayer!.setSpeed(_playbackSpeed);
           await _audioPlayer!.play();
 
+          // Update media item BEFORE activating media session
+          _updateMediaItem(ayah);
+
+          // Notify audio service handler that playback started
+          try {
+            if (!kIsWeb) {
+              debugPrint('🔄 Calling audio service handler play...');
+              await _audioServiceHandler.play();
+              debugPrint('✅ Audio service handler play completed');
+            }
+          } catch (e) {
+            debugPrint('❌ Failed to notify audio service of play: $e');
+          }
+
           debugPrint('✅ Successfully started ${ayah.surah}:${ayah.ayah}');
           playbackStarted = true;
           
@@ -1136,6 +1172,7 @@ class ContinuousAudioManager {
           final nextAyah = _playQueue[_currentIndex];
           _currentAyah = nextAyah;
           currentAyahNotifier.value = nextAyah;
+          _updateMediaItem(nextAyah);
           _checkAndFollowAyah();
           
           // Start preloading next ayah in background
@@ -1239,11 +1276,27 @@ class ContinuousAudioManager {
   /// Pause playback
   void pause() {
     _audioPlayer?.pause();
+    // Notify audio service handler
+    try {
+      if (!kIsWeb) {
+        _audioServiceHandler.pause();
+      }
+    } catch (e) {
+      debugPrint('❌ Failed to notify audio service of pause: $e');
+    }
   }
 
   /// Resume playbook
   void resume() {
     _audioPlayer?.play();
+    // Notify audio service handler
+    try {
+      if (!kIsWeb) {
+        _audioServiceHandler.play();
+      }
+    } catch (e) {
+      debugPrint('❌ Failed to notify audio service of resume: $e');
+    }
   }
 
   Future<void> stop() async {
@@ -1252,6 +1305,14 @@ class ContinuousAudioManager {
       _completionTimer = null;
       _clearTimeouts(); // Clear all timeout timers
       await _audioPlayer?.stop();
+      // Notify audio service handler
+      try {
+        if (!kIsWeb) {
+          await _audioServiceHandler.stop();
+        }
+      } catch (e) {
+        debugPrint('❌ Failed to notify audio service of stop: $e');
+      }
     } catch (e) {
       debugPrint('❌ Error stopping player: $e');
     } finally {
@@ -1315,7 +1376,7 @@ class ContinuousAudioManager {
   /// Check if follow-the-ayah is enabled and follow if needed
   void _checkAndFollowAyah() {
     debugPrint('🔍 Checking follow-ayah: context=${_contextRef?.target != null}, controller=${_pageController != null}, callback=${_onPageChange != null}');
-    
+
     // Check if follow-the-ayah is enabled
     final context = _contextRef?.target;
     if (context != null && context.mounted) {
@@ -1337,6 +1398,45 @@ class ContinuousAudioManager {
       debugPrint('⚠️ No context available, following anyway');
       _followCurrentAyah();
     }
+  }
+
+  /// Update media item for background playback controls
+  void _updateMediaItem(AyahMarker ayah) {
+    try {
+      final reciterName = _currentReciter ?? 'قارئ';
+      final title = 'سورة ${_getSurahName(ayah.surah)} - آية ${ayah.ayah}';
+
+      _audioServiceHandler.setMediaItem(
+        title: title,
+        artist: reciterName,
+      );
+    } catch (e) {
+      debugPrint('❌ Failed to update media item: $e');
+      // Continue without updating media item if it fails
+    }
+  }
+
+  /// Get Arabic name for surah number
+  String _getSurahName(int surahNumber) {
+    const surahNames = [
+      'الفاتحة', 'البقرة', 'آل عمران', 'النساء', 'المائدة', 'الأنعام', 'الأعراف', 'الأنفال', 'التوبة', 'يونس',
+      'هود', 'يوسف', 'الرعد', 'إبراهيم', 'الحجر', 'النحل', 'الإسراء', 'الكهف', 'مريم', 'طه',
+      'الأنبياء', 'الحج', 'المؤمنون', 'النور', 'الفرقان', 'الشعراء', 'النمل', 'القصص', 'العنكبوت', 'الروم',
+      'لقمان', 'السجدة', 'الأحزاب', 'سبأ', 'فاطر', 'يس', 'الصافات', 'ص', 'الزمر', 'غافر',
+      'فصلت', 'الشورى', 'الزخرف', 'الدخان', 'الجاثية', 'الأحقاف', 'محمد', 'الفتح', 'الحجرات', 'ق',
+      'الذاريات', 'الطور', 'النجم', 'القمر', 'الرحمن', 'الواقعة', 'الحديد', 'المجادلة', 'الحشر', 'الممتحنة',
+      'الصف', 'الجمعة', 'المنافقون', 'التغابن', 'الطلاق', 'التحريم', 'الملك', 'القلم', 'الحاقة', 'المعارج',
+      'نوح', 'الجن', 'المزمل', 'المدثر', 'القيامة', 'الإنسان', 'المرسلات', 'النبأ', 'النازعات', 'عبس',
+      'التكوير', 'الانفطار', 'المطففين', 'الانشقاق', 'البروج', 'الطارق', 'الأعلى', 'الغاشية', 'الفجر', 'البلد',
+      'الشمس', 'الليل', 'الضحى', 'الشرح', 'التين', 'العلق', 'القدر', 'البينة', 'الزلزلة', 'العاديات',
+      'القارعة', 'التكاثر', 'العصر', 'الهمزة', 'الفيل', 'قريش', 'الماعون', 'الكوثر', 'الكافرون', 'النصر',
+      'المسد', 'الإخلاص', 'الفلق', 'الناس'
+    ];
+
+    if (surahNumber >= 1 && surahNumber <= surahNames.length) {
+      return surahNames[surahNumber - 1];
+    }
+    return '$surahNumber'; // Fallback to number if name not found
   }
 }
 

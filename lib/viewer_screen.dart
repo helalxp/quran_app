@@ -6,6 +6,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:wakelock_plus/wakelock_plus.dart';
 import 'models/ayah_marker.dart';
 import 'models/surah.dart';
 import 'bookmark_manager.dart';
@@ -61,6 +62,11 @@ class _ViewerScreenState extends State<ViewerScreen> with TickerProviderStateMix
     super.initState();
     _initializeAudioManager();
     _initializeReader();
+
+    // Delay wakelock until after the screen is fully built
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _enableWakelock();
+    });
   }
 
 
@@ -77,6 +83,30 @@ class _ViewerScreenState extends State<ViewerScreen> with TickerProviderStateMix
 
   void _updateMemorizationMode() {
     _isMemorizationModeActive.value = _memorizationManager!.sessionNotifier.value != null;
+  }
+
+  void _enableWakelock() async {
+    try {
+      await WakelockPlus.enable();
+    } catch (e) {
+      debugPrint('Failed to enable wakelock: $e');
+      // Retry after a short delay if activity isn't ready
+      Future.delayed(const Duration(seconds: 1), () {
+        try {
+          WakelockPlus.enable();
+        } catch (e) {
+          debugPrint('Failed to enable wakelock on retry: $e');
+        }
+      });
+    }
+  }
+
+  void _disableWakelock() async {
+    try {
+      await WakelockPlus.disable();
+    } catch (e) {
+      debugPrint('Failed to disable wakelock: $e');
+    }
   }
 
 
@@ -105,12 +135,15 @@ class _ViewerScreenState extends State<ViewerScreen> with TickerProviderStateMix
     // Cancel timer first to prevent any pending saves
     _saveTimer?.cancel();
     _saveTimer = null;
-    
+
+    // Disable wakelock when leaving main screen
+    _disableWakelock();
+
     // Dispose controller and notifiers
     _controller?.dispose();
     _controller = null;
     _currentPageNotifier.dispose();
-    
+
     // Properly dispose audio manager and memorization manager
     _memorizationManager?.sessionNotifier.removeListener(_updateMemorizationMode);
     _memorizationManager?.dispose();
@@ -248,7 +281,10 @@ class _ViewerScreenState extends State<ViewerScreen> with TickerProviderStateMix
       _currentPageNotifier.value = newPage;
       _saveLastPageOptimized(newPage);
       _checkBookmarkStatus();
-      
+
+      // Preload adjacent pages for smoother swiping - only when page actually changes
+      _preloadAdjacentPages(newPage);
+
       // Performance: Clean up old cached pages to prevent memory leaks
       _pageCacheManager.cleanupCache(newPage);
     }
@@ -671,12 +707,7 @@ class _ViewerScreenState extends State<ViewerScreen> with TickerProviderStateMix
                       ),
                       itemBuilder: (context, index) {
                         final pageNumber = index + 1;
-                        
-                        // Performance optimization handled by PageCacheManager
-                        
-                        // Preload adjacent pages for smoother swiping
-                        _preloadAdjacentPages(pageNumber);
-                        
+
                         final pageNumStr = pageNumber.toString().padLeft(3, '0');
                         final pageMarkers = _markersByPage[pageNumber] ?? [];
                         final pageInfo = _getInfoForPage(pageNumber);
