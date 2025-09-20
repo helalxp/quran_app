@@ -48,12 +48,6 @@ class _SvgPageViewerState extends State<SvgPageViewer> with TickerProviderStateM
   late Animation<double> _pulseAnimation;
   Timer? _highlightRemovalTimer;
 
-  // Debug mode controls
-  bool _debugMode = false;
-  double _debugScaleX = 1.0;
-  double _debugScaleY = 1.0;
-  double _debugOffsetX = 0.0;
-  double _debugOffsetY = 0.0;
 
   // SVG measurement key for direct measurement
   final GlobalKey _svgKey = GlobalKey();
@@ -63,11 +57,6 @@ class _SvgPageViewerState extends State<SvgPageViewer> with TickerProviderStateM
   late AnimationController _zoomResetController;
   late Animation<Matrix4> _zoomResetAnimation;
 
-  // Calibration constants - optimized for better responsiveness
-  static double get _baseScaleMultiplier => AppConstants.svgBaseScaleMultiplier;
-  static double get _baseYOffset => AppConstants.svgBaseYOffset;
-  static double get _referenceWidth => AppConstants.svgReferenceWidth;
-  static double get _referenceHeight => AppConstants.svgReferenceHeight;
 
   @override
   void initState() {
@@ -218,20 +207,6 @@ class _SvgPageViewerState extends State<SvgPageViewer> with TickerProviderStateM
                         child: _buildInteractiveOverlay(constraints),
                       ),
 
-                      // Layer 3: Debug UI
-                      if (_debugMode) ..._buildDebugUI(constraints),
-
-                      // Debug Toggle Button
-                      Positioned(
-                        top: 10,
-                        right: 10,
-                        child: FloatingActionButton(
-                          mini: true,
-                          onPressed: _toggleDebugMode,
-                          backgroundColor: _debugMode ? Colors.red : Colors.blue,
-                          child: Icon(_debugMode ? Icons.close : Icons.bug_report),
-                        ),
-                      ),
                     ],
                   ),
                 ),
@@ -394,16 +369,6 @@ class _SvgPageViewerState extends State<SvgPageViewer> with TickerProviderStateM
     final scaleX = contentScale * (svgViewBoxWidth / bboxCoordinateWidth);   // 345/395
     final scaleY = contentScale * (svgViewBoxHeight / bboxCoordinateHeight); // 550/551
 
-    debugPrint('🎯 MATHEMATICAL BOXFIT.CONTAIN:');
-    debugPrint('   📐 SVG ViewBox: ${svgViewBoxWidth.toStringAsFixed(0)}x${svgViewBoxHeight.toStringAsFixed(0)}');
-    debugPrint('   📐 BBox Coordinate Space: ${bboxCoordinateWidth.toStringAsFixed(0)}x${bboxCoordinateHeight.toStringAsFixed(0)}');
-    debugPrint('   📱 Container: ${containerWidth.toStringAsFixed(1)}x${containerHeight.toStringAsFixed(1)}');
-    debugPrint('   📊 Container Aspect: ${containerAspectRatio.toStringAsFixed(3)}, SVG Aspect: ${svgViewBoxAspectRatio.toStringAsFixed(3)}');
-    debugPrint('   🔒 Constraint: ${containerAspectRatio > svgViewBoxAspectRatio ? "HEIGHT" : "WIDTH"}');
-    debugPrint('   📏 Content Scale: ${contentScale.toStringAsFixed(4)}');
-    debugPrint('   📏 Content Size: ${contentWidth.toStringAsFixed(1)}x${contentHeight.toStringAsFixed(1)}');
-    debugPrint('   ⚖️ Final Scale X: ${scaleX.toStringAsFixed(4)}, Y: ${scaleY.toStringAsFixed(4)}');
-    debugPrint('   📍 Content Offset: (${offsetX.toStringAsFixed(1)}, ${offsetY.toStringAsFixed(1)})');
 
     return OverlayTransform(
       scale: scaleX, // For backward compatibility
@@ -415,52 +380,6 @@ class _SvgPageViewerState extends State<SvgPageViewer> with TickerProviderStateM
     );
   }
 
-  DeviceMultiplier _getDeviceMultiplier(BoxConstraints constraints) {
-    final double width = constraints.maxWidth;
-    final double height = constraints.maxHeight;
-
-    // Dynamic calculation based on screen density and size
-    // This ensures consistent behavior across all screen sizes without hardcoding
-
-    final double diagonal = sqrt(width * width + height * height);
-    final double aspectRatio = max(width, height) / min(width, height);
-
-    // Base scale factor - closer to 1.0 for better accuracy
-    // Adjust slightly based on screen size to account for rendering differences
-    double scaleMultiplier;
-    double offsetMultiplier;
-
-    if (diagonal < 800) {
-      // Small screens (phones)
-      scaleMultiplier = 1.0;
-      offsetMultiplier = 1.0;
-    } else if (diagonal < 1400) {
-      // Medium screens (tablets)
-      scaleMultiplier = 0.99;
-      offsetMultiplier = 0.98;
-    } else {
-      // Large screens (desktop/TV)
-      scaleMultiplier = 0.98;
-      offsetMultiplier = 0.96;
-    }
-
-    // Fine-tune based on aspect ratio (wider screens need slight adjustments)
-    if (aspectRatio > 1.8) {
-      scaleMultiplier *= 0.995;
-      offsetMultiplier *= 0.99;
-    }
-
-    return DeviceMultiplier(
-      scale: scaleMultiplier,
-      offset: offsetMultiplier,
-    );
-  }
-
-  double _getReferenceScale() {
-    final double scaleX = _referenceWidth / widget.sourceWidth;
-    final double scaleY = _referenceHeight / widget.sourceHeight;
-    return min(scaleX, scaleY);
-  }
 
   List<Widget> _buildHighlightOverlay(AyahMarker ayah, OverlayTransform transform) {
     if (ayah.bboxes.isEmpty) return [];
@@ -599,181 +518,6 @@ class _SvgPageViewerState extends State<SvgPageViewer> with TickerProviderStateM
     });
   }
 
-  void _toggleDebugMode() {
-    setState(() {
-      _debugMode = !_debugMode;
-    });
-    _logScreenDetails();
-  }
-
-  void _logScreenDetails() {
-    final size = MediaQuery.of(context).size;
-    final devicePixelRatio = MediaQuery.of(context).devicePixelRatio;
-    final padding = MediaQuery.of(context).padding;
-
-    debugPrint('🔬 DEBUG SCREEN ANALYSIS:');
-    debugPrint('   📱 Logical Size: ${size.width.toStringAsFixed(1)}x${size.height.toStringAsFixed(1)}');
-    debugPrint('   🖥️ Physical Size: ${(size.width * devicePixelRatio).toStringAsFixed(1)}x${(size.height * devicePixelRatio).toStringAsFixed(1)}');
-    debugPrint('   📏 Device Pixel Ratio: ${devicePixelRatio.toStringAsFixed(2)}');
-    debugPrint('   📐 Aspect Ratio: ${(size.width / size.height).toStringAsFixed(3)}');
-    debugPrint('   📱 Diagonal: ${(sqrt(size.width * size.width + size.height * size.height)).toStringAsFixed(1)}px');
-    debugPrint('   🎯 Padding: Top=${padding.top}, Bottom=${padding.bottom}');
-    debugPrint('   🎛️ Current Debug Values: ScaleX=${_debugScaleX.toStringAsFixed(3)}, ScaleY=${_debugScaleY.toStringAsFixed(3)}');
-    debugPrint('   🎛️ Current Debug Offsets: X=${_debugOffsetX.toStringAsFixed(1)}, Y=${_debugOffsetY.toStringAsFixed(1)}');
-  }
-
-  List<Widget> _buildDebugUI(BoxConstraints constraints) {
-    return [
-      // Debug overlay showing all bounding boxes
-      Positioned.fill(
-        child: Container(
-          color: Colors.black26,
-          child: Stack(
-            children: _buildAllBoundingBoxes(constraints),
-          ),
-        ),
-      ),
-
-      // Debug controls panel
-      Positioned(
-        left: 10,
-        top: 60,
-        child: Container(
-          width: 300,
-          padding: const EdgeInsets.all(10),
-          decoration: BoxDecoration(
-            color: Colors.black87,
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text('Debug Controls', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-              SizedBox(height: 10),
-
-              Text('Scale X: ${_debugScaleX.toStringAsFixed(3)}', style: TextStyle(color: Colors.white, fontSize: 12)),
-              Slider(
-                value: _debugScaleX,
-                min: 0.5,
-                max: 2.0,
-                divisions: 150,
-                onChanged: (value) {
-                  setState(() {
-                    _debugScaleX = value;
-                  });
-                  _logScreenDetails();
-                },
-              ),
-
-              Text('Scale Y: ${_debugScaleY.toStringAsFixed(3)}', style: TextStyle(color: Colors.white, fontSize: 12)),
-              Slider(
-                value: _debugScaleY,
-                min: 0.5,
-                max: 2.0,
-                divisions: 150,
-                onChanged: (value) {
-                  setState(() {
-                    _debugScaleY = value;
-                  });
-                  _logScreenDetails();
-                },
-              ),
-
-              Text('Offset X: ${_debugOffsetX.toStringAsFixed(1)}', style: TextStyle(color: Colors.white, fontSize: 12)),
-              Slider(
-                value: _debugOffsetX,
-                min: -100.0,
-                max: 100.0,
-                divisions: 200,
-                onChanged: (value) {
-                  setState(() {
-                    _debugOffsetX = value;
-                  });
-                  _logScreenDetails();
-                },
-              ),
-
-              Text('Offset Y: ${_debugOffsetY.toStringAsFixed(1)}', style: TextStyle(color: Colors.white, fontSize: 12)),
-              Slider(
-                value: _debugOffsetY,
-                min: -100.0,
-                max: 100.0,
-                divisions: 200,
-                onChanged: (value) {
-                  setState(() {
-                    _debugOffsetY = value;
-                  });
-                  _logScreenDetails();
-                },
-              ),
-
-              ElevatedButton(
-                onPressed: () {
-                  setState(() {
-                    _debugScaleX = 1.0;
-                    _debugScaleY = 1.0;
-                    _debugOffsetX = 0.0;
-                    _debugOffsetY = 0.0;
-                  });
-                  _logScreenDetails();
-                },
-                child: Text('Reset', style: TextStyle(fontSize: 12)),
-              ),
-            ],
-          ),
-        ),
-      ),
-    ];
-  }
-
-  List<Widget> _buildAllBoundingBoxes(BoxConstraints constraints) {
-    final overlayData = _calculateOverlayTransform(constraints);
-
-    // Apply debug adjustments to the overlay transform
-    final debugOverlayData = OverlayTransform(
-      scale: overlayData.scale,
-      scaleX: overlayData.scaleX * _debugScaleX,
-      scaleY: overlayData.scaleY * _debugScaleY,
-      offsetX: overlayData.offsetX + _debugOffsetX,
-      offsetY: overlayData.offsetY + _debugOffsetY,
-      baseScale: overlayData.baseScale,
-    );
-
-    return widget.markers.expand<Widget>((marker) {
-      return marker.bboxes.map((bbox) {
-        // Use the same transformation method as actual overlays
-        final transformedRect = _transformBoundingBox(bbox, debugOverlayData);
-        final double left = transformedRect.left;
-        final double top = transformedRect.top;
-        final double width = transformedRect.width;
-        final double height = transformedRect.height;
-
-        return Positioned(
-          top: top,
-          left: left,
-          width: width,
-          height: height,
-          child: Container(
-            decoration: BoxDecoration(
-              border: Border.all(color: Colors.cyan, width: 2),
-              color: Colors.cyan.withOpacity(0.2),
-            ),
-            child: Center(
-              child: Text(
-                '${marker.surah}:${marker.ayah}',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 10,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-          ),
-        );
-      });
-    }).toList();
-  }
 }
 
 // Helper classes for better code organization
@@ -796,12 +540,3 @@ class OverlayTransform {
        scaleY = scaleY ?? scale;
 }
 
-class DeviceMultiplier {
-  final double scale;
-  final double offset;
-
-  const DeviceMultiplier({
-    required this.scale,
-    required this.offset,
-  });
-}

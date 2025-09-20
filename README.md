@@ -867,5 +867,149 @@ This codebase serves as an excellent foundation for a commercial Quran reading a
 
 ---
 
+## ⚖️ **LICENSING & ATTRIBUTION**
+
+### **Quran Text - Tanzil Project**
+- **License**: Creative Commons Attribution 3.0
+- **Source**: https://tanzil.net
+- **Requirements**: Attribution required, no modifications allowed
+
+### **SVG Pages - Batoul Apps**
+- **License**: MIT License
+- **Source**: https://github.com/batoulapps/quran-svg
+- **Original**: Official Quran Printing Complex
+
+### **Audio Recitations**
+- **Sources**: EveryAyah.com, Quran.com API, AlQuran.cloud API
+- **Status**: ⚠️ **CONTACT REQUIRED FOR COMMERCIAL USE**
+- **Action**: Verify licensing before publishing
+
+### **Complete Attribution Notice**
+```
+Hilal Quran Reader
+Copyright (C) 2024 [Your Name]
+
+Quran Text: Tanzil Quran Text (Uthmani, Version 1.1)
+Copyright (C) 2007-2025 Tanzil Project
+License: Creative Commons Attribution 3.0
+Source: https://tanzil.net
+
+SVG Pages: Batoul Apps (MIT License)
+Original: Official Quran Printing Complex
+Source: https://github.com/batoulapps/quran-svg
+
+Audio: Various sources (permissions pending verification)
+```
+
+## 📱 **PUBLISHING GUIDE**
+
+### **Build Commands**
+```bash
+# Android (Play Store)
+flutter build appbundle --release
+
+# iOS (App Store)
+flutter build ios --release
+
+# Web
+flutter build web --release
+
+# Windows
+flutter build windows --release
+```
+
+### **App Store Information**
+- **Name**: "Hilal - Quran Reader"
+- **Category**: Books & Reference
+- **Age Rating**: 4+ (suitable for all ages)
+- **Price**: Free
+
+### **Required Before Publishing**
+1. ⚠️ **Audio Licensing** - Contact EveryAyah.com and other providers
+2. 📋 **Privacy Policy** - Create and host privacy policy
+3. 📱 **App Store Assets** - Icons, screenshots, descriptions
+4. 📊 **Analytics Setup** - Firebase Analytics (optional but recommended)
+
+## 📊 **ANALYTICS SETUP (FREE)**
+
+### **Firebase Analytics - Completely Free**
+Add to `pubspec.yaml`:
+```yaml
+dependencies:
+  firebase_core: ^2.24.2
+  firebase_analytics: ^10.7.4
+  firebase_crashlytics: ^3.4.9
+```
+
+Initialize in `main.dart`:
+```dart
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_analytics/firebase_analytics.dart';
+
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp();
+  runApp(MyApp());
+}
+```
+
+Track events:
+```dart
+// Track page views
+await FirebaseAnalytics.instance.logEvent(
+  name: 'page_view',
+  parameters: {'page_number': pageNumber, 'surah_number': surahNumber},
+);
+
+// Track audio usage
+await FirebaseAnalytics.instance.logEvent(
+  name: 'audio_play',
+  parameters: {'reciter': reciterName, 'surah': surahNumber},
+);
+```
+
+## 🔒 **PRIVACY POLICY (REQUIRED)**
+
+Create this privacy policy for app stores:
+
+```markdown
+# PRIVACY POLICY - HILAL QURAN READER
+
+## Data Collection
+• No personal information collected
+• Bookmarks and settings stored locally only
+• No user accounts required
+
+## Audio Downloads
+• Files cached locally for offline use
+• No tracking of listening habits
+• Anonymous downloads only
+
+## Analytics (if enabled)
+• Anonymous usage statistics only
+• No personally identifiable information
+• Used solely for app improvement
+
+## Contact: [your-email@domain.com]
+```
+
+## 🎯 **IMMEDIATE ACTION ITEMS**
+
+### **URGENT - Before Publishing:**
+- [ ] **Audio Licensing** - Contact all audio providers for permission
+- [ ] **Privacy Policy** - Create and host privacy policy
+- [ ] **App Store Setup** - Create developer accounts ($25 Google, $99 Apple)
+- [ ] **Assets** - Prepare icons, screenshots, app descriptions
+
+### **Recommended Steps:**
+1. **Week 1**: Handle audio licensing (most critical)
+2. **Week 2**: Create app store assets and accounts
+3. **Week 3**: Implement analytics and build production
+4. **Week 4**: Submit to app stores
+
+---
+
+**📋 See `HILAL_QURAN_APP_COMPLETE_GUIDE.md` for comprehensive publishing instructions.**
+
 **For Support:** Review this documentation, check the debug logs, and refer to the maintenance guide for common issues.
 **For New Features:** Follow the architecture patterns established in this codebase and maintain the same code quality standards.
