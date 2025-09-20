@@ -55,6 +55,9 @@ class _SvgPageViewerState extends State<SvgPageViewer> with TickerProviderStateM
   double _debugOffsetX = 0.0;
   double _debugOffsetY = 0.0;
 
+  // SVG measurement key for direct measurement
+  final GlobalKey _svgKey = GlobalKey();
+
   // Zoom functionality
   late TransformationController _transformationController;
   late AnimationController _zoomResetController;
@@ -244,6 +247,7 @@ class _SvgPageViewerState extends State<SvgPageViewer> with TickerProviderStateM
     final colorFilter = _getSvgColorFilter(context, themeManager.currentTheme);
 
     Widget svgWidget = SvgPicture.asset(
+      key: _svgKey,
       widget.svgAssetPath,
       width: constraints.maxWidth,
       height: constraints.maxHeight,
@@ -348,35 +352,66 @@ class _SvgPageViewerState extends State<SvgPageViewer> with TickerProviderStateM
   }
 
   OverlayTransform _calculateOverlayTransform(BoxConstraints constraints) {
-    // Calculate base scale using BoxFit.contain logic
-    final double scaleX = constraints.maxWidth / widget.sourceWidth;
-    final double scaleY = constraints.maxHeight / widget.sourceHeight;
-    final double baseScale = min(scaleX, scaleY);
+    // MATHEMATICAL BOXFIT.CONTAIN CALCULATION
+    // No widget measurement - purely mathematical approach
 
-    // Calculate rendered dimensions
-    final double renderedWidth = widget.sourceWidth * baseScale;
-    final double renderedHeight = widget.sourceHeight * baseScale;
+    // SVG coordinate space and viewBox dimensions
+    const double bboxCoordinateWidth = AppConstants.svgSourceWidth;   // 395
+    const double bboxCoordinateHeight = AppConstants.svgSourceHeight; // 551
+    const double svgViewBoxWidth = 345.0;    // SVG viewBox width
+    const double svgViewBoxHeight = 550.0;   // SVG viewBox height
 
-    // Calculate centering offsets
-    final double baseCenterX = (constraints.maxWidth - renderedWidth) / 2;
-    final double baseCenterY = (constraints.maxHeight - renderedHeight) / 2;
+    final containerWidth = constraints.maxWidth;
+    final containerHeight = constraints.maxHeight;
 
-    // Apply responsive calibration
-    final deviceMultiplier = _getDeviceMultiplier(constraints);
-    final double calibratedScale = baseScale * _baseScaleMultiplier * deviceMultiplier.scale;
-    final double calibratedOffsetY = baseCenterY + (_baseYOffset * baseScale / _getReferenceScale()) * deviceMultiplier.offset;
+    // Calculate aspect ratios
+    final containerAspectRatio = containerWidth / containerHeight;
+    final svgViewBoxAspectRatio = svgViewBoxWidth / svgViewBoxHeight;
 
-    // HARDCODED FIX: Apply user-provided scaling corrections
-    const double scaleXCorrection = 0.860;
-    const double offsetXCorrection = 4.0;
+    // BoxFit.contain logic: scale to fit entirely within container while maintaining aspect ratio
+    double contentScale;
+    double contentWidth, contentHeight;
+    double offsetX = 0.0, offsetY = 0.0;
+
+    if (containerAspectRatio > svgViewBoxAspectRatio) {
+      // Container is wider than SVG - HEIGHT-CONSTRAINED
+      // SVG fills container height, has horizontal margins
+      contentScale = containerHeight / svgViewBoxHeight;
+      contentHeight = containerHeight;
+      contentWidth = svgViewBoxWidth * contentScale;
+      offsetX = (containerWidth - contentWidth) / 2.0;
+    } else {
+      // Container is taller than SVG - WIDTH-CONSTRAINED
+      // SVG fills container width, has vertical margins
+      contentScale = containerWidth / svgViewBoxWidth;
+      contentWidth = containerWidth;
+      contentHeight = svgViewBoxHeight * contentScale;
+      offsetY = (containerHeight - contentHeight) / 2.0;
+    }
+
+    // Convert from SVG viewBox scale to bounding box coordinate scale
+    // The bounding boxes are in 395x551 space, but SVG viewBox is 345x550
+    final scaleX = contentScale * (svgViewBoxWidth / bboxCoordinateWidth);   // 345/395
+    final scaleY = contentScale * (svgViewBoxHeight / bboxCoordinateHeight); // 550/551
+
+    debugPrint('🎯 MATHEMATICAL BOXFIT.CONTAIN:');
+    debugPrint('   📐 SVG ViewBox: ${svgViewBoxWidth.toStringAsFixed(0)}x${svgViewBoxHeight.toStringAsFixed(0)}');
+    debugPrint('   📐 BBox Coordinate Space: ${bboxCoordinateWidth.toStringAsFixed(0)}x${bboxCoordinateHeight.toStringAsFixed(0)}');
+    debugPrint('   📱 Container: ${containerWidth.toStringAsFixed(1)}x${containerHeight.toStringAsFixed(1)}');
+    debugPrint('   📊 Container Aspect: ${containerAspectRatio.toStringAsFixed(3)}, SVG Aspect: ${svgViewBoxAspectRatio.toStringAsFixed(3)}');
+    debugPrint('   🔒 Constraint: ${containerAspectRatio > svgViewBoxAspectRatio ? "HEIGHT" : "WIDTH"}');
+    debugPrint('   📏 Content Scale: ${contentScale.toStringAsFixed(4)}');
+    debugPrint('   📏 Content Size: ${contentWidth.toStringAsFixed(1)}x${contentHeight.toStringAsFixed(1)}');
+    debugPrint('   ⚖️ Final Scale X: ${scaleX.toStringAsFixed(4)}, Y: ${scaleY.toStringAsFixed(4)}');
+    debugPrint('   📍 Content Offset: (${offsetX.toStringAsFixed(1)}, ${offsetY.toStringAsFixed(1)})');
 
     return OverlayTransform(
-      scale: calibratedScale, // Keep original scale as fallback
-      scaleX: calibratedScale * scaleXCorrection, // Apply X correction only
-      scaleY: calibratedScale, // Keep original Y scale unchanged
-      offsetX: baseCenterX + offsetXCorrection,
-      offsetY: calibratedOffsetY,
-      baseScale: baseScale,
+      scale: scaleX, // For backward compatibility
+      scaleX: scaleX,
+      scaleY: scaleY,
+      offsetX: offsetX,
+      offsetY: offsetY,
+      baseScale: contentScale,
     );
   }
 
@@ -695,9 +730,11 @@ class _SvgPageViewerState extends State<SvgPageViewer> with TickerProviderStateM
   List<Widget> _buildAllBoundingBoxes(BoxConstraints constraints) {
     final overlayData = _calculateOverlayTransform(constraints);
 
-    // Apply debug adjustments - need to handle Y scaling separately
+    // Apply debug adjustments to the overlay transform
     final debugOverlayData = OverlayTransform(
-      scale: overlayData.scale * _debugScaleX,
+      scale: overlayData.scale,
+      scaleX: overlayData.scaleX * _debugScaleX,
+      scaleY: overlayData.scaleY * _debugScaleY,
       offsetX: overlayData.offsetX + _debugOffsetX,
       offsetY: overlayData.offsetY + _debugOffsetY,
       baseScale: overlayData.baseScale,
@@ -705,11 +742,12 @@ class _SvgPageViewerState extends State<SvgPageViewer> with TickerProviderStateM
 
     return widget.markers.expand<Widget>((marker) {
       return marker.bboxes.map((bbox) {
-        // Apply separate X and Y scaling for debug
-        final double left = bbox.xMin * debugOverlayData.scale + debugOverlayData.offsetX;
-        final double top = bbox.yMin * (overlayData.scale * _debugScaleY) + debugOverlayData.offsetY;
-        final double width = bbox.width * debugOverlayData.scale;
-        final double height = bbox.height * (overlayData.scale * _debugScaleY);
+        // Use the same transformation method as actual overlays
+        final transformedRect = _transformBoundingBox(bbox, debugOverlayData);
+        final double left = transformedRect.left;
+        final double top = transformedRect.top;
+        final double width = transformedRect.width;
+        final double height = transformedRect.height;
 
         return Positioned(
           top: top,
