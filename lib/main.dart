@@ -5,12 +5,24 @@ import 'package:flutter/foundation.dart';
 import 'package:provider/provider.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:audio_service/audio_service.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'viewer_screen.dart';
 import 'theme_manager.dart';
 import 'services/audio_service_handler.dart';
+import 'services/analytics_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Initialize Firebase safely (non-blocking)
+  try {
+    await Firebase.initializeApp();
+    await AnalyticsService.initialize();
+    debugPrint('✅ Firebase initialized successfully');
+  } catch (e) {
+    debugPrint('❌ Failed to initialize Firebase: $e');
+    // Continue without Firebase - app will still work
+  }
 
   // Initialize Hive
   await Hive.initFlutter();
@@ -50,11 +62,14 @@ class QuranApp extends StatelessWidget {
       child: Consumer<ThemeManager>(
         builder: (context, themeManager, child) {
           return MaterialApp(
-            title: 'Quran Reader',
+            title: 'Quran by Helal',
             debugShowCheckedModeBanner: false,
             themeMode: themeManager.themeMode,
             theme: themeManager.getLightTheme(themeManager.currentTheme),
             darkTheme: themeManager.getDarkTheme(themeManager.currentTheme),
+            navigatorObservers: AnalyticsService.observer != null
+                ? [AnalyticsService.observer!]
+                : [],
             home: const ViewerScreen(),
           );
         },

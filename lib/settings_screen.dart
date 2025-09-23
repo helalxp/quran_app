@@ -13,6 +13,7 @@ import 'utils/haptic_utils.dart';
 import 'widgets/loading_states.dart';
 import 'screens/tafsir_sources_screen.dart';
 import 'widgets/download_manager_sheet.dart';
+import 'services/analytics_service.dart';
 
 class SettingsScreen extends StatefulWidget {
   final MemorizationManager? memorizationManager;
@@ -72,13 +73,16 @@ class _SettingsScreenState extends State<SettingsScreen> with TickerProviderStat
   @override
   void initState() {
     super.initState();
-    
+
+    // Log settings opened analytics
+    AnalyticsService.logSettingsOpened();
+
     // Initialize animations
     _fadeController = AnimationController(
       duration: AnimationUtils.normal,
       vsync: this,
     );
-    
+
     _sectionControllers = AnimationUtils.createStaggeredControllers(
       vsync: this,
       count: 5, // Number of sections (added memorization section)

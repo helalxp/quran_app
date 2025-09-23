@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'design_system/noor_theme.dart';
 import 'constants/app_constants.dart';
+import 'services/analytics_service.dart';
 
 enum AppTheme { brown, green, blue, islamic }
 
@@ -64,6 +65,9 @@ class ThemeManager extends ChangeNotifier {
     _currentTheme = theme;
     notifyListeners();
 
+    // Log theme change analytics
+    AnalyticsService.logThemeChanged(theme.name, _themeMode == ThemeMode.dark);
+
     try {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setInt(_themeKey, theme.index);
@@ -77,6 +81,9 @@ class ThemeManager extends ChangeNotifier {
 
     _themeMode = mode;
     notifyListeners();
+
+    // Log theme mode change analytics
+    AnalyticsService.logThemeChanged(_currentTheme.name, mode == ThemeMode.dark);
 
     try {
       final prefs = await SharedPreferences.getInstance();

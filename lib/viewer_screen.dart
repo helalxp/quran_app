@@ -23,6 +23,7 @@ import 'utils/haptic_utils.dart';
 import 'widgets/loading_states.dart';
 import 'widgets/jump_to_page_dialog.dart';
 import 'managers/page_cache_manager.dart';
+import 'services/analytics_service.dart';
 
 class ViewerScreen extends StatefulWidget {
   const ViewerScreen({super.key});
@@ -62,6 +63,9 @@ class _ViewerScreenState extends State<ViewerScreen> with TickerProviderStateMix
     super.initState();
     _initializeAudioManager();
     _initializeReader();
+
+    // Log app opened event
+    AnalyticsService.logAppOpened();
 
     // Delay wakelock until after the screen is fully built
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -277,10 +281,14 @@ class _ViewerScreenState extends State<ViewerScreen> with TickerProviderStateMix
         newPage <= totalPages) {
       // Add subtle haptic feedback for smooth page turns
       HapticUtils.lightImpact();
-      
+
       _currentPageNotifier.value = newPage;
       _saveLastPageOptimized(newPage);
       _checkBookmarkStatus();
+
+      // Log page viewed analytics
+      final pageInfo = _getInfoForPage(newPage);
+      AnalyticsService.logPageViewed(newPage, pageInfo.surahName);
 
       // Preload adjacent pages for smoother swiping - only when page actually changes
       _preloadAdjacentPages(newPage);
@@ -403,6 +411,8 @@ class _ViewerScreenState extends State<ViewerScreen> with TickerProviderStateMix
 
       if (_isBookmarked) {
         await BookmarkManager.removeBookmark(currentPage);
+        // Log bookmark removed analytics
+        AnalyticsService.logBookmarkRemoved(pageInfo.surahName, currentPage);
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
@@ -422,6 +432,8 @@ class _ViewerScreenState extends State<ViewerScreen> with TickerProviderStateMix
           createdAt: DateTime.now(),
         );
         await BookmarkManager.addBookmark(bookmark);
+        // Log bookmark added analytics
+        AnalyticsService.logBookmarkAdded(pageInfo.surahName, currentPage);
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(

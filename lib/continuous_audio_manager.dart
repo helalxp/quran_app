@@ -14,6 +14,7 @@ import 'constants/api_constants.dart';
 import 'audio_cache_manager.dart';
 import 'audio_download_manager.dart';
 import 'services/audio_service_handler.dart';
+import 'services/analytics_service.dart';
 
 // Constants for better maintainability
 class AudioConstants {
@@ -598,6 +599,12 @@ class ContinuousAudioManager {
     _completionHandled = true;
     debugPrint('🎵 Ayah completed, moving to next instantly');
 
+    // Log audio completed analytics
+    if (_currentAyah != null) {
+      final duration = _audioPlayer?.duration?.inSeconds ?? 0;
+      AnalyticsService.logAudioCompleted('سورة ${_currentAyah!.surah}', duration);
+    }
+
     // Move to next ayah immediately - no timer delays
     _moveToNextAyah();
   }
@@ -966,6 +973,10 @@ class ContinuousAudioManager {
           await _audioPlayer!.setSpeed(_playbackSpeed);
           await _audioPlayer!.play();
 
+          // Log audio started analytics
+          final reciterName = _currentReciter ?? _reciterConfigs.keys.first;
+          AnalyticsService.logAudioStarted(reciterName, 'سورة ${ayah.surah}');
+
           // Update media item BEFORE activating media session
           _updateMediaItem(ayah);
 
@@ -1276,6 +1287,12 @@ class ContinuousAudioManager {
   /// Pause playback
   void pause() {
     _audioPlayer?.pause();
+
+    // Log audio paused analytics
+    if (_currentAyah != null) {
+      AnalyticsService.logAudioPaused('سورة ${_currentAyah!.surah}');
+    }
+
     // Notify audio service handler
     try {
       if (!kIsWeb) {

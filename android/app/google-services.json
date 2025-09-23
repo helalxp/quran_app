@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "386271992483",
+    "project_id": "quran-by-helal",
+    "storage_bucket": "quran-by-helal.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:386271992483:android:dd0972e39c9b3b09acbd16",
+        "android_client_info": {
+          "package_name": "com.helal.quran"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyApW-q9ymPyHL-0Gy3xzM43tsAP7TxZvg4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
