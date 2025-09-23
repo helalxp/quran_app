@@ -3,10 +3,10 @@
     "surahNumber": 1,
     "bboxes": [
       {
-        "x_min_visual": 96.48,
-        "y_min_visual": 61.79080357142857,
-        "x_max_visual": 300.0,
-        "y_max_visual": 95.709196428571424
+        "x_min_visual": 100,
+        "y_min_visual": 130,
+        "x_max_visual": 310,
+        "y_max_visual": 170
       }
     ],
     "page": 1,
@@ -16,10 +16,10 @@
     "surahNumber": 1,
     "bboxes": [
       {
-        "x_min_visual": 60.55,
-        "y_min_visual": 127.60080357142858,
-        "x_max_visual": 340.0,
-        "y_max_visual": 161.51919642857143
+        "x_min_visual": 80,
+        "y_min_visual": 175,
+        "x_max_visual": 340,
+        "y_max_visual": 210
       }
     ],
     "page": 1,
@@ -29,10 +29,10 @@
     "surahNumber": 1,
     "bboxes": [
       {
-        "x_min_visual": 215.06,
-        "y_min_visual": 193.43080357142857,
-        "x_max_visual": 385.0,
-        "y_max_visual": 227.34919642857143
+        "x_min_visual": 210,
+        "y_min_visual": 215,
+        "x_max_visual": 380,
+        "y_max_visual": 255
       }
     ],
     "page": 1,
@@ -42,10 +42,10 @@
     "surahNumber": 1,
     "bboxes": [
       {
-        "x_min_visual": 19.84,
-        "y_min_visual": 193.43080357142857,
-        "x_max_visual": 215.06,
-        "y_max_visual": 227.34919642857143
+        "x_min_visual": 30,
+        "y_min_visual": 215,
+        "x_max_visual": 210,
+        "y_max_visual": 255
       }
     ],
     "page": 1,
@@ -55,10 +55,10 @@
     "surahNumber": 1,
     "bboxes": [
       {
-        "x_min_visual": 91.51,
-        "y_min_visual": 257.25080357142858,
-        "x_max_visual": 395.0,
-        "y_max_visual": 291.16919642857144
+        "x_min_visual": 95,
+        "y_min_visual": 260,
+        "x_max_visual": 380,
+        "y_max_visual": 295
       }
     ],
     "page": 1,
@@ -68,16 +68,16 @@
     "surahNumber": 1,
     "bboxes": [
       {
-        "x_min_visual": 20.51,
-        "y_min_visual": 257.25080357142858,
-        "x_max_visual": 91.51,
-        "y_max_visual": 291.16919642857144
+        "x_min_visual": 20,
+        "y_min_visual": 260,
+        "x_max_visual": 90,
+        "y_max_visual": 295
       },
       {
-        "x_min_visual": 190.51,
-        "y_min_visual": 327.25080357142858,
-        "x_max_visual": 375.0,
-        "y_max_visual": 361.16919642857144
+        "x_min_visual": 195,
+        "y_min_visual": 300,
+        "x_max_visual": 375,
+        "y_max_visual": 335
       }
     ],
     "page": 1,
@@ -88,21 +88,21 @@
     "bboxes": [
       {
         "x_min_visual": 30,
-        "y_min_visual": 327.25080357142858,
-        "x_max_visual": 190.51,
-        "y_max_visual": 361.16919642857144
+        "y_min_visual": 300,
+        "x_max_visual": 190,
+        "y_max_visual": 335
       },
       {
         "x_min_visual": 70,
-        "y_min_visual": 391.16919642857144,
-        "x_max_visual": 335.0,
-        "y_max_visual": 431.25080357142858
+        "y_min_visual": 340,
+        "x_max_visual": 335,
+        "y_max_visual": 375
       },
       {
         "x_min_visual": 120,
-        "y_min_visual": 457.97080357142858,
-        "x_max_visual": 280.0,
-        "y_max_visual": 487.88919642857144
+        "y_min_visual": 380,
+        "x_max_visual": 290,
+        "y_max_visual": 415
       }
     ],
     "page": 1,
@@ -112,10 +112,10 @@
     "surahNumber": 2,
     "bboxes": [
       {
-        "x_min_visual": 288.34,
-        "y_min_visual": 127.60080357142858,
+        "x_min_visual": 290,
+        "y_min_visual": 175,
         "x_max_visual": 340,
-        "y_max_visual": 161.51919642857143
+        "y_max_visual": 210
       }
     ],
     "page": 2,
@@ -126,15 +126,15 @@
     "bboxes": [
       {
         "x_min_visual": 60,
-        "y_min_visual": 127.60080357142858,
-        "x_max_visual": 288.34,
-        "y_max_visual": 161.51919642857143
+        "y_min_visual": 175,
+        "x_max_visual": 280,
+        "y_max_visual": 210
       },
       {
         "x_min_visual": 290,
-        "y_min_visual": 191.43080357142857,
-        "x_max_visual": 380.0,
-        "y_max_visual": 231.34919642857143
+        "y_min_visual": 215,
+        "x_max_visual": 370,
+        "y_max_visual": 250
       }
     ],
     "page": 2,
@@ -144,16 +144,16 @@
     "surahNumber": 2,
     "bboxes": [
       {
-        "x_min_visual": 20,
-        "y_min_visual": 191.43080357142857,
-        "x_max_visual": 290,
-        "y_max_visual": 231.34919642857143
+        "x_min_visual": 30,
+        "y_min_visual": 215,
+        "x_max_visual": 280,
+        "y_max_visual": 250
       },
       {
-        "x_min_visual": 190,
-        "y_min_visual": 257.25080357142858,
-        "x_max_visual": 380.0,
-        "y_max_visual": 291.16919642857144
+        "x_min_visual": 200,
+        "y_min_visual": 255,
+        "x_max_visual": 370,
+        "y_max_visual": 290
       }
     ],
     "page": 2,
@@ -163,16 +163,16 @@
     "surahNumber": 2,
     "bboxes": [
       {
-        "x_min_visual": 15,
-        "y_min_visual": 257.25080357142858,
+        "x_min_visual": 20,
+        "y_min_visual": 257,
         "x_max_visual": 190,
-        "y_max_visual": 291.16919642857144
+        "y_max_visual": 292
       },
       {
-        "x_min_visual": 25,
-        "y_min_visual": 327.25080357142858,
-        "x_max_visual": 370,
-        "y_max_visual": 361.16919642857144
+        "x_min_visual": 40,
+        "y_min_visual": 297,
+        "x_max_visual": 380,
+        "y_max_visual": 332
       }
     ],
     "page": 2,
@@ -182,16 +182,16 @@
     "surahNumber": 2,
     "bboxes": [
       {
-        "x_min_visual": 60,
-        "y_min_visual": 391.16919642857144,
+        "x_min_visual": 70,
+        "y_min_visual": 337,
         "x_max_visual": 340,
-        "y_max_visual": 431.25080357142858
+        "y_max_visual": 372
       },
       {
-        "x_min_visual": 115,
-        "y_min_visual": 457.97080357142858,
+        "x_min_visual": 120,
+        "y_min_visual": 380,
         "x_max_visual": 285,
-        "y_max_visual": 487.88919642857144
+        "y_max_visual": 420
       }
     ],
     "page": 2,
