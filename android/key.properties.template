@@ -1,0 +1,15 @@
+# Release signing configuration for Google Play Store
+# Copy this file to 'key.properties' and fill in your actual values
+# DO NOT commit key.properties to version control
+
+storePassword=YOUR_KEYSTORE_PASSWORD
+keyPassword=YOUR_KEY_PASSWORD
+keyAlias=YOUR_KEY_ALIAS
+storeFile=../path/to/your/keystore.jks
+
+# Instructions:
+# 1. Generate a keystore: keytool -genkey -v -keystore upload-keystore.jks -keyalg RSA -keysize 2048 -validity 10000 -alias upload
+# 2. Copy this file to key.properties (same directory as this template)
+# 3. Fill in the actual values above
+# 4. Place your keystore file in android/ directory or adjust storeFile path
+# 5. Add key.properties to .gitignore to keep your credentials secure
