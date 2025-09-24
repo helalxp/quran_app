@@ -25,9 +25,9 @@ class AudioServiceHandler extends BaseAudioHandler with QueueHandler, SeekHandle
     // Set default media item immediately to activate media session
     mediaItem.add(MediaItem(
       id: 'quran_audio',
-      album: '\u202B' + 'القرآن الكريم' + '\u202C',
-      title: '\u202B' + 'القرآن الكريم' + '\u202C',
-      artist: '\u202B' + 'قارئ' + '\u202C',
+      album: '\u202B' 'القرآن الكريم' '\u202C',
+      title: '\u202B' 'القرآن الكريم' '\u202C',
+      artist: '\u202B' 'قارئ' '\u202C',
       duration: null,
       extras: {
         'language': 'ar',
@@ -104,7 +104,7 @@ class AudioServiceHandler extends BaseAudioHandler with QueueHandler, SeekHandle
     // Add RTL mark to force right-to-left text display
     final String rtlTitle = '\u202B$title\u202C'; // RLE + text + PDF
     final String rtlArtist = '\u202B$artist\u202C'; // RLE + text + PDF
-    final String rtlAlbum = '\u202B' + 'القرآن الكريم' + '\u202C';
+    final String rtlAlbum = '\u202B' 'القرآن الكريم' '\u202C';
 
     debugPrint('🎵 Updating media item: $rtlTitle by $rtlArtist');
     mediaItem.add(MediaItem(

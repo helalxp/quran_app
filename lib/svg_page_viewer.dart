@@ -1,6 +1,5 @@
 // lib/svg_page_viewer.dart
 
-import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:provider/provider.dart';
@@ -333,8 +332,18 @@ class _SvgPageViewerState extends State<SvgPageViewer> with TickerProviderStateM
     // SVG coordinate space and viewBox dimensions
     const double bboxCoordinateWidth = AppConstants.svgSourceWidth;   // 395
     const double bboxCoordinateHeight = AppConstants.svgSourceHeight; // 551
-    const double svgViewBoxWidth = 345.0;    // SVG viewBox width
-    const double svgViewBoxHeight = 550.0;   // SVG viewBox height
+
+    // Page-specific SVG viewBox dimensions
+    double svgViewBoxWidth, svgViewBoxHeight;
+    if (widget.currentPage == 1 || widget.currentPage == 2) {
+      // Pages 1 and 2 have square viewBox
+      svgViewBoxWidth = 235.0;
+      svgViewBoxHeight = 235.0;
+    } else {
+      // All other pages have rectangular viewBox
+      svgViewBoxWidth = 345.0;
+      svgViewBoxHeight = 550.0;
+    }
 
     final containerWidth = constraints.maxWidth;
     final containerHeight = constraints.maxHeight;

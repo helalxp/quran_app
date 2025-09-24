@@ -28,6 +28,7 @@ dependencies:
   audio_service: ^0.18.18
   firebase_core: ^2.24.2
   firebase_analytics: ^10.7.4
+  package_info_plus: ^9.0.0
 
 dev_dependencies:
   flutter_test:
@@ -35,7 +36,6 @@ dev_dependencies:
   flutter_lints: ^6.0.0
   mockito: ^5.4.4
   build_runner: ^2.4.7
-
 flutter:
   uses-material-design: true
   
