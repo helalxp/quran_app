@@ -30,8 +30,8 @@ class SettingsScreen extends StatefulWidget {
 class _SettingsScreenState extends State<SettingsScreen> with TickerProviderStateMixin {
   late AnimationController _fadeController;
   late List<AnimationController> _sectionControllers;
-  String _selectedReciter = 'مشاري راشد العفاسي';
-  String _selectedTafsir = 'التفسير الميسر';
+  String _selectedReciter = 'عبد الباسط عبد الصمد';
+  String _selectedTafsir = 'تفسير ابن كثير';
   double _playbackSpeed = 1.0;
   bool _autoPlayNext = true;
   bool _repeatSurah = false;
@@ -49,8 +49,8 @@ class _SettingsScreenState extends State<SettingsScreen> with TickerProviderStat
   // Enhanced reciter list with more options
   // SYNCHRONIZED: This is now the single source of truth for reciters.
   final Map<String, ReciterInfo> _reciters = {
-    'مشاري العفاسي': ReciterInfo('Mishary Alafasy', 'Alafasy_128kbps'),
     'عبد الباسط عبد الصمد': ReciterInfo('Abdul Basit', 'Abdul_Basit_Murattal_192kbps'),
+    'مشاري العفاسي': ReciterInfo('Mishary Alafasy', 'Alafasy_128kbps'),
     'عبد الرحمن السديس': ReciterInfo('Abdur-Rahman as-Sudais', 'Sudais_128kbps'),
     'ماهر المعيقلي': ReciterInfo('Maher Al Muaiqly', 'MaherAlMuaiqly128kbps'),
     'محمد صديق المنشاوي': ReciterInfo('Minshawi', 'Minshawi_Murattal_128kbps'),

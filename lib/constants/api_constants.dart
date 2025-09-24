@@ -26,7 +26,7 @@ class ApiConstants {
   }
   
   static String getVerseTranslation(int surah, int ayah, int translationId) {
-    return '$quranComBase/$translationId/$surah/$ayah';
+    return '$quranComBase$translationId/$surah/$ayah';
   }
   
   /// Mapping from API codes to Arabic reciter names
@@ -54,14 +54,14 @@ class ApiConstants {
 
   /// Audio reciter configurations
   static const Map<String, ReciterConfig> reciterConfigs = {
-    'مشاري راشد العفاسي': ReciterConfig(
-      baseUrl: '$everyAyahBase/Alafasy_128kbps',
-      fallbackUrl: '$everyAyahBase/Alafasy_64kbps',
-      format: 'mp3',
-    ),
     'عبد الباسط عبد الصمد': ReciterConfig(
       baseUrl: '$everyAyahBase/Abdul_Basit_Murattal_192kbps',
       fallbackUrl: '$everyAyahBase/AbdulSamad_64kbps_QuranCentral.com',
+      format: 'mp3',
+    ),
+    'مشاري راشد العفاسي': ReciterConfig(
+      baseUrl: '$everyAyahBase/Alafasy_128kbps',
+      fallbackUrl: '$everyAyahBase/Alafasy_64kbps',
       format: 'mp3',
     ),
     'محمد صديق المنشاوي': ReciterConfig(

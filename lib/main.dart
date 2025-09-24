@@ -18,9 +18,9 @@ void main() async {
   try {
     await Firebase.initializeApp();
     await AnalyticsService.initialize();
-    debugPrint('✅ Firebase initialized successfully');
+    if (kDebugMode) debugPrint('✅ Firebase initialized successfully');
   } catch (e) {
-    debugPrint('❌ Failed to initialize Firebase: $e');
+    if (kDebugMode) debugPrint('❌ Failed to initialize Firebase: $e');
     // Continue without Firebase - app will still work
   }
 
@@ -33,7 +33,7 @@ void main() async {
       await AudioService.init(
         builder: () => AudioServiceHandler(),
         config: const AudioServiceConfig(
-          androidNotificationChannelId: 'com.hilal.quran.audio',
+          androidNotificationChannelId: 'com.helal.quran.audio',
           androidNotificationChannelName: 'Quran Audio',
           androidNotificationChannelDescription: 'Audio controls for Quran recitation',
           androidNotificationOngoing: false,
@@ -42,10 +42,10 @@ void main() async {
           androidNotificationIcon: 'mipmap/ic_launcher',
         ),
       );
-      debugPrint('✅ Audio service initialized successfully');
+      if (kDebugMode) debugPrint('✅ Audio service initialized successfully');
     }
   } catch (e) {
-    debugPrint('❌ Failed to initialize audio service: $e');
+    if (kDebugMode) debugPrint('❌ Failed to initialize audio service: $e');
     // Continue app startup even if audio service fails
   }
 

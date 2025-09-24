@@ -42,6 +42,17 @@ class SettingsData {
 
   /// Comprehensive tafsir information for settings UI
   static const Map<String, TafsirInfo> tafsirInfo = {
+    'تفسير ابن كثير': TafsirInfo(
+      englishName: 'Ibn Kathir',
+      fullArabicName: 'تفسير القرآن العظيم',
+      author: 'الحافظ ابن كثير الدمشقي',
+      authorLifespan: '(701-774 هـ)',
+      description: 'تفسير شامل ومفصل يعتمد على القرآن والسنة والأثر.',
+      methodology: 'منهج السلف في التفسير بالمأثور',
+      features: ['تفسير بالقرآن والسنة', 'أسباب النزول', 'الأحاديث الصحيحة'],
+      difficulty: 'متوسط إلى متقدم',
+      volumes: '8 مجلدات',
+    ),
     'التفسير الميسر': TafsirInfo(
       englishName: 'Al-Muyassar',
       fullArabicName: 'التفسير الميسر',
@@ -74,17 +85,6 @@ class SettingsData {
       features: ['الوضوح والاعتدال', 'الفوائد العملية', 'التطبيق المعاصر'],
       difficulty: 'متوسط',
       volumes: 'مجلد واحد',
-    ),
-    'تفسير ابن كثير': TafsirInfo(
-      englishName: 'Ibn Kathir',
-      fullArabicName: 'تفسير القرآن العظيم',
-      author: 'الحافظ ابن كثير الدمشقي',
-      authorLifespan: '(701-774 هـ)',
-      description: 'تفسير شامل ومفصل يعتمد على القرآن والسنة والأثر.',
-      methodology: 'منهج السلف في التفسير بالمأثور',
-      features: ['تفسير بالقرآن والسنة', 'أسباب النزول', 'الأحاديث الصحيحة'],
-      difficulty: 'متوسط إلى متقدم',
-      volumes: '8 مجلدات',
     ),
     'تفسير الطبري': TafsirInfo(
       englishName: 'At-Tabari',

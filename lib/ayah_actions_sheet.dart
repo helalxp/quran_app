@@ -3,6 +3,7 @@
 import 'dart:convert';
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'models/ayah_marker.dart';
@@ -280,22 +281,22 @@ class _AyahActionsSheetState extends State<AyahActionsSheet> with TickerProvider
         apiCall: () async {
           try {
             final url = ApiConstants.getVerseTranslation(widget.ayahMarker.surah, widget.ayahMarker.ayah, 4);
-            print('Ibn Kathir URL: $url');
+            if (kDebugMode) print('Ibn Kathir URL: $url');
             final response = await http.get(
               Uri.parse(url),
               headers: {'Accept': 'application/json'},
             ).timeout(AppConstants.tafsirTimeout);
 
-            print('Ibn Kathir Response status: ${response.statusCode}');
+            if (kDebugMode) print('Ibn Kathir Response status: ${response.statusCode}');
             if (response.statusCode == 200) {
               final data = json.decode(response.body);
-              print('Ibn Kathir Response data: $data');
+              if (kDebugMode) print('Ibn Kathir Response data: $data');
               return data['text'] as String?;
             } else {
-              print('Ibn Kathir Response error: ${response.body}');
+              if (kDebugMode) print('Ibn Kathir Response error: ${response.body}');
             }
           } catch (e) {
-            print('Ibn Kathir Exception: $e');
+            if (kDebugMode) print('Ibn Kathir Exception: $e');
           }
           return null;
         },
@@ -341,22 +342,22 @@ class _AyahActionsSheetState extends State<AyahActionsSheet> with TickerProvider
         apiCall: () async {
           try {
             final url = ApiConstants.getVerseTranslation(widget.ayahMarker.surah, widget.ayahMarker.ayah, ApiConstants.translationIds['تفسير السعدي']!);
-            print('As-Sa\'di URL: $url');
+            if (kDebugMode) print('As-Sa\'di URL: $url');
             final response = await http.get(
               Uri.parse(url),
               headers: {'Accept': 'application/json'},
             ).timeout(AppConstants.tafsirTimeout);
 
-            print('As-Sa\'di Response status: ${response.statusCode}');
+            if (kDebugMode) print('As-Sa\'di Response status: ${response.statusCode}');
             if (response.statusCode == 200) {
               final data = json.decode(response.body);
-              print('As-Sa\'di Response data: $data');
+              if (kDebugMode) print('As-Sa\'di Response data: $data');
               return data['text'] as String?;
             } else {
-              print('As-Sa\'di Response error: ${response.body}');
+              if (kDebugMode) print('As-Sa\'di Response error: ${response.body}');
             }
           } catch (e) {
-            print('As-Sa\'di Exception: $e');
+            if (kDebugMode) print('As-Sa\'di Exception: $e');
           }
           return null;
         },
@@ -368,22 +369,22 @@ class _AyahActionsSheetState extends State<AyahActionsSheet> with TickerProvider
         apiCall: () async {
           try {
             final url = ApiConstants.getVerseTranslation(widget.ayahMarker.surah, widget.ayahMarker.ayah, 8);
-            print('Al-Tabari URL: $url');
+            if (kDebugMode) print('Al-Tabari URL: $url');
             final response = await http.get(
               Uri.parse(url),
               headers: {'Accept': 'application/json'},
             ).timeout(AppConstants.tafsirTimeout);
 
-            print('Al-Tabari Response status: ${response.statusCode}');
+            if (kDebugMode) print('Al-Tabari Response status: ${response.statusCode}');
             if (response.statusCode == 200) {
               final data = json.decode(response.body);
-              print('Al-Tabari Response data: $data');
+              if (kDebugMode) print('Al-Tabari Response data: $data');
               return data['text'] as String?;
             } else {
-              print('Al-Tabari Response error: ${response.body}');
+              if (kDebugMode) print('Al-Tabari Response error: ${response.body}');
             }
           } catch (e) {
-            print('Al-Tabari Exception: $e');
+            if (kDebugMode) print('Al-Tabari Exception: $e');
           }
           return null;
         },
