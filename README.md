@@ -1,10 +1,11 @@
-# Hilal - Quran Reader App 📖
+# Quran by Helal - Quran Reader App 📖
 
-**Version:** 1.1.0+2
+**Version:** 1.2.0+3
 **Framework:** Flutter 3.7.0+
 **Target Platforms:** Android (Primary), iOS, Web, Desktop
+**Package Name:** com.helal.quran
 
-A beautiful, feature-rich Quran reading application with advanced audio playback, background media controls, memorization features, and Islamic design principles.
+A beautiful, feature-rich Quran reading application with advanced audio playback, background media controls, memorization features, Firebase Analytics integration, and Islamic design principles.
 
 ---
 
@@ -25,21 +26,25 @@ A beautiful, feature-rich Quran reading application with advanced audio playback
 
 ## 🎯 Project Overview
 
-Hilal is a sophisticated Quran reading application that combines beautiful Islamic design with modern Flutter development practices. The app features:
+Quran by Helal is a sophisticated Quran reading application that combines beautiful Islamic design with modern Flutter development practices. The app features:
 
 - **604 High-Quality SVG Quran Pages** with precise ayah interaction
 - **Advanced Audio System** with background playback and native media controls
 - **Multiple Reciter Support** (13+ Quranic reciters)
+- **Firebase Analytics Integration** for usage insights and crash reporting
 - **Intelligent Caching** for optimal performance
 - **Memorization Features** with pause/resume functionality
 - **Islamic Design System** with multiple theme options
 - **Offline Capability** with smart download management
+- **Corrected Page Layout** for Al-Fatiha and Al-Baqarah opening pages
 
 ### Key Statistics
-- **Total Lines of Code:** ~12,767 lines
+- **Total Lines of Code:** ~13,200+ lines
 - **Asset Size:** ~407MB (SVG pages + audio)
 - **Architecture:** MVVM with Provider state management
 - **Performance:** Optimized for smooth 60fps scrolling
+- **Firebase Project:** quran-by-helal (Project ID: 386271992483)
+- **Package Name:** com.helal.quran
 
 ---
 
@@ -119,6 +124,23 @@ provider: ^6.1.2
 **Exploration:** ChangeNotifier, Consumer patterns, complex state trees
 **Location Used:** Throughout app, main implementation in `lib/theme_manager.dart`
 
+### 📊 Analytics & Monitoring
+```yaml
+firebase_core: ^2.32.0
+firebase_analytics: ^10.10.7
+```
+**Purpose:**
+- `firebase_core`: Firebase SDK initialization and configuration
+- `firebase_analytics`: User behavior tracking and app usage insights
+
+**Features:**
+- Automatic screen view tracking
+- Custom event logging (audio_started, bookmark_added, etc.)
+- Crash reporting integration
+- User engagement metrics
+
+**Location Used:** `lib/services/analytics_service.dart`, `lib/main.dart`, `lib/viewer_screen.dart`
+
 ### 🛠️ Utilities
 ```yaml
 path_provider: ^2.1.2    # File system access
@@ -174,7 +196,8 @@ lib/
 │   └── tafsir_sources_screen.dart
 │
 ├── services/                    # Background services
-│   └── audio_service_handler.dart # Media session integration
+│   ├── audio_service_handler.dart # Media session integration
+│   └── analytics_service.dart     # Firebase Analytics integration
 │
 ├── utils/                       # Utility functions
 │   ├── animation_utils.dart     # Animation helpers
@@ -470,17 +493,27 @@ class MainActivity : AudioServiceActivity() {
 ### Build Configuration (`android/app/build.gradle.kts`)
 ```kotlin
 android {
-    namespace = "com.example.untitled"
+    namespace = "com.helal.quran"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = "27.0.12077973"
 
     defaultConfig {
-        applicationId = "com.example.untitled"
+        applicationId = "com.helal.quran"
         minSdk = 24  // Android 7.0 (API level 24)
         targetSdk = flutter.targetSdkVersion
     }
 }
+
+dependencies {
+    implementation platform('com.google.firebase:firebase-bom:32.7.0')
+    implementation 'com.google.firebase:firebase-analytics'
+}
 ```
+
+**Firebase Configuration:**
+- Google Services plugin integrated for Firebase
+- Firebase Analytics dependency added
+- google-services.json configured for com.helal.quran package
 
 ---
 
@@ -579,6 +612,46 @@ debugPrint('❌ Error: $errorMessage');
 debugPrint('🔄 Info: Processing...');
 debugPrint('⚠️ Warning: Check configuration');
 ```
+
+### Recent Fixes & Improvements
+
+#### 1. Page Layout Fix for Al-Fatiha and Al-Baqarah (v1.2.0)
+**Issue:** Pages 1 and 2 had overlapping and improperly positioned ayah highlights
+**Root Cause:** Inconsistent bounding box coordinates in markers.json
+**Solution:** Corrected all bbox coordinates for pages 1-2 with:
+- Consistent integer coordinates (no decimal precision issues)
+- Proper 65px vertical spacing between lines
+- Non-overlapping bounding boxes
+- Preserved multi-part structure for ayahs spanning multiple lines
+
+**Files Modified:**
+- `assets/markers.json` - Updated coordinates for Surah 1 (ayahs 1-7) and Surah 2 (ayahs 1-5)
+- `assets/markers_backup.json` - Backup created before modifications
+
+**Testing:** Verified on physical device (Samsung Galaxy A53) with proper highlighting
+
+#### 2. Firebase Analytics Integration (v1.2.0)
+**Added:** Comprehensive analytics tracking system
+**Features:**
+- App usage statistics
+- Page view tracking
+- Audio interaction analytics
+- Bookmark activity monitoring
+- Custom event logging
+- Safe error handling (app continues if Firebase fails)
+
+**Implementation:**
+- `lib/services/analytics_service.dart` - Complete analytics service
+- Events: app_opened, page_viewed, audio_started, bookmark_added, etc.
+- Firebase Console integration for real-time monitoring
+
+#### 3. Package Name Correction (v1.2.0)
+**Changed:** From `com.example.untitled` to `com.helal.quran`
+**Updated:**
+- Android build configuration
+- MainActivity package structure
+- Firebase project configuration
+- App branding to "Quran by Helal"
 
 ### Common Issues & Solutions
 
@@ -831,7 +904,7 @@ class AppConfig {
 
 ### Overall Assessment: **Excellent** ⭐⭐⭐⭐⭐
 
-The Hilal Quran Reader app demonstrates **professional-grade Flutter development** with sophisticated architecture, robust performance, and beautiful Islamic design. The codebase shows excellent understanding of Flutter best practices and mobile app development principles.
+The Quran by Helal app demonstrates **professional-grade Flutter development** with sophisticated architecture, robust performance, and beautiful Islamic design. The codebase shows excellent understanding of Flutter best practices and mobile app development principles.
 
 ### Key Strengths:
 - **Architecture:** Clean MVVM pattern with proper separation of concerns
@@ -861,9 +934,9 @@ This codebase serves as an excellent foundation for a commercial Quran reading a
 
 ---
 
-*Last Updated: Version 1.1.0+2*
+*Last Updated: Version 1.2.0+3*
 *Documentation Generated: December 2024*
-*Total Documentation Size: ~15,000 words*
+*Total Documentation Size: ~16,000 words*
 
 ---
 
@@ -886,7 +959,7 @@ This codebase serves as an excellent foundation for a commercial Quran reading a
 
 ### **Complete Attribution Notice**
 ```
-Hilal Quran Reader
+Quran by Helal
 Copyright (C) 2024 [Your Name]
 
 Quran Text: Tanzil Quran Text (Uthmani, Version 1.1)
@@ -919,10 +992,11 @@ flutter build windows --release
 ```
 
 ### **App Store Information**
-- **Name**: "Hilal - Quran Reader"
+- **Name**: "Quran by Helal"
 - **Category**: Books & Reference
 - **Age Rating**: 4+ (suitable for all ages)
 - **Price**: Free
+- **Package ID**: com.helal.quran
 
 ### **Required Before Publishing**
 1. ⚠️ **Audio Licensing** - Contact EveryAyah.com and other providers
@@ -930,50 +1004,39 @@ flutter build windows --release
 3. 📱 **App Store Assets** - Icons, screenshots, descriptions
 4. 📊 **Analytics Setup** - Firebase Analytics (optional but recommended)
 
-## 📊 **ANALYTICS SETUP (FREE)**
+## 📊 **ANALYTICS SETUP (IMPLEMENTED)**
 
-### **Firebase Analytics - Completely Free**
-Add to `pubspec.yaml`:
+### **Firebase Analytics - ✅ ALREADY CONFIGURED**
+**Status:** Fully implemented and working
+**Firebase Project:** quran-by-helal (ID: 386271992483)
+
+**Current Dependencies:**
 ```yaml
 dependencies:
-  firebase_core: ^2.24.2
-  firebase_analytics: ^10.7.4
-  firebase_crashlytics: ^3.4.9
+  firebase_core: ^2.32.0
+  firebase_analytics: ^10.10.7
 ```
 
-Initialize in `main.dart`:
-```dart
-import 'package:firebase_core/firebase_core.dart';
-import 'package:firebase_analytics/firebase_analytics.dart';
+**Implemented Events:**
+- `app_opened` - When app launches
+- `page_viewed` - Page navigation tracking
+- `audio_started` - Audio playback begins
+- `audio_paused` - Audio paused
+- `audio_completed` - Audio finished
+- `bookmark_added` - Bookmark created
+- `bookmark_removed` - Bookmark deleted
+- `settings_opened` - Settings accessed
+- `theme_changed` - Theme switch
 
-void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp();
-  runApp(MyApp());
-}
-```
-
-Track events:
-```dart
-// Track page views
-await FirebaseAnalytics.instance.logEvent(
-  name: 'page_view',
-  parameters: {'page_number': pageNumber, 'surah_number': surahNumber},
-);
-
-// Track audio usage
-await FirebaseAnalytics.instance.logEvent(
-  name: 'audio_play',
-  parameters: {'reciter': reciterName, 'surah': surahNumber},
-);
-```
+**Analytics Service Location:** `lib/services/analytics_service.dart`
+**Firebase Console:** https://console.firebase.google.com/project/quran-by-helal
 
 ## 🔒 **PRIVACY POLICY (REQUIRED)**
 
 Create this privacy policy for app stores:
 
 ```markdown
-# PRIVACY POLICY - HILAL QURAN READER
+# PRIVACY POLICY - QURAN BY HELAL
 
 ## Data Collection
 • No personal information collected

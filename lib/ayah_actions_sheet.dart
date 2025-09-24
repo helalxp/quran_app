@@ -278,14 +278,24 @@ class _AyahActionsSheetState extends State<AyahActionsSheet> with TickerProvider
       TafsirStrategy(
         name: 'تفسير ابن كثير',
         apiCall: () async {
-          final response = await http.get(
-            Uri.parse(ApiConstants.getAyahTranslation(widget.ayahMarker.surah, widget.ayahMarker.ayah, 'ar.katheer')),
-            headers: {'Accept': 'application/json'},
-          ).timeout(AppConstants.tafsirTimeout);
+          try {
+            final url = ApiConstants.getVerseTranslation(widget.ayahMarker.surah, widget.ayahMarker.ayah, 4);
+            print('Ibn Kathir URL: $url');
+            final response = await http.get(
+              Uri.parse(url),
+              headers: {'Accept': 'application/json'},
+            ).timeout(AppConstants.tafsirTimeout);
 
-          if (response.statusCode == 200) {
-            final data = json.decode(response.body);
-            return data['data']['text'] as String?;
+            print('Ibn Kathir Response status: ${response.statusCode}');
+            if (response.statusCode == 200) {
+              final data = json.decode(response.body);
+              print('Ibn Kathir Response data: $data');
+              return data['text'] as String?;
+            } else {
+              print('Ibn Kathir Response error: ${response.body}');
+            }
+          } catch (e) {
+            print('Ibn Kathir Exception: $e');
           }
           return null;
         },
@@ -329,16 +339,24 @@ class _AyahActionsSheetState extends State<AyahActionsSheet> with TickerProvider
       TafsirStrategy(
         name: 'تفسير السعدي',
         apiCall: () async {
-          final response = await http.get(
-            Uri.parse(ApiConstants.getVerseTranslation(widget.ayahMarker.surah, widget.ayahMarker.ayah, 171)),
-            headers: {'Accept': 'application/json'},
-          ).timeout(AppConstants.tafsirTimeout);
+          try {
+            final url = ApiConstants.getVerseTranslation(widget.ayahMarker.surah, widget.ayahMarker.ayah, ApiConstants.translationIds['تفسير السعدي']!);
+            print('As-Sa\'di URL: $url');
+            final response = await http.get(
+              Uri.parse(url),
+              headers: {'Accept': 'application/json'},
+            ).timeout(AppConstants.tafsirTimeout);
 
-          if (response.statusCode == 200) {
-            final data = json.decode(response.body);
-            if (data['translations'] != null && data['translations'].isNotEmpty) {
-              return data['translations'][0]['text'] as String?;
+            print('As-Sa\'di Response status: ${response.statusCode}');
+            if (response.statusCode == 200) {
+              final data = json.decode(response.body);
+              print('As-Sa\'di Response data: $data');
+              return data['text'] as String?;
+            } else {
+              print('As-Sa\'di Response error: ${response.body}');
             }
+          } catch (e) {
+            print('As-Sa\'di Exception: $e');
           }
           return null;
         },
@@ -348,14 +366,24 @@ class _AyahActionsSheetState extends State<AyahActionsSheet> with TickerProvider
       TafsirStrategy(
         name: 'تفسير الطبري',
         apiCall: () async {
-          final response = await http.get(
-            Uri.parse(ApiConstants.getAyahTranslation(widget.ayahMarker.surah, widget.ayahMarker.ayah, 'ar.tabary')),
-            headers: {'Accept': 'application/json'},
-          ).timeout(AppConstants.tafsirTimeout);
+          try {
+            final url = ApiConstants.getVerseTranslation(widget.ayahMarker.surah, widget.ayahMarker.ayah, 8);
+            print('Al-Tabari URL: $url');
+            final response = await http.get(
+              Uri.parse(url),
+              headers: {'Accept': 'application/json'},
+            ).timeout(AppConstants.tafsirTimeout);
 
-          if (response.statusCode == 200) {
-            final data = json.decode(response.body);
-            return data['data']['text'] as String?;
+            print('Al-Tabari Response status: ${response.statusCode}');
+            if (response.statusCode == 200) {
+              final data = json.decode(response.body);
+              print('Al-Tabari Response data: $data');
+              return data['text'] as String?;
+            } else {
+              print('Al-Tabari Response error: ${response.body}');
+            }
+          } catch (e) {
+            print('Al-Tabari Exception: $e');
           }
           return null;
         },

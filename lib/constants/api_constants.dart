@@ -8,7 +8,7 @@ class ApiConstants {
   
   /// Base URLs for different API services
   static const String alquranCloudBase = 'https://api.alquran.cloud/v1';
-  static const String quranComBase = 'https://api.quran.com/api/v4';
+  static const String quranComBase = 'http://api.quran-tafseer.com/tafseer/';
   static const String everyAyahBase = 'https://everyayah.com/data';
   
   /// Al-Quran Cloud API endpoints
@@ -26,7 +26,7 @@ class ApiConstants {
   }
   
   static String getVerseTranslation(int surah, int ayah, int translationId) {
-    return '$quranComBase/verses/by_key/$surah:$ayah?translations=$translationId';
+    return '$quranComBase/$translationId/$surah/$ayah';
   }
   
   /// Mapping from API codes to Arabic reciter names
@@ -54,26 +54,26 @@ class ApiConstants {
 
   /// Audio reciter configurations
   static const Map<String, ReciterConfig> reciterConfigs = {
-    'عبد الباسط عبد الصمد': ReciterConfig(
-      baseUrl: '$everyAyahBase/Abdul_Basit_Murattal_192kbps',
-      fallbackUrl: '$everyAyahBase/AbdulSamad_64kbps_QuranCentral.com',
-      format: 'mp3',
-    ),
     'مشاري راشد العفاسي': ReciterConfig(
       baseUrl: '$everyAyahBase/Alafasy_128kbps',
       fallbackUrl: '$everyAyahBase/Alafasy_64kbps',
       format: 'mp3',
     ),
+    'عبد الباسط عبد الصمد': ReciterConfig(
+      baseUrl: '$everyAyahBase/Abdul_Basit_Murattal_192kbps',
+      fallbackUrl: '$everyAyahBase/AbdulSamad_64kbps_QuranCentral.com',
+      format: 'mp3',
+    ),
     'محمد صديق المنشاوي': ReciterConfig(
-      baseUrl: '$everyAyahBase/Minshawi_Murattal_128kbps',
+      baseUrl: '$everyAyahBase/Minshawy_Murattal_128kbps/',
       format: 'mp3',
     ),
     'أبو بكر الشاطري': ReciterConfig(
-      baseUrl: '$everyAyahBase/Shatri_128kbps',
+      baseUrl: '$everyAyahBase/Abu Bakr Ash-Shaatree_128kbps/',
       format: 'mp3',
     ),
     'عبد الرحمن السديس': ReciterConfig(
-      baseUrl: '$everyAyahBase/Sudais_128kbps',
+      baseUrl: '$everyAyahBase/Abdurrahmaan_As-Sudais_192kbps',
       format: 'mp3',
     ),
     'ماهر المعيقلي': ReciterConfig(
@@ -94,7 +94,7 @@ class ApiConstants {
       format: 'mp3',
     ),
     'خالد القحطاني': ReciterConfig(
-      baseUrl: '$everyAyahBase/Khalid_Al-Qahtani_192kbps',
+      baseUrl: '$everyAyahBase/Khaalid_Abdullaah_al-Qahtaanee_192kbps',
       format: 'mp3',
     ),
     'ناصر القطامي': ReciterConfig(
@@ -118,6 +118,10 @@ class ApiConstants {
       baseUrl: '$everyAyahBase/Ahmed_Neana_128kbps',
       format: 'mp3',
     ),
+    'سعود الشريم': ReciterConfig(
+        baseUrl: '$everyAyahBase/Saood_ash-Shuraym_128kbps',
+        format: 'mp3',
+    ),
   };
   
   /// Tafsir source identifiers
@@ -132,7 +136,13 @@ class ApiConstants {
   
   /// Translation IDs for Quran.com API
   static const Map<String, int> translationIds = {
-    'التفسير الميسر': 171,
+    'التفسير الميسر': 1,
+    'تفسير الجلالين': 2,
+    'تفسير السعدي': 3,
+    'تفسير ابن كثير': 4,
+    'تفسير الطبري': 8,
+    'تفسير القرطبي': 7,
+
   };
   
   /// Request timeout configurations

@@ -30,8 +30,8 @@ class SettingsScreen extends StatefulWidget {
 class _SettingsScreenState extends State<SettingsScreen> with TickerProviderStateMixin {
   late AnimationController _fadeController;
   late List<AnimationController> _sectionControllers;
-  String _selectedReciter = 'عبد الباسط عبد الصمد';
-  String _selectedTafsir = 'تفسير ابن كثير';
+  String _selectedReciter = 'مشاري راشد العفاسي';
+  String _selectedTafsir = 'التفسير الميسر';
   double _playbackSpeed = 1.0;
   bool _autoPlayNext = true;
   bool _repeatSurah = false;
@@ -63,6 +63,8 @@ class _SettingsScreenState extends State<SettingsScreen> with TickerProviderStat
     'خالد القحطاني': ReciterInfo('Khalid Al-Qahtani', 'Khalid_Al-Qahtani_192kbps'),
     'محمد أيوب': ReciterInfo('Muhammad Ayyub', 'Muhammad_Ayyoub_128kbps'),
     'عبد الله المطرود': ReciterInfo('Abdullah Al-Matroud', 'Abdullah_Matroud_128kbps'),
+    'أبو بكر الشاطري': ReciterInfo('Abu Bakr Al-Shatri', 'Abu Bakr Ash-Shaatree_128kbps'),
+    'أحمد نعينع': ReciterInfo('Ahmed Neana', 'Ahmed_Neana_128kbps')
   };
 
   // Use tafsir sources from SettingsData
