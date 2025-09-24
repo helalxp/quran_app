@@ -3,6 +3,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:package_info_plus/package_info_plus.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'theme_manager.dart';
 import 'continuous_audio_manager.dart';
 import 'memorization_manager.dart';
@@ -36,7 +38,8 @@ class _SettingsScreenState extends State<SettingsScreen> with TickerProviderStat
   bool _autoPlayNext = true;
   bool _repeatSurah = false;
   bool _isLoading = true;
-  
+  String _appVersion = '1.0.0'; // Will be loaded from package info
+
   // Memorization settings
   int _memorationRepetitions = 3;
   bool _pauseBetweenRepetitions = true;
@@ -79,6 +82,9 @@ class _SettingsScreenState extends State<SettingsScreen> with TickerProviderStat
     // Log settings opened analytics
     AnalyticsService.logSettingsOpened();
 
+    // Load app version
+    _loadAppVersion();
+
     // Initialize animations
     _fadeController = AnimationController(
       duration: AnimationUtils.normal,
@@ -109,6 +115,56 @@ class _SettingsScreenState extends State<SettingsScreen> with TickerProviderStat
     _fadeController.dispose();
     AnimationUtils.disposeStaggeredControllers(_sectionControllers);
     super.dispose();
+  }
+
+  Future<void> _loadAppVersion() async {
+    try {
+      final packageInfo = await PackageInfo.fromPlatform();
+      setState(() {
+        _appVersion = packageInfo.version;
+      });
+    } catch (e) {
+      // Fallback to default version
+      setState(() {
+        _appVersion = '1.0.0';
+      });
+    }
+  }
+
+  Future<void> _openAppRating() async {
+    try {
+      // Your app's Google Play Store URL
+      const String playStoreUrl = 'https://play.google.com/store/apps/details?id=com.helal.quran';
+
+      // Try to launch the Play Store app first, then fallback to browser
+      const String playStoreAppUrl = 'market://details?id=com.helal.quran';
+
+      if (await canLaunchUrl(Uri.parse(playStoreAppUrl))) {
+        await launchUrl(Uri.parse(playStoreAppUrl));
+      } else if (await canLaunchUrl(Uri.parse(playStoreUrl))) {
+        await launchUrl(Uri.parse(playStoreUrl), mode: LaunchMode.externalApplication);
+      } else {
+        // Show error message if can't open either
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('لا يمكن فتح متجر التطبيقات'),
+              duration: Duration(seconds: 2),
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      // Show error message
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('حدث خطأ في فتح متجر التطبيقات'),
+            duration: Duration(seconds: 2),
+          ),
+        );
+      }
+    }
   }
 
   Future<void> _loadSettings() async {
@@ -701,7 +757,7 @@ class _SettingsScreenState extends State<SettingsScreen> with TickerProviderStat
               color: Theme.of(context).colorScheme.primary,
             ),
             title: const Text('معلومات التطبيق'),
-            subtitle: const Text('الإصدار 1.0.0'),
+            subtitle: Text('الإصدار $_appVersion'),
           ),
           const Divider(height: 1),
           ListTile(
@@ -711,9 +767,7 @@ class _SettingsScreenState extends State<SettingsScreen> with TickerProviderStat
             ),
             title: const Text('تقييم التطبيق'),
             subtitle: const Text('ساعدنا بتقييم التطبيق'),
-            onTap: () {
-              // TODO: Implement app rating
-            },
+            onTap: () => _openAppRating(),
           ),
           const Divider(height: 1),
           ListTile(
