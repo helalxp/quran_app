@@ -53,7 +53,7 @@ class _SettingsScreenState extends State<SettingsScreen> with TickerProviderStat
   // SYNCHRONIZED: This is now the single source of truth for reciters.
   final Map<String, ReciterInfo> _reciters = {
     'عبد الباسط عبد الصمد': ReciterInfo('Abdul Basit', 'Abdul_Basit_Murattal_192kbps'),
-    'مشاري العفاسي': ReciterInfo('Mishary Alafasy', 'Alafasy_128kbps'),
+    'مشاري راشد العفاسي': ReciterInfo('Mishary Alafasy', 'Alafasy_128kbps'),
     'عبد الرحمن السديس': ReciterInfo('Abdur-Rahman as-Sudais', 'Sudais_128kbps'),
     'ماهر المعيقلي': ReciterInfo('Maher Al Muaiqly', 'MaherAlMuaiqly128kbps'),
     'محمد صديق المنشاوي': ReciterInfo('Minshawi', 'Minshawi_Murattal_128kbps'),
