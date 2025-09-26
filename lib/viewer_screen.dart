@@ -750,7 +750,7 @@ class _ViewerScreenState extends State<ViewerScreen> with TickerProviderStateMix
                 ),
               ),
 
-              // Improved Media Player - collapsible with fixed button functions
+              // Improved Media Player - collapsible
               if (_audioManager != null)
                 ValueListenableBuilder<AyahMarker?>(
                   valueListenable: _audioManager!.currentAyahNotifier,
