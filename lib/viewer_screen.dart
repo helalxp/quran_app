@@ -1020,7 +1020,7 @@ class _ViewerScreenState extends State<ViewerScreen> with TickerProviderStateMix
     );
   }
 
-  /// FIXED: Proper dismissible Juz dialog with smooth animations
+  /// Proper dismissible Juz dialog with smooth animations
   Future<void> _showJuzSelectionDialog(BuildContext context) async {
     if (!mounted) return;
 

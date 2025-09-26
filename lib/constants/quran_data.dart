@@ -229,12 +229,13 @@ class QuranData {
       'الفاتحة', 'البقرة', 'آل عمران', 'النساء', 'المائدة', 'الأنعام', 'الأعراف', 'الأنفال', 'التوبة', 'يونس',
       // Add all 114 surah names...
       // This is a simplified version - you should add all surah names
+      // remove this since we going to make a new file
     ];
-    
+
     if (surahNumber < 1 || surahNumber > surahNames.length) {
       return 'سورة $surahNumber'; // Fallback
     }
-    
+
     return surahNames[surahNumber - 1];
   }
 }

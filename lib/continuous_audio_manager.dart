@@ -1448,6 +1448,7 @@ class ContinuousAudioManager {
       'القارعة', 'التكاثر', 'العصر', 'الهمزة', 'الفيل', 'قريش', 'الماعون', 'الكوثر', 'الكافرون', 'النصر',
       'المسد', 'الإخلاص', 'الفلق', 'الناس'
     ];
+    // Use the new constants file
 
     if (surahNumber >= 1 && surahNumber <= surahNames.length) {
       return surahNames[surahNumber - 1];

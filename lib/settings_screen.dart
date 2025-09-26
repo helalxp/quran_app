@@ -49,7 +49,7 @@ class _SettingsScreenState extends State<SettingsScreen> with TickerProviderStat
   // Download manager
   late AudioDownloadManager _downloadManager;
 
-  // Enhanced reciter list with more options
+
   // SYNCHRONIZED: This is now the single source of truth for reciters.
   final Map<String, ReciterInfo> _reciters = {
     'عبد الباسط عبد الصمد': ReciterInfo('Abdul Basit', 'Abdul_Basit_Murattal_192kbps'),
@@ -133,7 +133,7 @@ class _SettingsScreenState extends State<SettingsScreen> with TickerProviderStat
 
   Future<void> _openAppRating() async {
     try {
-      // Your app's Google Play Store URL
+      // My app's Google Play Store URL
       const String playStoreUrl = 'https://play.google.com/store/apps/details?id=com.helal.quran';
 
       // Try to launch the Play Store app first, then fallback to browser
@@ -277,7 +277,7 @@ class _SettingsScreenState extends State<SettingsScreen> with TickerProviderStat
         _repeatSurah = value;
       });
       
-      // Update audio manager with new repeat setting
+      // Update audio manager with repeat setting
       final audioManager = ContinuousAudioManager();
       await audioManager.updateRepeatSurah(value);
     } catch (e) {
@@ -516,7 +516,7 @@ class _SettingsScreenState extends State<SettingsScreen> with TickerProviderStat
           ),
           const Divider(height: 1),
 
-          // Download Section (Future Feature)
+          // Download Section
           ListTile(
             leading: Icon(
               Icons.download,

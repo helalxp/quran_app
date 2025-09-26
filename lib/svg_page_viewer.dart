@@ -1,4 +1,4 @@
-// lib/svg_page_viewer.dart
+// lib/svg_page_viewer.dart most of this AI some is by claude don't touch it since it works now
 
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -179,7 +179,6 @@ class _SvgPageViewerState extends State<SvgPageViewer> with TickerProviderStateM
               minScale: 1.0,
               maxScale: 3.0,
               onInteractionEnd: (details) {
-                // Reset zoom when fingers are lifted
                 _resetZoom();
               },
               child: GestureDetector(
@@ -327,7 +326,6 @@ class _SvgPageViewerState extends State<SvgPageViewer> with TickerProviderStateM
 
   OverlayTransform _calculateOverlayTransform(BoxConstraints constraints) {
     // MATHEMATICAL BOXFIT.CONTAIN CALCULATION
-    // No widget measurement - purely mathematical approach
 
     // SVG coordinate space and viewBox dimensions
     const double bboxCoordinateWidth = AppConstants.svgSourceWidth;   // 395

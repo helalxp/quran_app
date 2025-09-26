@@ -1,11 +1,9 @@
 // lib/constants/juz_mappings.dart - Correct Juz to page mappings
 
-/// Standard Juz (Para) to page mappings for Quran
-/// These are the traditional starting pages for each Juz in most Mushaf layouts
+
 class JuzMappings {
   
   /// Map of Juz number to starting page number
-  /// Based on standard 604-page Mushaf layout
   static const Map<int, int> juzToPage = {
     1: 1,     // Al-Fatiha 1:1
     2: 22,    // Al-Baqarah 2:142  
