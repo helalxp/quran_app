@@ -4,16 +4,25 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 
+    <!-- Required for location detection (prayer times) -->
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+
     <!-- Required for background audio playback -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
+
+    <!-- Required for exact alarm scheduling (prayer times) -->
+    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
+    <uses-permission android:name="android.permission.USE_EXACT_ALARM" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     
     <application
         android:label="Quran by Helal"
-        android:name="${applicationName}"
+        android:name=".MyApplication"
         android:icon="@mipmap/ic_launcher">
         <activity
             android:name=".MainActivity"
@@ -52,6 +61,45 @@
             tools:ignore="Instantiatable">
             <intent-filter>
                 <action android:name="android.intent.action.MEDIA_BUTTON" />
+            </intent-filter>
+        </receiver>
+
+        <!-- Azan foreground service for reliable playback -->
+        <service
+            android:name=".AzanService"
+            android:foregroundServiceType="mediaPlayback"
+            android:exported="false" />
+
+        <!-- Boot receiver to reschedule prayer alarms after device reboot -->
+        <receiver
+            android:name=".BootReceiver"
+            android:enabled="true"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.QUICKBOOT_POWERON" />
+            </intent-filter>
+        </receiver>
+
+        <!-- Azan broadcast receiver (plays azan and sends notifications from background alarms) -->
+        <receiver
+            android:name=".AzanBroadcastReceiver"
+            android:enabled="true"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.helal.quran.PLAY_AZAN" />
+                <action android:name="com.helal.quran.STOP_AZAN" />
+                <action android:name="com.helal.quran.SEND_NOTIFICATION" />
+            </intent-filter>
+        </receiver>
+
+        <!-- Midnight reschedule receiver (triggers next day prayer rescheduling) -->
+        <receiver
+            android:name=".MidnightRescheduleReceiver"
+            android:enabled="true"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.helal.quran.MIDNIGHT_RESCHEDULE" />
             </intent-filter>
         </receiver>
 

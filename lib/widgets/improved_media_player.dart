@@ -55,6 +55,7 @@ class _ImprovedMediaPlayerState extends State<ImprovedMediaPlayer>
     with TickerProviderStateMixin {
   bool _isCollapsed = true; // Start collapsed by default
   bool _isVisible = false;
+  bool _wasAutoPaused = false; // Track if we auto-paused during collapse
   late final AnimationController _expandController;
   late final AnimationController _slideController;
   late final Animation<Offset> _slideAnimation;
@@ -125,20 +126,28 @@ class _ImprovedMediaPlayerState extends State<ImprovedMediaPlayer>
       _isCollapsed = !_isCollapsed;
       if (_isCollapsed) {
         _expandController.reverse();
-        // If collapsing during memorization mode, pause the session
+        // Only auto-pause if user preference allows it (disabled for now)
         final isMemorizationMode = widget.isMemorizationModeNotifier?.value ?? false;
-        if (isMemorizationMode) {
+        if (isMemorizationMode && _shouldAutoPauseOnCollapse()) {
           widget.onMemorizationPause?.call();
+          _wasAutoPaused = true;
         }
       } else {
         _expandController.forward();
-        // If expanding during memorization mode, resume the session
+        // Only auto-resume if was auto-paused
         final isMemorizationMode = widget.isMemorizationModeNotifier?.value ?? false;
-        if (isMemorizationMode) {
+        if (isMemorizationMode && _wasAutoPaused) {
           widget.onMemorizationResume?.call();
+          _wasAutoPaused = false;
         }
       }
     });
+  }
+
+  /// Check if memorization should auto-pause on collapse
+  bool _shouldAutoPauseOnCollapse() {
+    // For now, disable auto-pause to prevent interference with memorization flow
+    return false;
   }
 
   @override

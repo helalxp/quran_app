@@ -121,6 +121,7 @@ class ContinuousAudioManager {
   bool _isTransitioning = false;
   bool _completionHandled = false; // NEW: Prevent multiple completion events
   Timer? _completionTimer; // NEW: Debounce completion events
+  bool _inMemorizationMode = false; // NEW: Flag to skip completion handling during memorization
   
   // Enhanced timeout controls
   Timer? _loadingTimer; // Track loading timeout
@@ -510,7 +511,10 @@ class ContinuousAudioManager {
         debugPrint('🎵 Player state: ${state.processingState}, playing: ${state.playing}');
 
         // Update playing and buffering states
-        isPlayingNotifier.value = state.playing;
+        // Set playing to false when completed
+        isPlayingNotifier.value = state.processingState == ProcessingState.completed
+            ? false
+            : state.playing;
         isBufferingNotifier.value =
             state.processingState == ProcessingState.buffering ||
                 state.processingState == ProcessingState.loading;
@@ -531,7 +535,10 @@ class ContinuousAudioManager {
             _consecutiveErrors = 0;
             _currentRetryAttempt = 0; // Reset retry attempts on success
             _isTransitioning = false;
-            _completionHandled = false; // Reset for next completion
+            // Only reset completion flag if not in memorization mode
+            if (!_inMemorizationMode) {
+              _completionHandled = false; // Reset for next completion
+            }
             _clearTimeouts(); // Clear any pending timeouts
             
             // Check if we should exit network recovery mode
@@ -592,6 +599,14 @@ class ContinuousAudioManager {
   void _handleCompletion() {
     if (_completionHandled) {
       debugPrint('🎵 Completion already handled, ignoring');
+      return;
+    }
+
+    // Skip auto-completion handling if in memorization mode
+    // The memorization manager will handle completion through its own listener
+    if (_inMemorizationMode) {
+      debugPrint('🧠 In memorization mode, skipping auto-completion');
+      _completionHandled = true;
       return;
     }
 
@@ -1248,29 +1263,37 @@ class ContinuousAudioManager {
       // Reset timeout counters for new playback
       _currentRetryAttempt = 0;
       _clearTimeouts();
-      
+
+      // Enable memorization mode to skip auto-completion
+      _inMemorizationMode = true;
+      // Reset completion flag for this new ayah
+      _completionHandled = false;
+
       if (!_reciterConfigs.containsKey(reciterName)) {
         throw Exception(AudioErrorMessages.getReciterNotFoundError());
       }
-      
+
       final reciterConfig = _reciterConfigs[reciterName]!;
 
       // Stop current playback
       await stop();
+
+      // Re-enable memorization mode (stop() resets it)
+      _inMemorizationMode = true;
 
       // Update state
       currentAyahNotifier.value = ayah;
       isPlayingNotifier.value = false;
       currentReciterNotifier.value = reciterName;
 
-      // Try to play the ayah  
+      // Try to play the ayah
       final audioUrl = reciterConfig.getAyahUrl(ayah.surah, ayah.ayah);
-      
+
       debugPrint('🎵 Playing single ayah for memorization: ${ayah.surah}:${ayah.ayah} - $audioUrl');
 
       await _audioPlayer!.setUrl(audioUrl);
       await _audioPlayer!.play();
-      
+
     } catch (e) {
       debugPrint('❌ Error playing single ayah: $e');
       rethrow;
@@ -1320,6 +1343,7 @@ class ContinuousAudioManager {
       _completionTimer?.cancel();
       _completionTimer = null;
       _clearTimeouts(); // Clear all timeout timers
+      _inMemorizationMode = false; // Reset memorization flag
       await _audioPlayer?.stop();
       // Notify audio service handler
       try {

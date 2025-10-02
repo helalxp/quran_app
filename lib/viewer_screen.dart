@@ -5,12 +5,12 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'screens/feature_selection_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
 import 'models/ayah_marker.dart';
 import 'models/surah.dart';
 import 'bookmark_manager.dart';
-import 'settings_screen.dart';
 import 'svg_page_viewer.dart';
 import 'widgets/improved_media_player.dart';
 import 'continuous_audio_manager.dart';
@@ -370,11 +370,16 @@ class _ViewerScreenState extends State<ViewerScreen> with TickerProviderStateMix
 
   void _onContinuousPlayRequested(AyahMarker ayahMarker, String reciterName) async {
     try {
-      // Stop memorization session if active
+      // Atomically stop memorization session if active
       if (_isMemorizationModeActive.value) {
+        final wasActive = _isMemorizationModeActive.value;
+        _isMemorizationModeActive.value = false; // Update UI immediately
+
         await _memorizationManager?.stopSession();
-        _isMemorizationModeActive.value = false;
-        debugPrint('🛑 Stopped memorization session to start normal recitation');
+
+        if (kDebugMode && wasActive) {
+          debugPrint('🛑 Stopped memorization session to start normal recitation');
+        }
       }
       
       debugPrint('Starting continuous playbook for ayah ${ayahMarker.surah}:${ayahMarker.ayah} with $reciterName');
@@ -670,12 +675,14 @@ class _ViewerScreenState extends State<ViewerScreen> with TickerProviderStateMix
   }
 
   // Navigate to settings with smooth animation
-  void _openSettings() {
+  void _openSelectionScreen() {
     HapticUtils.navigation(); // Haptic feedback for navigation
     Navigator.of(context).push(
       AnimatedRoute(
-        builder: (context) => SettingsScreen(memorizationManager: _memorizationManager),
-        transitionType: PageTransitionType.slideUp,
+        builder: (context) => FeatureSelectionScreen(
+          memorizationManager: _memorizationManager,
+        ),
+        transitionType: PageTransitionType.slideLeftToRight,
         transitionDuration: AnimationUtils.normal,
       ),
     );
@@ -763,7 +770,19 @@ class _ViewerScreenState extends State<ViewerScreen> with TickerProviderStateMix
                       playbackSpeedNotifier: _audioManager!.playbackSpeedNotifier,
                       positionNotifier: _audioManager!.positionNotifier,
                       durationNotifier: _audioManager!.durationNotifier,
-                      onPlayPause: () => _audioManager!.togglePlayPause(),
+                      onPlayPause: () {
+                        if (_isMemorizationModeActive.value) {
+                          // In memorization mode, pause/resume the session
+                          if (_audioManager!.isPlayingNotifier.value) {
+                            _memorizationManager?.pauseSession();
+                          } else {
+                            _memorizationManager?.resumeSession();
+                          }
+                        } else {
+                          // Normal playback
+                          _audioManager!.togglePlayPause();
+                        }
+                      },
                       onStop: () {
                         _audioManager!.stop();
                         if (_isMemorizationModeActive.value) {
@@ -816,9 +835,9 @@ class _ViewerScreenState extends State<ViewerScreen> with TickerProviderStateMix
           children: [
             // 1. Hamburger menu button (leftmost)
             IconButton(
-              onPressed: _openSettings,
+              onPressed: () {_openSelectionScreen();},
               icon: const Icon(Icons.menu),
-              tooltip: 'الإعدادات',
+              tooltip: 'المميزات',
             ),
 
             // 2. Surah name - clickable and fits content

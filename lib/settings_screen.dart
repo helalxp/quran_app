@@ -334,6 +334,14 @@ class _SettingsScreenState extends State<SettingsScreen> with TickerProviderStat
             appBar: AppBar(
               backgroundColor: Theme.of(context).scaffoldBackgroundColor,
               elevation: 0,
+              automaticallyImplyLeading: false, // Disable automatic back button
+              actions: [
+                IconButton(
+                  onPressed: () => Navigator.pop(context),
+                  icon: const Icon(Icons.arrow_forward_outlined),
+                  tooltip: 'رجوع',
+                ),
+              ],
               title: const Text(
                 'الإعدادات',
                 style: TextStyle(

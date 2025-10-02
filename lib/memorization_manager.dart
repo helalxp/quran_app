@@ -6,6 +6,14 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'models/ayah_marker.dart';
 import 'continuous_audio_manager.dart';
 
+/// Memorization constants
+class MemorizationConstants {
+  static const int defaultRepetitionCount = 3;
+  static const Duration defaultPauseDuration = Duration(seconds: 2);
+  static const Duration retryDelay = Duration(seconds: 2);
+  static const int maxRetryAttempts = 3;
+}
+
 /// Types of memorization modes
 enum MemorizationMode {
   singleAyah,    // Repeat single ayah
@@ -23,10 +31,10 @@ class MemorizationSettings {
   final bool showProgress;
   
   const MemorizationSettings({
-    this.repetitionCount = 3,
+    this.repetitionCount = MemorizationConstants.defaultRepetitionCount,
     this.playbackSpeed = 1.0,
     this.pauseBetweenRepetitions = true,
-    this.pauseDuration = const Duration(seconds: 2),
+    this.pauseDuration = MemorizationConstants.defaultPauseDuration,
     this.mode = MemorizationMode.singleAyah,
     this.showProgress = true,
   });
@@ -57,15 +65,38 @@ class MemorizationSettings {
     'mode': mode.index,
     'showProgress': showProgress,
   };
-  
+
   factory MemorizationSettings.fromJson(Map<String, dynamic> json) {
+    // Helper functions to safely parse values from query string (which returns strings)
+    int parseInt(dynamic value, int defaultValue) {
+      if (value == null) return defaultValue;
+      if (value is int) return value;
+      if (value is String) return int.tryParse(value) ?? defaultValue;
+      return defaultValue;
+    }
+
+    double parseDouble(dynamic value, double defaultValue) {
+      if (value == null) return defaultValue;
+      if (value is double) return value;
+      if (value is num) return value.toDouble();
+      if (value is String) return double.tryParse(value) ?? defaultValue;
+      return defaultValue;
+    }
+
+    bool parseBool(dynamic value, bool defaultValue) {
+      if (value == null) return defaultValue;
+      if (value is bool) return value;
+      if (value is String) return value.toLowerCase() == 'true';
+      return defaultValue;
+    }
+
     return MemorizationSettings(
-      repetitionCount: json['repetitionCount'] ?? 3,
-      playbackSpeed: json['playbackSpeed']?.toDouble() ?? 1.0,
-      pauseBetweenRepetitions: json['pauseBetweenRepetitions'] ?? true,
-      pauseDuration: Duration(seconds: json['pauseDurationSeconds'] ?? 2),
-      mode: MemorizationMode.values[json['mode'] ?? 0],
-      showProgress: json['showProgress'] ?? true,
+      repetitionCount: parseInt(json['repetitionCount'], MemorizationConstants.defaultRepetitionCount),
+      playbackSpeed: parseDouble(json['playbackSpeed'], 1.0),
+      pauseBetweenRepetitions: parseBool(json['pauseBetweenRepetitions'], true),
+      pauseDuration: Duration(seconds: parseInt(json['pauseDurationSeconds'], MemorizationConstants.defaultPauseDuration.inSeconds)),
+      mode: MemorizationMode.values[parseInt(json['mode'], 0)],
+      showProgress: parseBool(json['showProgress'], true),
     );
   }
 }
@@ -98,11 +129,14 @@ class MemorizationSession {
       currentRepetition > settings.repetitionCount;
       
   double get progress {
-    if (ayahs.isEmpty) return 0.0;
+    if (ayahs.isEmpty || settings.repetitionCount <= 0) return 0.0;
+
     final totalRepetitions = ayahs.length * settings.repetitionCount;
-    final completedRepetitions = (currentAyahIndex * settings.repetitionCount) + 
+    if (totalRepetitions == 0) return 0.0;
+
+    final completedRepetitions = (currentAyahIndex * settings.repetitionCount) +
         (currentRepetition - 1);
-    return completedRepetitions / totalRepetitions;
+    return (completedRepetitions / totalRepetitions).clamp(0.0, 1.0);
   }
 }
 
@@ -136,18 +170,21 @@ class MemorizationManager {
       final prefs = await SharedPreferences.getInstance();
       final settingsJson = prefs.getString(_settingsKey);
       if (settingsJson != null) {
-        final Map<String, dynamic> json = 
+        final Map<String, dynamic> json =
             Map<String, dynamic>.from(Uri.splitQueryString(settingsJson));
         _settings = MemorizationSettings.fromJson(json);
         settingsNotifier.value = _settings;
+        if (kDebugMode) {
+          debugPrint('🧠 [MEMORIZATION] Settings loaded: repetitions=${_settings.repetitionCount}, mode=${_settings.mode}, pause=${_settings.pauseBetweenRepetitions}, duration=${_settings.pauseDuration.inSeconds}s');
+        }
       }
     } catch (e) {
       if (kDebugMode) {
-        debugPrint('Error loading memorization settings: $e');
+        debugPrint('🧠 [MEMORIZATION] Error loading memorization settings: $e');
       }
     }
   }
-  
+
   /// Save memorization settings to storage
   Future<void> _saveSettings() async {
     try {
@@ -157,9 +194,12 @@ class MemorizationManager {
           .map((e) => '${e.key}=${e.value}')
           .join('&');
       await prefs.setString(_settingsKey, queryString);
+      if (kDebugMode) {
+        debugPrint('🧠 [MEMORIZATION] Settings saved: $queryString');
+      }
     } catch (e) {
       if (kDebugMode) {
-        debugPrint('Error saving memorization settings: $e');
+        debugPrint('🧠 [MEMORIZATION] Error saving memorization settings: $e');
       }
     }
   }
@@ -230,7 +270,7 @@ class MemorizationManager {
     sessionNotifier.value = _currentSession;
     
     if (kDebugMode) {
-      debugPrint('🧠 Starting memorization session with ${_currentSession!.ayahs.length} ayahs');
+      debugPrint('🧠 [MEMORIZATION] Starting session with ${_currentSession!.ayahs.length} ayahs');
     }
     
     await _playCurrentAyah();
@@ -242,33 +282,39 @@ class MemorizationManager {
     if (session == null || session.currentAyah == null || !session.isActive) {
       return;
     }
-    
+
     // Set playback speed
     _audioManager.setPlaybackSpeed(session.settings.playbackSpeed);
-    
+
     // Play the current ayah
     try {
       await _audioManager.playSingleAyah(
         session.currentAyah!,
         session.reciterName,
       );
-      
+
       // Listen for playback completion
       _audioManager.isPlayingNotifier.addListener(_onPlaybackStateChanged);
-      
+
     } catch (e) {
+      // Ensure listener cleanup in error case
+      _audioManager.isPlayingNotifier.removeListener(_onPlaybackStateChanged);
       if (kDebugMode) {
-        debugPrint('Error playing ayah for memorization: $e');
+        debugPrint('🧠 [MEMORIZATION] Error playing ayah for memorization: $e');
       }
-      await _handlePlaybackError();
+      await _handlePlaybackError(e);
     }
   }
   
   /// Handle playback state changes
   void _onPlaybackStateChanged() {
     final session = _currentSession;
-    if (session == null || !session.isActive) return;
-    
+    if (session == null || !session.isActive) {
+      // Clean up listener if session is invalid
+      _audioManager.isPlayingNotifier.removeListener(_onPlaybackStateChanged);
+      return;
+    }
+
     // If playback stopped and we're in memorization mode
     if (!_audioManager.isPlayingNotifier.value) {
       _audioManager.isPlayingNotifier.removeListener(_onPlaybackStateChanged);
@@ -282,7 +328,7 @@ class MemorizationManager {
     if (session == null || !session.isActive) return;
     
     if (kDebugMode) {
-      debugPrint('🧠 Ayah ${session.currentRepetition}/${session.settings.repetitionCount} completed');
+      debugPrint('🧠 [MEMORIZATION] Ayah ${session.currentRepetition}/${session.settings.repetitionCount} completed');
     }
     
     if (session.currentRepetition < session.settings.repetitionCount) {
@@ -320,8 +366,13 @@ class MemorizationManager {
     
     _pauseTimer?.cancel();
     _pauseTimer = Timer(session.settings.pauseDuration, () {
-      if (session.isActive) {
+      // Double-check session validity
+      if (_currentSession?.isActive == true && session.isActive) {
         _playCurrentAyah();
+      } else {
+        // Clean up timer if session is no longer active
+        _pauseTimer?.cancel();
+        _pauseTimer = null;
       }
     });
   }
@@ -329,7 +380,7 @@ class MemorizationManager {
   /// Complete memorization session
   void _completeSession() {
     if (kDebugMode) {
-      debugPrint('🧠 Memorization session completed successfully!');
+      debugPrint('🧠 [MEMORIZATION] Session completed successfully!');
     }
     
     _currentSession?.isActive = false;
@@ -337,11 +388,50 @@ class MemorizationManager {
   }
   
   /// Handle playback error
-  Future<void> _handlePlaybackError() async {
+  Future<void> _handlePlaybackError([dynamic error]) async {
     if (kDebugMode) {
-      debugPrint('🧠 Error in memorization playback, stopping session');
+      debugPrint('🧠 [MEMORIZATION] Error in memorization playback: $error');
     }
-    await stopSession();
+
+    // Check if error is recoverable
+    if (_isRecoverableError(error)) {
+      // Pause session instead of stopping
+      pauseSession();
+
+      // Schedule retry after delay
+      Timer(const Duration(seconds: 2), () {
+        if (_currentSession?.isActive == false) {
+          resumeSession();
+        }
+      });
+    } else {
+      // Only stop for non-recoverable errors
+      await stopSession();
+    }
+  }
+
+  /// Check if an error is recoverable
+  bool _isRecoverableError(dynamic error) {
+    if (error == null) return false;
+
+    final errorString = error.toString().toLowerCase();
+
+    // Network-related errors are usually recoverable
+    if (errorString.contains('network') ||
+        errorString.contains('timeout') ||
+        errorString.contains('connection') ||
+        errorString.contains('socket')) {
+      return true;
+    }
+
+    // Audio loading errors might be recoverable
+    if (errorString.contains('load') ||
+        errorString.contains('source') ||
+        errorString.contains('format')) {
+      return true;
+    }
+
+    return false;
   }
   
   /// Stop current memorization session
@@ -358,7 +448,7 @@ class MemorizationManager {
     sessionNotifier.value = null;
     
     if (kDebugMode) {
-      debugPrint('🧠 Memorization session stopped');
+      debugPrint('🧠 [MEMORIZATION] Session stopped');
     }
   }
   
@@ -367,17 +457,33 @@ class MemorizationManager {
     if (_currentSession?.isActive == true) {
       _currentSession!.isActive = false;
       _pauseTimer?.cancel();
+      _pauseTimer = null;
       _audioManager.pause();
       sessionNotifier.value = _currentSession;
+      if (kDebugMode) {
+        debugPrint('🧠 [MEMORIZATION] Session paused');
+      }
     }
   }
-  
-  /// Resume current session  
+
+  /// Resume current session
   void resumeSession() {
     if (_currentSession != null && !_currentSession!.isActive) {
       _currentSession!.isActive = true;
-      _audioManager.resume();
       sessionNotifier.value = _currentSession;
+
+      // If audio was playing when paused, resume it
+      if (_audioManager.positionNotifier.value.inSeconds > 0 &&
+          _audioManager.positionNotifier.value < _audioManager.durationNotifier.value) {
+        _audioManager.resume();
+      } else {
+        // Otherwise, restart playback of current ayah
+        _playCurrentAyah();
+      }
+
+      if (kDebugMode) {
+        debugPrint('🧠 [MEMORIZATION] Session resumed');
+      }
     }
   }
   
@@ -385,33 +491,45 @@ class MemorizationManager {
   void skipToNext() {
     final session = _currentSession;
     if (session == null || !session.isActive) return;
-    
+
+    // Cancel any pending pause timer and remove playback listener
     _pauseTimer?.cancel();
-    _audioManager.stop();
-    
+    _pauseTimer = null;
+    _audioManager.isPlayingNotifier.removeListener(_onPlaybackStateChanged);
+
+    // Move to next ayah
     session.currentAyahIndex++;
     session.currentRepetition = 1;
-    
+
     if (session.isComplete) {
       _completeSession();
     } else {
       sessionNotifier.value = session;
+      if (kDebugMode) {
+        debugPrint('🧠 [MEMORIZATION] Skipped to next ayah: ${session.currentAyahIndex + 1}/${session.ayahs.length}');
+      }
       _playCurrentAyah();
     }
   }
-  
+
   /// Skip to previous ayah in session
   void skipToPrevious() {
     final session = _currentSession;
     if (session == null || !session.isActive || session.currentAyahIndex <= 0) return;
-    
+
+    // Cancel any pending pause timer and remove playback listener
     _pauseTimer?.cancel();
-    _audioManager.stop();
-    
+    _pauseTimer = null;
+    _audioManager.isPlayingNotifier.removeListener(_onPlaybackStateChanged);
+
+    // Move to previous ayah
     session.currentAyahIndex--;
     session.currentRepetition = 1;
     sessionNotifier.value = session;
-    
+    if (kDebugMode) {
+      debugPrint('🧠 [MEMORIZATION] Skipped to previous ayah: ${session.currentAyahIndex + 1}/${session.ayahs.length}');
+    }
+
     _playCurrentAyah();
   }
   

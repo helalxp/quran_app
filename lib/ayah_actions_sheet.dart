@@ -484,9 +484,13 @@ class _AyahActionsSheetState extends State<AyahActionsSheet> with TickerProvider
 
   // Start memorization session for this ayah
   void _startMemorization() {
-    if (widget.memorizationManager == null) return;
-    
-    final currentMode = widget.memorizationManager!.settings.mode;
+    final manager = widget.memorizationManager;
+    if (manager == null) {
+      _showError('Memorization manager not available');
+      return;
+    }
+
+    final currentMode = manager.settings.mode;
     
     Navigator.of(context).pop(); // Close the sheet
     
@@ -494,25 +498,35 @@ class _AyahActionsSheetState extends State<AyahActionsSheet> with TickerProvider
     switch (currentMode) {
       case MemorizationMode.singleAyah:
         // Start single ayah memorization
-        widget.memorizationManager!.startSingleAyahMemorization(
+        manager.startSingleAyahMemorization(
           ayah: widget.ayahMarker,
           reciterName: _defaultReciter,
         );
         _showMemorizationFeedback('بدء جلسة التحفيظ للآية ${widget.ayahMarker.ayah}');
         break;
-        
+
       case MemorizationMode.ayahRange:
         // Show range selection dialog
         _showAyahRangeDialog();
         break;
-        
+
       case MemorizationMode.fullSurah:
-        // Start full surah memorization - for now start with single ayah until we get all surah ayahs
-        widget.memorizationManager!.startSingleAyahMemorization(
-          ayah: widget.ayahMarker,
+        // Start full surah memorization - create markers for all ayahs in the surah
+        final ayahCount = SurahNames.getAyahCount(widget.ayahMarker.surah);
+        final List<AyahMarker> surahAyahs = [];
+        for (int ayahNum = 1; ayahNum <= ayahCount; ayahNum++) {
+          surahAyahs.add(AyahMarker(
+            surah: widget.ayahMarker.surah,
+            ayah: ayahNum,
+            page: widget.ayahMarker.page,
+            bboxes: [],
+          ));
+        }
+        manager.startRangeMemorization(
+          ayahs: surahAyahs,
           reciterName: _defaultReciter,
         );
-        _showMemorizationFeedback('بدء جلسة التحفيظ للسورة كاملة');
+        _showMemorizationFeedback('بدء جلسة التحفيظ للسورة كاملة ($ayahCount آية)');
         break;
     }
   }
@@ -526,6 +540,19 @@ class _AyahActionsSheetState extends State<AyahActionsSheet> with TickerProvider
         ),
         backgroundColor: Theme.of(context).colorScheme.secondary,
         duration: AppConstants.snackBarLongDuration,
+      ),
+    );
+  }
+
+  void _showError(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Directionality(
+          textDirection: TextDirection.rtl,
+          child: Text(message),
+        ),
+        backgroundColor: Theme.of(context).colorScheme.error,
+        duration: AppConstants.snackBarShortDuration,
       ),
     );
   }

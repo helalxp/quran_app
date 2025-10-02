@@ -47,6 +47,59 @@ class AnimationUtils {
       child: child,
     );
   }
+
+  // Slide transition from left to right
+  static Widget slideLeftToRightTransition({
+    required Widget child,
+    required Animation<double> animation,
+    double offset = 1.0,
+  }) {
+    return SlideTransition(
+      position: Tween<Offset>(
+        begin: Offset(-offset, 0),  // Start from left (negative X)
+        end: Offset.zero,           // End at center (0, 0)
+      ).animate(CurvedAnimation(
+        parent: animation,
+        curve: slideInCurve,
+      )),
+      child: child,
+    );
+  }
+
+  // Slide transition from right to left
+  static Widget slideRightToLeftTransition({
+    required Widget child,
+    required Animation<double> animation,
+    double offset = 1.0,
+  }) {
+    return SlideTransition(
+      position: Tween<Offset>(
+        begin: Offset(offset, 0),   // Start from right (positive X)
+        end: Offset.zero,           // End at center (0, 0)
+      ).animate(CurvedAnimation(
+        parent: animation,
+        curve: slideInCurve,
+      )),
+      child: child,
+    );
+  }
+
+  // Slide out reveal transition - current screen slides out to left, revealing new screen
+  static Widget slideOutRevealTransation({
+    required Widget child,
+    required Animation<double> animation,
+  }) {
+    return SlideTransition(
+      position: Tween<Offset>(
+        begin: Offset.zero,
+        end: Offset(-1.0, 0),  // Slide out to the left
+      ).animate(CurvedAnimation(
+        parent: animation,
+        curve: slideOutCurve,
+      )),
+      child: child,
+    );
+  }
   
   // Scale transition
   static Widget scaleTransition({
@@ -98,10 +151,16 @@ class AnimationUtils {
         return fadeTransition(child: child, animation: animation);
       case PageTransitionType.slideUp:
         return slideUpTransition(child: child, animation: animation);
+      case PageTransitionType.slideLeftToRight:
+        return slideLeftToRightTransition(child: child, animation: animation);
+      case PageTransitionType.slideRightToLeft:
+        return slideRightToLeftTransition(child: child, animation: animation);
       case PageTransitionType.scale:
         return scaleTransition(child: child, animation: animation);
       case PageTransitionType.fadeSlide:
         return fadeSlideTransition(child: child, animation: animation);
+      case PageTransitionType.slideOutReveal:
+        return slideOutRevealTransation(child: child, animation: animation);
     }
   }
   
@@ -148,6 +207,9 @@ class AnimationUtils {
 enum PageTransitionType {
   fade,
   slideUp,
+  slideLeftToRight,
+  slideRightToLeft,
+  slideOutReveal, // Current screen slides out to left, revealing new screen behind
   scale,
   fadeSlide,
 }
@@ -223,7 +285,7 @@ class _AnimatedListItemState extends State<AnimatedListItem>
     
     if (widget.enableScrollAdaptation) {
       // For dialog lists, use minimal delay to prevent blank appearance
-      final adaptedDelay = Duration(milliseconds: (widget.delay.inMilliseconds * 0.2).round()); // 80% faster
+      final adaptedDelay = Duration(milliseconds: (widget.delay.inMilliseconds * 0.2).round());
       final maxDelay = const Duration(milliseconds: 100); // Cap total delay
       final actualDelay = Duration(
         milliseconds: (adaptedDelay * widget.index).inMilliseconds.clamp(0, maxDelay.inMilliseconds)
