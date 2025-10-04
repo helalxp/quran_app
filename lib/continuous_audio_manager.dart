@@ -113,6 +113,7 @@ class ContinuousAudioManager {
   double _playbackSpeed = 1.0;
   bool _autoPlayNext = true;
   bool _repeatSurah = false;
+  bool _continueToNextSurah = false;
   int _consecutiveErrors = 0;
   // Use constant from AudioConstants
   static int get maxConsecutiveErrors => AudioConstants.maxConsecutiveErrors;
@@ -313,11 +314,14 @@ class ContinuousAudioManager {
       
       // Load auto play next
       _autoPlayNext = prefs.getBool('auto_play_next') ?? true;
-      
+
       // Load repeat surah
       _repeatSurah = prefs.getBool('repeat_surah') ?? false;
-      
-      debugPrint('⚙️ Settings loaded - Speed: ${_playbackSpeed}x, AutoPlay: $_autoPlayNext, Repeat: $_repeatSurah');
+
+      // Load continue to next surah
+      _continueToNextSurah = prefs.getBool('continue_to_next_surah') ?? false;
+
+      debugPrint('⚙️ Settings loaded - Speed: ${_playbackSpeed}x, AutoPlay: $_autoPlayNext, Repeat: $_repeatSurah, Continue: $_continueToNextSurah');
       
     } catch (e) {
       debugPrint('⚠️ Error loading audio settings: $e');
@@ -326,6 +330,7 @@ class ContinuousAudioManager {
       _playbackSpeed = 1.0;
       _autoPlayNext = true;
       _repeatSurah = false;
+      _continueToNextSurah = false;
     }
   }
 
@@ -1089,6 +1094,11 @@ class ContinuousAudioManager {
     debugPrint('🔁 Repeat surah updated to: $enabled');
   }
 
+  Future<void> updateContinueToNextSurah(bool enabled) async {
+    _continueToNextSurah = enabled;
+    debugPrint('➡️ Continue to next surah updated to: $enabled');
+  }
+
   // -------- Cache Management Methods --------
   
   /// Get cache statistics for UI display
@@ -1210,13 +1220,34 @@ class ContinuousAudioManager {
       await _playCurrentAyah();
     } else {
       debugPrint('🏁 Reached end of surah');
-      
-      // Check if repeat surah is enabled
+
+      // Priority 1: Repeat surah (if enabled)
       if (_repeatSurah && _playQueue.isNotEmpty) {
         debugPrint('🔄 Repeat surah enabled, restarting from beginning');
         _currentIndex = 0;
         await _playCurrentAyah();
-      } else {
+      }
+      // Priority 2: Continue to next surah (if enabled)
+      else if (_continueToNextSurah && _playQueue.isNotEmpty) {
+        final currentSurah = _playQueue.first.surah;
+        final nextSurah = currentSurah >= 114 ? 1 : currentSurah + 1;
+        debugPrint('➡️ Continue to next surah enabled, moving from surah $currentSurah to $nextSurah');
+
+        // TODO: Need to implement loading next surah's ayahs
+        // For now, we'll need to rebuild the queue with the next surah's ayahs
+        // This requires access to all ayah markers which we don't have here yet
+        // We need to either:
+        // 1. Store all ayah markers in this manager
+        // 2. Add a callback to viewer screen to reload next surah
+        // 3. Fetch ayah data from a service
+
+        // Placeholder: Stop for now until we implement proper ayah loading
+        debugPrint('⚠️ Continue to next surah logic needs implementation');
+        debugPrint('⚠️ Would continue to surah $nextSurah');
+        await stop();
+      }
+      // Priority 3: Stop playback
+      else {
         debugPrint('🛑 Stopping playback');
         await stop();
       }

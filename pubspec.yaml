@@ -2,7 +2,7 @@ name: quran_by_helal
 description: "Quran by Helal - A beautiful Quran reader app with audio recitation and bookmarking features."
 publish_to: 'none'
 
-version: 1.2.1+11
+version: 1.2.2+12
 
 environment:
   sdk: ">=3.7.0 <4.0.0"
@@ -46,11 +46,11 @@ flutter:
   
   # App icon configuration
   # Note: You'll need to add app icons in android/app/src/main/res/ and ios/Runner/Assets.xcassets/
-  
-  # fonts:
-    # - family: Uthmanic
-    #   fonts:
-    #     - asset: assets/fonts/UthmanicHafs.ttf
+
+  fonts:
+    - family: Uthmanic
+      fonts:
+        - asset: assets/fonts/UthmanicHafs.ttf
 
   assets:
     - assets/pages/

@@ -37,6 +37,7 @@ class _SettingsScreenState extends State<SettingsScreen> with TickerProviderStat
   double _playbackSpeed = 1.0;
   bool _autoPlayNext = true;
   bool _repeatSurah = false;
+  bool _continueToNextSurah = false;
   bool _isLoading = true;
   String _appVersion = '1.0.0'; // Will be loaded from package info
 
@@ -190,7 +191,8 @@ class _SettingsScreenState extends State<SettingsScreen> with TickerProviderStat
         _playbackSpeed = prefs.getDouble('playback_speed') ?? 1.0;
         _autoPlayNext = prefs.getBool('auto_play_next') ?? true;
         _repeatSurah = prefs.getBool('repeat_surah') ?? false;
-        
+        _continueToNextSurah = prefs.getBool('continue_to_next_surah') ?? false;
+
         // Load memorization settings
         _memorationRepetitions = prefs.getInt('memorization_repetitions') ?? 3;
         _pauseBetweenRepetitions = prefs.getBool('pause_between_repetitions') ?? true;
@@ -284,18 +286,50 @@ class _SettingsScreenState extends State<SettingsScreen> with TickerProviderStat
 
   Future<void> _saveRepeatSurah(bool value) async {
     try {
-      HapticUtils.toggleSwitch(); // Haptic feedback for toggle
+      HapticUtils.toggleSwitch();
       final prefs = await SharedPreferences.getInstance();
       await prefs.setBool('repeat_surah', value);
+
       setState(() {
         _repeatSurah = value;
+        // Mutual exclusivity: Turn off continue to next surah
+        if (value && _continueToNextSurah) {
+          _continueToNextSurah = false;
+          prefs.setBool('continue_to_next_surah', false);
+        }
       });
-      
+
       // Update audio manager with repeat setting
       final audioManager = ContinuousAudioManager();
       await audioManager.updateRepeatSurah(value);
     } catch (e) {
       debugPrint('Error saving repeat surah setting: $e');
+    }
+  }
+
+  Future<void> _saveContinueToNextSurah(bool value) async {
+    try {
+      HapticUtils.toggleSwitch();
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool('continue_to_next_surah', value);
+
+      setState(() {
+        _continueToNextSurah = value;
+        // Mutual exclusivity: Turn off repeat surah
+        if (value && _repeatSurah) {
+          _repeatSurah = false;
+          prefs.setBool('repeat_surah', false);
+          // Update audio manager
+          final audioManager = ContinuousAudioManager();
+          audioManager.updateRepeatSurah(false);
+        }
+      });
+
+      // Update audio manager with continue to next surah setting
+      final audioManager = ContinuousAudioManager();
+      await audioManager.updateContinueToNextSurah(value);
+    } catch (e) {
+      debugPrint('Error saving continue to next surah setting: $e');
     }
   }
 
@@ -511,15 +545,48 @@ class _SettingsScreenState extends State<SettingsScreen> with TickerProviderStat
           const Divider(height: 1),
 
           // Repeat Surah
-          SwitchListTile(
-            secondary: Icon(
-              Icons.repeat,
-              color: Theme.of(context).colorScheme.primary,
+          AnimatedContainer(
+            duration: const Duration(milliseconds: 300),
+            decoration: BoxDecoration(
+              color: _repeatSurah
+                  ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.1)
+                  : null,
             ),
-            title: const Text('تكرار السورة'),
-            subtitle: const Text('إعادة تشغيل السورة عند انتهائها'),
-            value: _repeatSurah,
-            onChanged: _saveRepeatSurah,
+            child: SwitchListTile(
+              secondary: Icon(
+                Icons.repeat,
+                color: _repeatSurah
+                    ? Theme.of(context).colorScheme.primary
+                    : Theme.of(context).colorScheme.primary.withValues(alpha: 0.6),
+              ),
+              title: const Text('تكرار السورة'),
+              subtitle: const Text('إعادة تشغيل السورة عند انتهائها'),
+              value: _repeatSurah,
+              onChanged: _saveRepeatSurah,
+            ),
+          ),
+          const Divider(height: 1),
+
+          // Continue to Next Surah
+          AnimatedContainer(
+            duration: const Duration(milliseconds: 300),
+            decoration: BoxDecoration(
+              color: _continueToNextSurah
+                  ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.1)
+                  : null,
+            ),
+            child: SwitchListTile(
+              secondary: Icon(
+                Icons.fast_forward,
+                color: _continueToNextSurah
+                    ? Theme.of(context).colorScheme.primary
+                    : Theme.of(context).colorScheme.primary.withValues(alpha: 0.6),
+              ),
+              title: const Text('الانتقال للسورة التالية'),
+              subtitle: const Text('متابعة التشغيل بالسور التالية تلقائياً'),
+              value: _continueToNextSurah,
+              onChanged: _saveContinueToNextSurah,
+            ),
           ),
           const Divider(height: 1),
 

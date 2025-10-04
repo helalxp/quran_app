@@ -5,6 +5,7 @@ import '../utils/animation_utils.dart';
 import '../memorization_manager.dart';
 import 'prayer_times_screen.dart';
 import 'qibla_screen.dart';
+import 'tasbih_screen.dart';
 
 class FeatureSelectionScreen extends StatefulWidget {
     final MemorizationManager? memorizationManager;
@@ -49,19 +50,23 @@ class _FeatureSelectionScreenState extends State<FeatureSelectionScreen> {
           ),
             body: LayoutBuilder(
               builder: (context, constraints) {
-                // Use column layout only for small phones
-                final useColumnLayout = constraints.maxWidth < 300 ||
-                    (constraints.maxWidth < 300 && constraints.maxHeight < 600);
+                // Responsive layout based on screen width
+                // Small: <360px = Single column (scrollable, full screen)
+                // Medium: 360-800px = 2-column Wrap
+                // Large: >800px = 3-4 column Wrap with max width
 
-                if (useColumnLayout) {
-                  return Center(
-                    child: SingleChildScrollView(
-                      child: Padding(
-                        padding: const EdgeInsets.all(16.0),
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            const SizedBox(height: 20),
+                final isSmall = constraints.maxWidth < 360;
+                final isMedium = constraints.maxWidth >= 360 && constraints.maxWidth < 800;
+                final isLarge = constraints.maxWidth >= 800;
+
+                if (isSmall) {
+                  // Small screens: Full-width scrollable column
+                  return SingleChildScrollView(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
+                      child: Column(
+                        children: [
+                          const SizedBox(height: 24),
                             FeatureIconButton(
                               icon: Icons.access_time,
                               label: "أوقات الصلاة",
@@ -149,38 +154,9 @@ class _FeatureSelectionScreenState extends State<FeatureSelectionScreen> {
                               size: 100,
                               onPressed: () {
                                 HapticUtils.selectionClick();
-                                showDialog(
-                                  context: context,
-                                  builder: (context) => AlertDialog(
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(16),
-                                    ),
-                                    icon: Icon(
-                                      Icons.auto_awesome,
-                                      size: 48,
-                                      color: Theme.of(context).colorScheme.primary,
-                                    ),
-                                    title: const Text(
-                                      "التسبيح",
-                                      textAlign: TextAlign.center,
-                                      style: TextStyle(fontWeight: FontWeight.bold),
-                                    ),
-                                    content: const Text(
-                                      "سبحة إلكترونية لعد التسبيحات قريباً.\n\nستتضمن عدادات مختلفة وحفظ التقدم.",
-                                      textAlign: TextAlign.center,
-                                      style: TextStyle(height: 1.5),
-                                    ),
-                                    actions: [
-                                      TextButton.icon(
-                                        onPressed: () => Navigator.pop(context),
-                                        icon: const Icon(Icons.check, size: 18),
-                                        label: const Text("حسناً"),
-                                        style: TextButton.styleFrom(
-                                          foregroundColor: Theme.of(context).colorScheme.primary,
-                                        ),
-                                      ),
-                                    ],
-                                    actionsPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                                Navigator.of(context).push(
+                                  MaterialPageRoute(
+                                    builder: (context) => const TasbihScreen(),
                                   ),
                                 );
                               },
@@ -324,24 +300,17 @@ class _FeatureSelectionScreenState extends State<FeatureSelectionScreen> {
                                 _openSettings();
                               },
                             ),
-                            const SizedBox(height: 20),
+                            const SizedBox(height: 24),
                           ],
                         ),
                       ),
-                    ),
-                  );
+                    );
                 } else {
-                  // Responsive grid layout for larger screens
-                  // Determine grid columns based on screen width
-                  int crossAxisCount = 2;
-                  if (constraints.maxWidth > 800) {
-                    crossAxisCount = 3;
-                  } else if (constraints.maxWidth > 1200) {
-                    crossAxisCount = 4;
-                  }
-
-                  // Calculate appropriate max width for grid
-                  double maxGridWidth = constraints.maxWidth > 600 ? 600 : constraints.maxWidth;
+                  // Medium and Large screens use Wrap layout
+                  // Medium: 2 columns, Large: 3-4 columns
+                  double maxGridWidth = isMedium ? 600 : 900;
+                  double buttonSize = isMedium ? 80 : 90;
+                  double spacing = isMedium ? 30 : 40;
 
                   return Center(
                     child: Container(
@@ -349,14 +318,14 @@ class _FeatureSelectionScreenState extends State<FeatureSelectionScreen> {
                       child: SingleChildScrollView(
                         padding: const EdgeInsets.all(24.0),
                         child: Wrap(
-                          spacing: 40,
-                          runSpacing: 40,
+                          spacing: spacing,
+                          runSpacing: spacing,
                           alignment: WrapAlignment.center,
                           children: [
                             FeatureIconButton(
                               icon: Icons.access_time,
                               label: "أوقات الصلاة",
-                              size: 80,
+                              size: buttonSize,
                               onPressed: () {
                                 HapticUtils.selectionClick();
                                 Navigator.of(context).push(
@@ -369,7 +338,7 @@ class _FeatureSelectionScreenState extends State<FeatureSelectionScreen> {
                             FeatureIconButton(
                               icon: Icons.explore,
                               label: "القبلة",
-                              size: 80,
+                              size: buttonSize,
                               onPressed: () {
                                 HapticUtils.selectionClick();
                                 Navigator.of(context).push(
@@ -382,7 +351,7 @@ class _FeatureSelectionScreenState extends State<FeatureSelectionScreen> {
                             FeatureIconButton(
                               icon: Icons.book_outlined,
                               label: "المصحف",
-                              size: 80,
+                              size: buttonSize,
                               onPressed: () {
                                 HapticUtils.selectionClick();
                                 Navigator.pop(context);
@@ -391,7 +360,7 @@ class _FeatureSelectionScreenState extends State<FeatureSelectionScreen> {
                             FeatureIconButton(
                               icon: Icons.check_circle_outline,
                               label: "الختمة",
-                              size: 80,
+                              size: buttonSize,
                               onPressed: () {
                                 HapticUtils.selectionClick();
                                 showDialog(
@@ -433,41 +402,12 @@ class _FeatureSelectionScreenState extends State<FeatureSelectionScreen> {
                             FeatureIconButton(
                               icon: Icons.auto_awesome,
                               label: "التسبيح",
-                              size: 80,
+                              size: buttonSize,
                               onPressed: () {
                                 HapticUtils.selectionClick();
-                                showDialog(
-                                  context: context,
-                                  builder: (context) => AlertDialog(
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(16),
-                                    ),
-                                    icon: Icon(
-                                      Icons.auto_awesome,
-                                      size: 48,
-                                      color: Theme.of(context).colorScheme.primary,
-                                    ),
-                                    title: const Text(
-                                      "التسبيح",
-                                      textAlign: TextAlign.center,
-                                      style: TextStyle(fontWeight: FontWeight.bold),
-                                    ),
-                                    content: const Text(
-                                      "سبحة إلكترونية لعد التسبيحات قريباً.\n\nستتضمن عدادات مختلفة وحفظ التقدم.",
-                                      textAlign: TextAlign.center,
-                                      style: TextStyle(height: 1.5),
-                                    ),
-                                    actions: [
-                                      TextButton.icon(
-                                        onPressed: () => Navigator.pop(context),
-                                        icon: const Icon(Icons.check, size: 18),
-                                        label: const Text("حسناً"),
-                                        style: TextButton.styleFrom(
-                                          foregroundColor: Theme.of(context).colorScheme.primary,
-                                        ),
-                                      ),
-                                    ],
-                                    actionsPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                                Navigator.of(context).push(
+                                  MaterialPageRoute(
+                                    builder: (context) => const TasbihScreen(),
                                   ),
                                 );
                               },
@@ -475,7 +415,7 @@ class _FeatureSelectionScreenState extends State<FeatureSelectionScreen> {
                             FeatureIconButton(
                               icon: Icons.headphones,
                               label: "السمعيات",
-                              size: 80,
+                              size: buttonSize,
                               onPressed: () {
                                 HapticUtils.selectionClick();
                                 showDialog(
@@ -517,7 +457,7 @@ class _FeatureSelectionScreenState extends State<FeatureSelectionScreen> {
                             FeatureIconButton(
                               icon: Icons.favorite,
                               label: "الأذكار",
-                              size: 80,
+                              size: buttonSize,
                               onPressed: () {
                                 HapticUtils.selectionClick();
                                 showDialog(
@@ -559,7 +499,7 @@ class _FeatureSelectionScreenState extends State<FeatureSelectionScreen> {
                             FeatureIconButton(
                               icon: Icons.book,
                               label: "الدعاء",
-                              size: 80,
+                              size: buttonSize,
                               onPressed: () {
                                 HapticUtils.selectionClick();
                                 showDialog(
@@ -601,7 +541,7 @@ class _FeatureSelectionScreenState extends State<FeatureSelectionScreen> {
                             FeatureIconButton(
                               icon: Icons.settings,
                               label: "الإعدادات",
-                              size: 80,
+                              size: buttonSize,
                               onPressed: () {
                                 HapticUtils.navigation();
                                 _openSettings();
