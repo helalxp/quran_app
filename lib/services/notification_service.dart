@@ -3,15 +3,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'azan_service.dart';
 
-/// DEPRECATED: This service is no longer used.
-/// Prayer notifications are now handled entirely by native Android code:
-/// - NativeNotificationManager.kt: Sends prayer reminder notifications
-/// - AzanBroadcastReceiver.kt: Receives notification alarm triggers
-/// - PrayerAlarmScheduler.kt: Schedules notification alarms
-///
-/// This file is kept for backwards compatibility but is not actively used.
-/// Consider removing in future cleanup.
-@Deprecated('Use native Android notification implementation instead')
+/// Simplified NotificationService - notifications are now handled by native Android alarms.
+/// This service only maintains notification initialization for compatibility.
 class NotificationService {
   static NotificationService? _instance;
   static NotificationService get instance => _instance ??= NotificationService._();
@@ -24,6 +17,7 @@ class NotificationService {
   // Settings keys
   static const String _notificationsEnabledKey = 'notifications_enabled';
   static const String _notificationTimeKey = 'notification_time_minutes';
+  static const String _permissionRequestedKey = 'notification_permission_requested_v2';
 
   // Initialize the service
   Future<void> initialize() async {
@@ -58,15 +52,24 @@ class NotificationService {
       );
 
       // Request permissions for Android 13+
-      await _flutterLocalNotificationsPlugin
-          .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
-          ?.requestNotificationsPermission();
+      // Always request permission to ensure users who updated the app get prompted
+      final prefs = await SharedPreferences.getInstance();
+      final permissionRequested = prefs.getBool(_permissionRequestedKey) ?? false;
 
-      // Setup notification channels with dismissal callback
       final androidImplementation = _flutterLocalNotificationsPlugin
           .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
 
       if (androidImplementation != null) {
+        // Check current permission status
+        final permissionGranted = await androidImplementation.areNotificationsEnabled() ?? false;
+
+        // Request permission if not granted or if this is first time with new version
+        if (!permissionGranted || !permissionRequested) {
+          await androidImplementation.requestNotificationsPermission();
+          await prefs.setBool(_permissionRequestedKey, true);
+          if (kDebugMode) debugPrint('📲 Requested notification permission');
+        }
+
         // Create azan notification channel
         const androidChannel = AndroidNotificationChannel(
           'azan_player',

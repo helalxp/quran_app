@@ -30,6 +30,7 @@ class ApiConstants {
   }
   
   /// Mapping from API codes to Arabic reciter names
+  // TODO: I need to remember to add the fallback codes for some of the reciters
   static const Map<String, String> apiCodeToArabicName = {
     'Abdul_Basit_Murattal_192kbps': 'عبد الباسط عبد الصمد',
     'AbdulSamad_64kbps_QuranCentral.com': 'عبد الباسط عبد الصمد',
@@ -50,6 +51,22 @@ class ApiConstants {
     'Husary_64kbps': 'محمود خليل الحصري',
     'Yasser_Ad-Dussary_128kbps': 'ياسر الدوسري',
     'Ahmed_Neana_128kbps': 'أحمد نعينع',
+    'Abdullaah_3awwaad_Al-Juhaynee_128kbps': 'عبد الله عوض الجهني',
+    'Abdullah_Basfar_192kbps': 'عبد الله بن علي بصفر',
+    'Akram_AlAlaqimy_128kbps' : 'أكرم العلاقمي',
+    'Ali_Hajjaj_AlSuesy_128kbps' : 'على حجاج السويسى',
+    'Ali_Jaber_64kbps' : 'على جابر',
+    'Ayman_Sowaid_64kbps' : "أيمن سويد",
+    'aziz_alili_128kbps' : 'عبد العزيز عليلي',
+    'Fares_Abbad_64kbps' : 'فارس عباد',
+    'Hani_Rifai_192kbps' : 'هاني رفاعي',
+    'Hudhaify_128kbps' : 'علي الحذيفي',
+    'Ibrahim_Akhdar_32kbps' : 'ابراهيم الاخضر',
+    'Mohammad_al_Tablaway_128kbps' : 'محمد الطبلاوي',
+    'Muhammad_AbdulKareem_128kbps' : 'محمد عبد الكريم',
+    'Muhammad_Jibreel_128kbps' : 'محمد جبريل',
+    'Muhsin_Al_Qasim_192kbps' : 'عبد المحسن القاسم'
+
   };
 
   /// Audio reciter configurations
@@ -122,6 +139,66 @@ class ApiConstants {
         baseUrl: '$everyAyahBase/Saood_ash-Shuraym_128kbps',
         format: 'mp3',
     ),
+    'عبد الله عوض الجهني': ReciterConfig(
+      baseUrl: '$everyAyahBase/Abdullaah_3awwaad_Al-Juhaynee_128kbps',
+      format: 'mp3',
+    ),
+    'عبد الله بن علي بصفر': ReciterConfig(
+      baseUrl: '$everyAyahBase/Abdullah_Basfar_192kbps',
+      format: 'mp3',
+    ),
+    'أكرم العلاقمي': ReciterConfig(
+      baseUrl: '$everyAyahBase/Akram_AlAlaqimy_128kbps',
+      format: 'mp3',
+    ),
+    'على حجاج السويسى': ReciterConfig(
+      baseUrl: '$everyAyahBase/Ali_Hajjaj_AlSuesy_128kbps',
+      format: 'mp3',
+    ),
+    'على جابر': ReciterConfig(
+      baseUrl: '$everyAyahBase/Ali_Jaber_64kbps',
+      format: 'mp3',
+    ),
+    'أيمن سويد': ReciterConfig(
+      baseUrl: '$everyAyahBase/Ayman_Sowaid_64kbps',
+      format: 'mp3',
+    ),
+    'عبد العزيز عليلي': ReciterConfig(
+      baseUrl: '$everyAyahBase/aziz_alili_128kbps',
+      format: 'mp3',
+    ),
+    'Fares_Abbad_64kbps': ReciterConfig(
+      baseUrl: '$everyAyahBase/Fares_Abbad_64kbps',
+      format: 'mp3',
+    ),
+    'هاني رفاعي': ReciterConfig(
+      baseUrl: '$everyAyahBase/Hani_Rifai_192kbps',
+      format: 'mp3',
+    ),
+    'علي الحذيفي': ReciterConfig(
+      baseUrl: '$everyAyahBase/Hudhaify_128kbps',
+      format: 'mp3',
+    ),
+    'ابراهيم الاخضر': ReciterConfig(
+      baseUrl: '$everyAyahBase/Ibrahim_Akhdar_32kbps',
+      format: 'mp3',
+    ),
+    'محمد الطبلاوي': ReciterConfig(
+      baseUrl: '$everyAyahBase/Mohammad_al_Tablaway_128kbps',
+      format: 'mp3',
+    ),
+    'محمد عبد الكريم': ReciterConfig(
+      baseUrl: '$everyAyahBase/Muhammad_AbdulKareem_128kbps',
+      format: 'mp3',
+    ),
+    'محمد جبريل': ReciterConfig(
+      baseUrl: '$everyAyahBase/Muhammad_Jibreel_128kbps',
+      format: 'mp3',
+    ),
+    'عبد المحسن القاسم': ReciterConfig(
+      baseUrl: '$everyAyahBase/Muhsin_Al_Qasim_192kbps',
+      format: 'mp3',
+    ),
   };
   
   /// Tafsir source identifiers
@@ -142,6 +219,8 @@ class ApiConstants {
     'تفسير ابن كثير': 4,
     'تفسير الطبري': 8,
     'تفسير القرطبي': 7,
+    "تفسير الوسيط لطنطاوي" : 5, // I need to add this to the settings_screen
+    "تفسير البغوي" : 6  // I need to add this to the settings_screen
 
   };
   

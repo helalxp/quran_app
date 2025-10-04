@@ -27,12 +27,13 @@ class _PrayerTimesScreenState extends State<PrayerTimesScreen> {
   final ValueNotifier<String> _prayerName = ValueNotifier<String>('غير متوفر');
 
   // Prayer settings - using Prayer enum
+  // Default: All azan OFF - user must explicitly enable to avoid false positives
   final Map<Prayer, Map<String, bool>> prayerSettings = {
-    Prayer.fajr: {'notification': true, 'azan': true},
+    Prayer.fajr: {'notification': true, 'azan': false},
     Prayer.sunrise: {'notification': false, 'azan': false}, // No azan for Sunrise
     Prayer.dhuhr: {'notification': true, 'azan': false},
-    Prayer.asr: {'notification': true, 'azan': true},
-    Prayer.maghrib: {'notification': true, 'azan': true},
+    Prayer.asr: {'notification': true, 'azan': false},
+    Prayer.maghrib: {'notification': true, 'azan': false},
     Prayer.isha: {'notification': false, 'azan': false},
   };
 
@@ -297,6 +298,7 @@ class _PrayerTimesScreenState extends State<PrayerTimesScreen> {
                 Checkbox(
                   value: settings['notification'],
                   onChanged: (value) async {
+                    HapticUtils.toggleSwitch();
                     setState(() {
                       settings['notification'] = value ?? false;
                     });
@@ -314,6 +316,7 @@ class _PrayerTimesScreenState extends State<PrayerTimesScreen> {
                   Checkbox(
                     value: settings['azan'],
                     onChanged: (value) async {
+                      HapticUtils.toggleSwitch();
                       setState(() {
                         settings['azan'] = value ?? false;
                       });
@@ -395,7 +398,10 @@ class _PrayerTimesScreenState extends State<PrayerTimesScreen> {
               ),
             ),
             IconButton(
-              onPressed: _showLocationDialog,
+              onPressed: () {
+                HapticUtils.buttonTap();
+                _showLocationDialog();
+              },
               icon: const Icon(Icons.location_on),
               tooltip: 'تحديد الموقع',
             ),

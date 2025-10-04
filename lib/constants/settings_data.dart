@@ -128,6 +128,7 @@ class SettingsData {
   static const List<int> pauseDurationOptions = [0, 1, 2, 3, 5, 10];
 
   /// Memorization mode options
+  // TODO: Either remove it or implement it
   static const List<String> memorizationModes = [
     'الحفظ التقليدي',
     'الحفظ بالتكرار',

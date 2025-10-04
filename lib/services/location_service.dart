@@ -4,7 +4,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/foundation.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'dart:async';
-import 'analytics_service.dart';
 
 class LocationService {
   static LocationService? _instance;
@@ -46,10 +45,10 @@ class LocationService {
     }
   }
 
-  // Get current device location with connectivity check
+  // Get current device location (Fix #7 & #10: Better error handling with connectivity check)
   Future<LocationData?> getCurrentLocation() async {
     try {
-      // Check internet connectivity first
+      // Fix #10: Check internet connectivity first
       final connectivityResult = await Connectivity().checkConnectivity();
       if (connectivityResult == ConnectivityResult.none) {
         if (kDebugMode) debugPrint('❌ Location: No internet connection');
@@ -103,23 +102,19 @@ class LocationService {
 
         await saveLocationData(locationData);
         if (kDebugMode) debugPrint('✅ Location detected: $locationName');
-        await AnalyticsService.logLocationDetected(locationName, true);
         return locationData;
       } on TimeoutException {
         if (kDebugMode) debugPrint('❌ Location: Timeout after 15 seconds');
-        await AnalyticsService.logLocationError('timeout', 'Location detection timed out after 15 seconds');
         throw LocationException(
           'انتهت مهلة تحديد الموقع. تأكد من تفعيل GPS والاتصال بالإنترنت',
           LocationErrorType.timeout,
         );
       }
 
-    } on LocationException catch (e) {
-      await AnalyticsService.logLocationError(e.type.toString(), e.message);
-      rethrow;
+    } on LocationException {
+      rethrow; // Pass through our custom exceptions
     } catch (e) {
       if (kDebugMode) debugPrint('❌ Location: Unexpected error: $e');
-      await AnalyticsService.logLocationError('unknown', e.toString());
       if (e.toString().contains('SERVICE_DISABLED')) {
         throw LocationException(
           'خدمات الموقع معطلة. يرجى تفعيل GPS من الإعدادات',
@@ -155,7 +150,7 @@ class LocationService {
     }
   }
 
-  // Get saved location data with auto-detect on first launch
+  // Get saved location data (Fix #11: Auto-detect on first launch)
   Future<LocationData?> getSavedLocationData() async {
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -165,7 +160,7 @@ class LocationService {
         return LocationData.fromJson(locationDataString);
       }
 
-      // On first launch, try to auto-detect location
+      // Fix #11: On first launch, try to auto-detect location
       if (kDebugMode) debugPrint('🌍 First launch: Attempting to auto-detect location');
       try {
         final autoDetectedLocation = await getCurrentLocation();
@@ -178,21 +173,21 @@ class LocationService {
         // Continue to fallback
       }
 
-      // Fallback to default location (Riyadh) only if auto-detection fails
-      if (kDebugMode) debugPrint('📍 Using fallback location: Riyadh');
+      // Fallback to default location (Cairo) only if auto-detection fails
+      if (kDebugMode) debugPrint('📍 Using fallback location: Cairo');
       return LocationData(
-        latitude: 24.7136,
-        longitude: 46.6753,
-        name: 'الرياض، السعودية',
+        latitude: 30.0444,
+        longitude: 31.2357,
+        name: 'القاهرة، مصر',
         isAutoDetected: false,
       );
     } catch (e) {
       if (kDebugMode) debugPrint('Error getting saved location data: $e');
       // Fallback to default location
       return LocationData(
-        latitude: 24.7136,
-        longitude: 46.6753,
-        name: 'الرياض، السعودية',
+        latitude: 30.0444,
+        longitude: 31.2357,
+        name: 'القاهرة، مصر',
         isAutoDetected: false,
       );
     }
@@ -265,13 +260,13 @@ class LocationData {
   }
 }
 
-// Custom exception for location errors
+// Custom exception for location errors (Fix #7 & #10)
 enum LocationErrorType {
   permissionDenied,
   permissionDeniedForever,
   serviceDisabled,
   timeout,
-  noInternet,
+  noInternet, // Fix #10
   unknown,
 }
 

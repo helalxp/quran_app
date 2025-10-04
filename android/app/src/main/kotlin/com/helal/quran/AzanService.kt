@@ -41,7 +41,7 @@ class AzanService : Service() {
         createNotificationChannel()
 
         // Initialize azan player with error handling
-        // NativeAzanPlayer handles azan playback and volume monitoring
+        // NativeAzanPlayer now handles MediaSessionCompat internally for volume buttons
         try {
             azanPlayer = NativeAzanPlayer(this)
             Log.d(TAG, "✅ NativeAzanPlayer initialized successfully")

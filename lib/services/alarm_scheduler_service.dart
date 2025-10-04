@@ -4,7 +4,6 @@ import 'package:adhan/adhan.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:async';
 import 'prayer_times_service.dart';
-import 'analytics_service.dart';
 
 class AlarmSchedulerService {
   static AlarmSchedulerService? _instance;
@@ -46,9 +45,6 @@ class AlarmSchedulerService {
 
   // Schedule all 5 daily prayer alarms (both azan and notifications)
   Future<void> scheduleAllPrayerAlarms() async {
-    int totalAlarms = 0;
-    int successfulAlarms = 0;
-
     try {
       if (!_initialized) {
         await initialize();
@@ -62,37 +58,24 @@ class AlarmSchedulerService {
       final prayerTimes = _prayerService.getCurrentPrayerTimes();
       final now = DateTime.now();
 
-      // Schedule each prayer (azan and notification) - track success
-      final fajrSuccess = await _schedulePrayer(Prayer.fajr, fajrAlarmId, fajrNotifId, prayerTimes, now, notificationMinutes);
-      totalAlarms += 2; successfulAlarms += fajrSuccess;
-
-      final dhuhrSuccess = await _schedulePrayer(Prayer.dhuhr, dhuhrAlarmId, dhuhrNotifId, prayerTimes, now, notificationMinutes);
-      totalAlarms += 2; successfulAlarms += dhuhrSuccess;
-
-      final asrSuccess = await _schedulePrayer(Prayer.asr, asrAlarmId, asrNotifId, prayerTimes, now, notificationMinutes);
-      totalAlarms += 2; successfulAlarms += asrSuccess;
-
-      final maghribSuccess = await _schedulePrayer(Prayer.maghrib, maghribAlarmId, maghribNotifId, prayerTimes, now, notificationMinutes);
-      totalAlarms += 2; successfulAlarms += maghribSuccess;
-
-      final ishaSuccess = await _schedulePrayer(Prayer.isha, ishaAlarmId, ishaNotifId, prayerTimes, now, notificationMinutes);
-      totalAlarms += 2; successfulAlarms += ishaSuccess;
+      // Schedule each prayer (azan and notification)
+      await _schedulePrayer(Prayer.fajr, fajrAlarmId, fajrNotifId, prayerTimes, now, notificationMinutes);
+      await _schedulePrayer(Prayer.dhuhr, dhuhrAlarmId, dhuhrNotifId, prayerTimes, now, notificationMinutes);
+      await _schedulePrayer(Prayer.asr, asrAlarmId, asrNotifId, prayerTimes, now, notificationMinutes);
+      await _schedulePrayer(Prayer.maghrib, maghribAlarmId, maghribNotifId, prayerTimes, now, notificationMinutes);
+      await _schedulePrayer(Prayer.isha, ishaAlarmId, ishaNotifId, prayerTimes, now, notificationMinutes);
 
       // Schedule midnight reschedule for next day
       await _scheduleMidnightReschedule();
 
-      if (kDebugMode) debugPrint('✅ All prayer alarms scheduled successfully ($successfulAlarms/$totalAlarms)');
-
-      // Log analytics
-      await AnalyticsService.logAllAlarmsScheduled(totalAlarms, successfulAlarms);
+      if (kDebugMode) debugPrint('✅ All prayer alarms scheduled successfully');
 
     } catch (e) {
       if (kDebugMode) debugPrint('❌ Error scheduling prayer alarms: $e');
-      await AnalyticsService.logError('alarm_scheduling', e.toString());
     }
   }
 
-  Future<int> _schedulePrayer(
+  Future<void> _schedulePrayer(
     Prayer prayer,
     int alarmId,
     int notifId,
@@ -100,14 +83,11 @@ class AlarmSchedulerService {
     DateTime now,
     int notificationMinutes,
   ) async {
-    int successCount = 0;
-
     try {
       final prayerTime = prayerTimes.timeForPrayer(prayer);
       if (prayerTime == null) {
         if (kDebugMode) debugPrint('⚠️ No prayer time for ${prayer.name}');
-        await AnalyticsService.logPrayerTimesError('No prayer time for ${prayer.name}');
-        return 0;
+        return;
       }
 
       // If prayer time has already passed today, schedule for tomorrow
@@ -122,8 +102,7 @@ class AlarmSchedulerService {
           if (kDebugMode) debugPrint('⏭️ ${prayer.name} already passed, scheduling for tomorrow');
         } else {
           if (kDebugMode) debugPrint('❌ Could not get tomorrow\'s prayer time for ${prayer.name}');
-          await AnalyticsService.logPrayerTimesError('Could not get tomorrow prayer time for ${prayer.name}');
-          return 0;
+          return;
         }
       }
 
@@ -144,14 +123,11 @@ class AlarmSchedulerService {
       });
 
       if (azanSuccess == true) {
-        successCount++;
         if (kDebugMode) {
           debugPrint('✅ ${prayer.name} azan alarm scheduled for $formattedTime');
         }
-        await AnalyticsService.logAlarmScheduled(prayerName, 'azan', true);
       } else {
         if (kDebugMode) debugPrint('❌ Failed to schedule ${prayer.name} azan alarm');
-        await AnalyticsService.logAlarmScheduled(prayerName, 'azan', false);
       }
 
       // Schedule notification alarm (X minutes before prayer time)
@@ -161,32 +137,25 @@ class AlarmSchedulerService {
       if (notificationTime.isAfter(now)) {
         final notifSuccess = await _alarmChannel.invokeMethod<bool>('scheduleNotificationAlarm', {
           'notificationId': notifId,
-          'prayerId': alarmId,
+          'prayerId': alarmId, // Original prayer ID for settings lookup
           'timeInMillis': notificationTime.millisecondsSinceEpoch,
           'prayerName': prayerName,
           'minutesBefore': notificationMinutes,
         });
 
         if (notifSuccess == true) {
-          successCount++;
           if (kDebugMode) {
             debugPrint('✅ ${prayer.name} notification scheduled $notificationMinutes min before');
           }
-          await AnalyticsService.logAlarmScheduled(prayerName, 'notification', true);
         } else {
           if (kDebugMode) debugPrint('❌ Failed to schedule ${prayer.name} notification');
-          await AnalyticsService.logAlarmScheduled(prayerName, 'notification', false);
         }
       } else {
         if (kDebugMode) debugPrint('⏭️ ${prayer.name} notification time already passed, skipping');
       }
 
-      return successCount;
-
     } catch (e) {
       if (kDebugMode) debugPrint('❌ Error scheduling ${prayer.name}: $e');
-      await AnalyticsService.logAlarmSchedulingError(prayer.name.toString(), e.toString());
-      return successCount;
     }
   }
 

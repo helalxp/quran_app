@@ -22,8 +22,6 @@ class NativeAzanPlayer(private val context: Context) {
     private var mediaPlayer: MediaPlayer? = null
     private var wakeLock: PowerManager.WakeLock? = null
     private var volumeObserver: ContentObserver? = null
-    private var volumeCheckHandler: Handler? = null
-    private var volumeCheckRunnable: Runnable? = null
     val notificationId = 9998  // Match AzanService notification ID
     private val channelId = "azan_playback"
     private var isPlaying = false
@@ -154,19 +152,27 @@ class NativeAzanPlayer(private val context: Context) {
 
     /**
      * Monitor alarm volume changes to allow stopping azan with volume buttons.
-     * Uses dual approach for reliability:
-     * 1. ContentObserver for immediate detection (works when screen is on)
-     * 2. Periodic polling as backup (works when screen is off/locked)
+     * Since we use USAGE_ALARM, MediaSessionCompat doesn't work, but we can detect
+     * when user changes alarm volume and stop playback.
      */
     private fun startVolumeMonitoring() {
         try {
             // Store initial volume
             initialAlarmVolume = audioManager?.getStreamVolume(AudioManager.STREAM_ALARM) ?: 0
 
-            // Approach 1: ContentObserver (primary method)
             volumeObserver = object : ContentObserver(Handler(Looper.getMainLooper())) {
                 override fun onChange(selfChange: Boolean) {
-                    checkVolumeChange()
+                    val currentVolume = audioManager?.getStreamVolume(AudioManager.STREAM_ALARM) ?: 0
+                    if (currentVolume != initialAlarmVolume && isPlaying) {
+                        Log.d(TAG, "🔊 Alarm volume changed - stopping azan")
+                        stopAzan()
+
+                        // Send broadcast to stop the service
+                        val stopIntent = Intent(AzanService.ACTION_STOP_AZAN).apply {
+                            setPackage(context.packageName)
+                        }
+                        context.sendBroadcast(stopIntent)
+                    }
                 }
             }
 
@@ -176,19 +182,6 @@ class NativeAzanPlayer(private val context: Context) {
                 volumeObserver!!
             )
 
-            // Approach 2: Periodic polling (backup method for screen off scenarios)
-            volumeCheckHandler = Handler(Looper.getMainLooper())
-            volumeCheckRunnable = object : Runnable {
-                override fun run() {
-                    if (isPlaying) {
-                        checkVolumeChange()
-                        // Check every 500ms while playing
-                        volumeCheckHandler?.postDelayed(this, 500)
-                    }
-                }
-            }
-            volumeCheckHandler?.post(volumeCheckRunnable!!)
-
             Log.d(TAG, "📊 Volume monitoring started (initial volume: $initialAlarmVolume)")
         } catch (e: Exception) {
             Log.e(TAG, "❌ Error starting volume monitoring: ${e.message}", e)
@@ -196,46 +189,15 @@ class NativeAzanPlayer(private val context: Context) {
     }
 
     /**
-     * Check if volume has changed and stop azan if it has.
-     * Extracted to separate method for reuse by both ContentObserver and polling.
-     */
-    private fun checkVolumeChange() {
-        try {
-            val currentVolume = audioManager?.getStreamVolume(AudioManager.STREAM_ALARM) ?: 0
-            if (currentVolume != initialAlarmVolume && isPlaying) {
-                Log.d(TAG, "🔊 Alarm volume changed ($initialAlarmVolume → $currentVolume) - stopping azan")
-                stopAzan()
-
-                // Send broadcast to stop the service
-                val stopIntent = Intent(AzanService.ACTION_STOP_AZAN).apply {
-                    setPackage(context.packageName)
-                }
-                context.sendBroadcast(stopIntent)
-            }
-        } catch (e: Exception) {
-            Log.e(TAG, "❌ Error checking volume: ${e.message}", e)
-        }
-    }
-
-    /**
-     * Stop monitoring volume changes (both ContentObserver and polling)
+     * Stop monitoring volume changes
      */
     private fun stopVolumeMonitoring() {
         try {
-            // Stop ContentObserver
             volumeObserver?.let {
                 context.contentResolver.unregisterContentObserver(it)
                 volumeObserver = null
+                Log.d(TAG, "📊 Volume monitoring stopped")
             }
-
-            // Stop periodic polling
-            volumeCheckRunnable?.let {
-                volumeCheckHandler?.removeCallbacks(it)
-                volumeCheckRunnable = null
-            }
-            volumeCheckHandler = null
-
-            Log.d(TAG, "📊 Volume monitoring stopped")
         } catch (e: Exception) {
             Log.e(TAG, "❌ Error stopping volume monitoring: ${e.message}", e)
         }

@@ -9,9 +9,9 @@ class QiblaService {
 
   QiblaService._();
 
-  // Default coordinates (Riyadh, Saudi Arabia)
-  static const double _defaultLatitude = 24.7136;
-  static const double _defaultLongitude = 46.6753;
+  // Default coordinates (Cairo, Egypt)
+  static const double _defaultLatitude = 30.0444;
+  static const double _defaultLongitude = 31.2357;
 
   // User location
   Coordinates? _coordinates;
@@ -137,9 +137,9 @@ class QiblaService {
   Future<String> getSavedLocationName() async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      return prefs.getString(_locationNameKey) ?? 'الرياض، السعودية';
+      return prefs.getString(_locationNameKey) ?? 'القاهرة، مصر';
     } catch (e) {
-      return 'الرياض، السعودية';
+      return 'القاهرة، مصر';
     }
   }
 

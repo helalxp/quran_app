@@ -5,58 +5,44 @@ import 'package:flutter/foundation.dart';
 
 /// Centralized haptic feedback utilities for consistent user experience
 class HapticUtils {
-  /// Light haptic feedback for subtle interactions
+  static const MethodChannel _channel = MethodChannel('com.helal.quran/vibration');
+
+  /// Light haptic feedback for subtle interactions (35ms)
   static Future<void> lightImpact() async {
-    try {
-      await HapticFeedback.lightImpact();
-    } catch (e) {
-      if (kDebugMode) {
-        print('Haptic feedback not available: $e');
-      }
-    }
+    await _vibrate(35);
   }
 
-  /// Medium haptic feedback for standard interactions
+  /// Medium haptic feedback for standard interactions (60ms)
   static Future<void> mediumImpact() async {
-    try {
-      await HapticFeedback.mediumImpact();
-    } catch (e) {
-      if (kDebugMode) {
-        print('Haptic feedback not available: $e');
-      }
-    }
+    await _vibrate(60);
   }
 
-  /// Heavy haptic feedback for important interactions
+  /// Heavy haptic feedback for important interactions (100ms)
   static Future<void> heavyImpact() async {
-    try {
-      await HapticFeedback.heavyImpact();
-    } catch (e) {
-      if (kDebugMode) {
-        print('Haptic feedback not available: $e');
-      }
-    }
+    await _vibrate(100);
   }
 
-  /// Selection click for toggles and selections
+  /// Selection click for toggles and selections (50ms)
   static Future<void> selectionClick() async {
-    try {
-      await HapticFeedback.selectionClick();
-    } catch (e) {
-      if (kDebugMode) {
-        print('Haptic feedback not available: $e');
-      }
-    }
+    await _vibrate(50);
   }
 
-  /// Vibrate for error states or warnings
+  /// Vibrate for error states or warnings (600ms)
   static Future<void> vibrate() async {
+    await _vibrate(600);
+  }
+
+  /// Continuous vibration for Qibla alignment - pulses until stopped
+  static Future<void> qiblaAlignmentVibrate() async {
+    await _vibrate(200);
+  }
+
+  /// Core vibration method using native Android Vibrator service
+  static Future<void> _vibrate(int durationMs) async {
     try {
-      await HapticFeedback.vibrate();
+      await _channel.invokeMethod('vibrate', {'duration': durationMs});
     } catch (e) {
-      if (kDebugMode) {
-        print('Haptic feedback not available: $e');
-      }
+      if (kDebugMode) debugPrint('Vibration error: $e');
     }
   }
 

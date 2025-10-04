@@ -67,8 +67,22 @@ class _SettingsScreenState extends State<SettingsScreen> with TickerProviderStat
     'محمد أيوب': ReciterInfo('Muhammad Ayyub', 'Muhammad_Ayyoub_128kbps'),
     'عبد الله المطرود': ReciterInfo('Abdullah Al-Matroud', 'Abdullah_Matroud_128kbps'),
     'أبو بكر الشاطري': ReciterInfo('Abu Bakr Al-Shatri', 'Abu Bakr Ash-Shaatree_128kbps'),
-    'أحمد نعينع': ReciterInfo('Ahmed Neana', 'Ahmed_Neana_128kbps')
-  };
+    'عبد الله عوض الجهني': ReciterInfo('Abdullaah 3awwaad Al-Juhaynee', 'Abdullaah_3awwaad_Al-Juhaynee_128kbps'),
+    'عبد الله بن علي بصفر': ReciterInfo('Abdullah Basfar', 'Abdullah_Basfar_192kbps'),
+    'أكرم العلاقمي': ReciterInfo('Akram AlAlaqimy', 'Akram_AlAlaqimy_128kbps'),
+    'على حجاج السويسى': ReciterInfo('Ali Hajjaj AlSuesy', 'Ali_Hajjaj_AlSuesy_128kbps'),
+    'على جابر': ReciterInfo('Ali Jaber', 'Ali_Jaber_64kbps'),
+    'أيمن سويد': ReciterInfo('Ayman Sowaid', 'Ayman_Sowaid_64kbps'),
+    'عبد العزيز عليلي': ReciterInfo('aziz alili', 'aziz_alili_128kbps'),
+    'فارس عباد': ReciterInfo('Fares Abbad', 'Fares_Abbad_64kbps'),
+    'هاني رفاعي': ReciterInfo('Hani Rifai', 'Hani_Rifai_192kbps'),
+    'علي الحذيفي': ReciterInfo('Hudhaify', 'Hudhaify_128kbps'),
+    'ابراهيم الاخضر': ReciterInfo('Ibrahim Akhdar', 'Ibrahim_Akhdar_32kbps'),
+    'محمد الطبلاوي': ReciterInfo('Mohammad al Tablaway', 'Mohammad_al_Tablaway_128kbps'),
+    'محمد عبد الكريم': ReciterInfo('Muhammad AbdulKareem', 'Muhammad_AbdulKareem_128kbps'),
+    'محمد جبريل': ReciterInfo('Muhammad Jibreel', 'Muhammad_Jibreel_128kbps'),
+    'عبد المحسن القاسم': ReciterInfo('Muhsin Al Qasim', 'Muhsin_Al_Qasim_192kbps'),
+    };
 
   // Use tafsir sources from SettingsData
   Map<String, TafsirInfo> get _tafsirSources => SettingsData.tafsirInfo;

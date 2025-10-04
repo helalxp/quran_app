@@ -61,11 +61,10 @@ void main() async {
   try {
     await PrayerTimesService.instance.initialize();
 
-    // Note: AzanService and NotificationService are deprecated.
-    // Azan and notifications are now handled by native Android code.
-    // These initializations are commented out but files kept for reference.
+    // Note: AzanService is deprecated - azan is now handled by native Android code.
+    // NotificationService is still needed for permission requests!
     // await AzanService.instance.initialize();
-    // await NotificationService.instance.initialize();
+    await NotificationService.instance.initialize();
 
     // Initialize and schedule prayer alarms (uses native Android alarms)
     await AlarmSchedulerService.instance.initialize();

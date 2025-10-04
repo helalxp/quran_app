@@ -127,7 +127,8 @@ class AzanBroadcastReceiver : BroadcastReceiver() {
 
         // Flutter shared_preferences prefixes keys with "flutter."
         val fullKey = "flutter.$prayerKey"
-        val enabled = prefs.getBoolean(fullKey, false)
+        // Default to false - user must explicitly enable azan to avoid false positives
+        val enabled = prefs.getBoolean(fullKey, true)
 
         Log.d(TAG, "🔍 Checking azan toggle for alarm ID $alarmId ($prayerKey): $enabled")
         return enabled

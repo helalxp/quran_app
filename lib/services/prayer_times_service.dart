@@ -12,9 +12,9 @@ class PrayerTimesService {
 
   PrayerTimesService._();
 
-  // Default coordinates (Riyadh, Saudi Arabia)
-  static const double _defaultLatitude = 24.7136;
-  static const double _defaultLongitude = 46.6753;
+  // Default coordinates (Cairo, Egypt)
+  static const double _defaultLatitude = 30.0444;
+  static const double _defaultLongitude = 31.2357;
 
   // List of main prayers (excluding sunrise)
   static const List<Prayer> _mainPrayers = [
@@ -125,16 +125,16 @@ class PrayerTimesService {
     }
   }
 
-  // Get current prayer times with timezone handling
+  // Get current prayer times with proper timezone handling (Fix #15)
   PrayerTimes getCurrentPrayerTimes() {
     if (_coordinates == null || _calculationParams == null) {
       // Return default prayer times
       final defaultCoords = Coordinates(_defaultLatitude, _defaultLongitude);
       final defaultParams = CalculationMethod.muslim_world_league.getParameters();
-      final today = DateTime.now();
+      final today = DateTime.now(); // Fix #15: Uses local timezone automatically
       final dateComponents = DateComponents(today.year, today.month, today.day);
 
-      // Log timezone information for debugging
+      // Fix #15: Log timezone information for debugging
       if (kDebugMode) {
         final timezoneOffset = today.timeZoneOffset;
         debugPrint('🕰️ Prayer times calculated for local timezone: UTC${timezoneOffset.isNegative ? '' : '+'}${timezoneOffset.inHours}');
@@ -143,10 +143,10 @@ class PrayerTimesService {
       return PrayerTimes(defaultCoords, dateComponents, defaultParams);
     }
 
-    final today = DateTime.now();
+    final today = DateTime.now(); // Fix #15: Uses local timezone automatically
     final dateComponents = DateComponents(today.year, today.month, today.day);
 
-    // Log timezone information for debugging (first calculation only)
+    // Fix #15: Log timezone information for debugging (first calculation only)
     if (kDebugMode && _coordinates != null) {
       final timezoneOffset = today.timeZoneOffset;
       debugPrint('🕰️ Prayer times for ${_currentLocationData?.name ?? 'Unknown'} in timezone UTC${timezoneOffset.isNegative ? '' : '+'}${timezoneOffset.inHours}');
@@ -155,9 +155,9 @@ class PrayerTimesService {
     return PrayerTimes(_coordinates!, dateComponents, _calculationParams!);
   }
 
-  // Get prayer times for specific date
+  // Get prayer times for specific date (Fix #15: Explicit timezone handling)
   PrayerTimes getPrayerTimesForDate(DateTime date) {
-    // Ensure date is in local timezone
+    // Fix #15: Ensure date is in local timezone
     final localDate = date.isUtc ? date.toLocal() : date;
 
     if (_coordinates == null || _calculationParams == null) {
@@ -316,9 +316,9 @@ class PrayerTimesService {
         return _currentLocationData!.name;
       }
       final locationData = await _locationService.getSavedLocationData();
-      return locationData?.name ?? 'الرياض، السعودية';
+      return locationData?.name ?? 'القاهرة، مصر';
     } catch (e) {
-      return 'الرياض، السعودية';
+      return 'القاهرة، مصر';
     }
   }
 

@@ -4,15 +4,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:async';
 import 'analytics_service.dart';
 
-/// DEPRECATED: This service is no longer used.
-/// Azan playback is now handled entirely by native Android code:
-/// - NativeAzanPlayer.kt: Handles azan playback with USAGE_ALARM
-/// - AzanService.kt: Foreground service for background playback
-/// - AzanBroadcastReceiver.kt: Receives alarm triggers
-///
-/// This file is kept for backwards compatibility but is not actively used.
-/// Consider removing in future cleanup.
-@Deprecated('Use native Android azan implementation instead')
 class AzanService {
   static AzanService? _instance;
   static AzanService get instance => _instance ??= AzanService._();
@@ -22,8 +13,8 @@ class AzanService {
   AudioPlayer? _audioPlayer;
   StreamSubscription? _playerStateSubscription;
   bool _isPlaying = false;
-  bool _isInitializing = false;
-  int _retryCount = 0;
+  bool _isInitializing = false; // Fix #3: Mutex lock for race condition prevention
+  int _retryCount = 0; // Fix #6 & #8: Track retry attempts for error recovery
   static const int _maxRetries = 3;
 
   // Settings keys
@@ -76,8 +67,9 @@ class AzanService {
   }
 
 
-  // Play azan
+  // Play azan (Fixes #3, #6, #8)
   Future<void> playAzan() async {
+    // Fix #3: Prevent race condition with mutex lock
     if (_isInitializing) {
       if (kDebugMode) debugPrint('🕌 Already initializing, skipping duplicate call');
       return;
@@ -115,6 +107,7 @@ class AzanService {
         await _setupAudioSession();
       }
 
+      // Fix #8: Retry logic if audio source failed to load
       if (_audioPlayer?.audioSource == null && _retryCount < _maxRetries) {
         _retryCount++;
         if (kDebugMode) debugPrint('🕌 Retrying audio setup (attempt $_retryCount/$_maxRetries)');
@@ -146,6 +139,7 @@ class AzanService {
     } catch (e) {
       if (kDebugMode) debugPrint('❌ Error playing azan: $e');
 
+      // Fix #6 & #8: Retry on error
       if (_retryCount < _maxRetries) {
         _retryCount++;
         if (kDebugMode) debugPrint('🕌 Retrying azan playback (attempt $_retryCount/$_maxRetries)');

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/foundation.dart';
 import 'dart:async';
 import 'dart:math' as math;
 import 'package:flutter_qiblah/flutter_qiblah.dart';
