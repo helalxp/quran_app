@@ -3,9 +3,11 @@ import '../settings_screen.dart';
 import '../utils/haptic_utils.dart';
 import '../utils/animation_utils.dart';
 import '../memorization_manager.dart';
+import '../services/navigation_service.dart';
 import 'prayer_times_screen.dart';
 import 'qibla_screen.dart';
 import 'tasbih_screen.dart';
+import 'playlist_screen.dart';
 
 class FeatureSelectionScreen extends StatefulWidget {
     final MemorizationManager? memorizationManager;
@@ -23,8 +25,14 @@ class FeatureSelectionScreen extends StatefulWidget {
 
 class _FeatureSelectionScreenState extends State<FeatureSelectionScreen> {
 
-    void _openSettings() {
+    void _openSettings() async {
         HapticUtils.navigation(); // Haptic feedback for navigation
+
+        // Save current screen before navigating
+        await NavigationService.saveLastScreen(NavigationService.routeSettings);
+
+        if (!mounted) return;
+
         Navigator.of(context).push(
             AnimatedRoute(
                 builder: (context) => SettingsScreen(memorizationManager: widget.memorizationManager),
@@ -44,7 +52,7 @@ class _FeatureSelectionScreenState extends State<FeatureSelectionScreen> {
             ),
             title: Text(
               "الميزات",
-              style: TextStyle(fontWeight: FontWeight.bold),
+              style: TextStyle(fontWeight: FontWeight.bold, fontFamily: 'Uthmanic'),
             ),
             centerTitle: true,
           ),
@@ -57,7 +65,6 @@ class _FeatureSelectionScreenState extends State<FeatureSelectionScreen> {
 
                 final isSmall = constraints.maxWidth < 360;
                 final isMedium = constraints.maxWidth >= 360 && constraints.maxWidth < 800;
-                final isLarge = constraints.maxWidth >= 800;
 
                 if (isSmall) {
                   // Small screens: Full-width scrollable column
@@ -71,8 +78,10 @@ class _FeatureSelectionScreenState extends State<FeatureSelectionScreen> {
                               icon: Icons.access_time,
                               label: "أوقات الصلاة",
                               size: 100,
-                              onPressed: () {
+                              onPressed: () async {
                                 HapticUtils.selectionClick();
+                                await NavigationService.saveLastScreen(NavigationService.routePrayerTimes);
+                                if (!mounted) return;
                                 Navigator.of(context).push(
                                   MaterialPageRoute(
                                     builder: (context) => const PrayerTimesScreen(),
@@ -85,8 +94,10 @@ class _FeatureSelectionScreenState extends State<FeatureSelectionScreen> {
                               icon: Icons.explore,
                               label: "القبلة",
                               size: 100,
-                              onPressed: () {
+                              onPressed: () async {
                                 HapticUtils.selectionClick();
+                                await NavigationService.saveLastScreen(NavigationService.routeQibla);
+                                if (!mounted) return;
                                 Navigator.of(context).push(
                                   MaterialPageRoute(
                                     builder: (context) => const QiblaScreen(),
@@ -99,8 +110,10 @@ class _FeatureSelectionScreenState extends State<FeatureSelectionScreen> {
                               icon: Icons.book_outlined,
                               label: "المصحف",
                               size: 100,
-                              onPressed: () {
+                              onPressed: () async {
                                 HapticUtils.selectionClick();
+                                await NavigationService.saveLastScreen(NavigationService.routeViewer);
+                                if (!mounted) return;
                                 Navigator.pop(context); // Go back to Mushaf
                               },
                             ),
@@ -152,8 +165,10 @@ class _FeatureSelectionScreenState extends State<FeatureSelectionScreen> {
                               icon: Icons.auto_awesome,
                               label: "التسبيح",
                               size: 100,
-                              onPressed: () {
+                              onPressed: () async {
                                 HapticUtils.selectionClick();
+                                await NavigationService.saveLastScreen(NavigationService.routeTasbih);
+                                if (!mounted) return;
                                 Navigator.of(context).push(
                                   MaterialPageRoute(
                                     builder: (context) => const TasbihScreen(),
@@ -166,40 +181,13 @@ class _FeatureSelectionScreenState extends State<FeatureSelectionScreen> {
                               icon: Icons.headphones,
                               label: "السمعيات",
                               size: 100,
-                              onPressed: () {
+                              onPressed: () async {
                                 HapticUtils.selectionClick();
-                                showDialog(
-                                  context: context,
-                                  builder: (context) => AlertDialog(
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(16),
-                                    ),
-                                    icon: Icon(
-                                      Icons.headphones,
-                                      size: 48,
-                                      color: Theme.of(context).colorScheme.primary,
-                                    ),
-                                    title: const Text(
-                                      "السمعيات",
-                                      textAlign: TextAlign.center,
-                                      style: TextStyle(fontWeight: FontWeight.bold),
-                                    ),
-                                    content: const Text(
-                                      "نعمل على إضافة تلاوات مختارة للقرآن الكريم من أشهر القراء.\n\nستتضمن ميزات التحكم بالتشغيل، التكرار، وإمكانية التحميل للاستماع بدون إنترنت.",
-                                      textAlign: TextAlign.center,
-                                      style: TextStyle(height: 1.5),
-                                    ),
-                                    actions: [
-                                      TextButton.icon(
-                                        onPressed: () => Navigator.pop(context),
-                                        icon: const Icon(Icons.check, size: 18),
-                                        label: const Text("حسناً"),
-                                        style: TextButton.styleFrom(
-                                          foregroundColor: Theme.of(context).colorScheme.primary,
-                                        ),
-                                      ),
-                                    ],
-                                    actionsPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                                await NavigationService.saveLastScreen(NavigationService.routeReciters);
+                                if (!mounted) return;
+                                Navigator.of(context).push(
+                                  MaterialPageRoute(
+                                    builder: (context) => const PlaylistScreen(),
                                   ),
                                 );
                               },
@@ -326,8 +314,10 @@ class _FeatureSelectionScreenState extends State<FeatureSelectionScreen> {
                               icon: Icons.access_time,
                               label: "أوقات الصلاة",
                               size: buttonSize,
-                              onPressed: () {
+                              onPressed: () async {
                                 HapticUtils.selectionClick();
+                                await NavigationService.saveLastScreen(NavigationService.routePrayerTimes);
+                                if (!mounted) return;
                                 Navigator.of(context).push(
                                   MaterialPageRoute(
                                     builder: (context) => const PrayerTimesScreen(),
@@ -339,8 +329,10 @@ class _FeatureSelectionScreenState extends State<FeatureSelectionScreen> {
                               icon: Icons.explore,
                               label: "القبلة",
                               size: buttonSize,
-                              onPressed: () {
+                              onPressed: () async {
                                 HapticUtils.selectionClick();
+                                await NavigationService.saveLastScreen(NavigationService.routeQibla);
+                                if (!mounted) return;
                                 Navigator.of(context).push(
                                   MaterialPageRoute(
                                     builder: (context) => const QiblaScreen(),
@@ -352,8 +344,10 @@ class _FeatureSelectionScreenState extends State<FeatureSelectionScreen> {
                               icon: Icons.book_outlined,
                               label: "المصحف",
                               size: buttonSize,
-                              onPressed: () {
+                              onPressed: () async {
                                 HapticUtils.selectionClick();
+                                await NavigationService.saveLastScreen(NavigationService.routeViewer);
+                                if (!mounted) return;
                                 Navigator.pop(context);
                               },
                             ),
@@ -403,8 +397,10 @@ class _FeatureSelectionScreenState extends State<FeatureSelectionScreen> {
                               icon: Icons.auto_awesome,
                               label: "التسبيح",
                               size: buttonSize,
-                              onPressed: () {
+                              onPressed: () async {
                                 HapticUtils.selectionClick();
+                                await NavigationService.saveLastScreen(NavigationService.routeTasbih);
+                                if (!mounted) return;
                                 Navigator.of(context).push(
                                   MaterialPageRoute(
                                     builder: (context) => const TasbihScreen(),
@@ -416,40 +412,13 @@ class _FeatureSelectionScreenState extends State<FeatureSelectionScreen> {
                               icon: Icons.headphones,
                               label: "السمعيات",
                               size: buttonSize,
-                              onPressed: () {
+                              onPressed: () async {
                                 HapticUtils.selectionClick();
-                                showDialog(
-                                  context: context,
-                                  builder: (context) => AlertDialog(
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(16),
-                                    ),
-                                    icon: Icon(
-                                      Icons.headphones,
-                                      size: 48,
-                                      color: Theme.of(context).colorScheme.primary,
-                                    ),
-                                    title: const Text(
-                                      "السمعيات",
-                                      textAlign: TextAlign.center,
-                                      style: TextStyle(fontWeight: FontWeight.bold),
-                                    ),
-                                    content: const Text(
-                                      "نعمل على إضافة تلاوات مختارة للقرآن الكريم من أشهر القراء.\n\nستتضمن ميزات التحكم بالتشغيل، التكرار، وإمكانية التحميل للاستماع بدون إنترنت.",
-                                      textAlign: TextAlign.center,
-                                      style: TextStyle(height: 1.5),
-                                    ),
-                                    actions: [
-                                      TextButton.icon(
-                                        onPressed: () => Navigator.pop(context),
-                                        icon: const Icon(Icons.check, size: 18),
-                                        label: const Text("حسناً"),
-                                        style: TextButton.styleFrom(
-                                          foregroundColor: Theme.of(context).colorScheme.primary,
-                                        ),
-                                      ),
-                                    ],
-                                    actionsPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                                await NavigationService.saveLastScreen(NavigationService.routeReciters);
+                                if (!mounted) return;
+                                Navigator.of(context).push(
+                                  MaterialPageRoute(
+                                    builder: (context) => const PlaylistScreen(),
                                   ),
                                 );
                               },
@@ -615,6 +584,7 @@ class FeatureIconButton extends StatelessWidget {
           style: TextStyle(
             fontSize: 14,
             fontWeight: FontWeight.w500,
+            fontFamily: 'Uthmanic',
             color: Theme.of(context).colorScheme.onSurface,
           ),
           textDirection: TextDirection.rtl,

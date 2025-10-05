@@ -83,7 +83,8 @@ class _SettingsScreenState extends State<SettingsScreen> with TickerProviderStat
     'محمد عبد الكريم': ReciterInfo('Muhammad AbdulKareem', 'Muhammad_AbdulKareem_128kbps'),
     'محمد جبريل': ReciterInfo('Muhammad Jibreel', 'Muhammad_Jibreel_128kbps'),
     'عبد المحسن القاسم': ReciterInfo('Muhsin Al Qasim', 'Muhsin_Al_Qasim_192kbps'),
-    };
+    'محمود على البنا': ReciterInfo('mahmoud ali al banna', 'mahmoud_ali_al_banna_32kbps'),
+  };
 
   // Use tafsir sources from SettingsData
   Map<String, TafsirInfo> get _tafsirSources => SettingsData.tafsirInfo;

@@ -24,9 +24,12 @@ import 'widgets/loading_states.dart';
 import 'widgets/jump_to_page_dialog.dart';
 import 'managers/page_cache_manager.dart';
 import 'services/analytics_service.dart';
+import 'services/navigation_service.dart';
 
 class ViewerScreen extends StatefulWidget {
-  const ViewerScreen({super.key});
+  final int? initialPage;
+
+  const ViewerScreen({super.key, this.initialPage});
 
   @override
   State<ViewerScreen> createState() => _ViewerScreenState();
@@ -225,10 +228,16 @@ class _ViewerScreenState extends State<ViewerScreen> with TickerProviderStateMix
   }
 
   Future<void> _loadLastPage() async {
-    
+
     try {
-      final prefs = await SharedPreferences.getInstance();
-      final lastPage = prefs.getInt('last_page') ?? 1;
+      // Use passed initialPage if available, otherwise load from SharedPreferences
+      final int lastPage;
+      if (widget.initialPage != null) {
+        lastPage = widget.initialPage!;
+      } else {
+        final prefs = await SharedPreferences.getInstance();
+        lastPage = prefs.getInt('last_page') ?? 1;
+      }
       _currentPageNotifier.value = lastPage;
 
       final initialIndex = lastPage - 1;
@@ -388,7 +397,13 @@ class _ViewerScreenState extends State<ViewerScreen> with TickerProviderStateMix
 
       debugPrint('Found ${surahAyahs.length} ayahs in surah ${ayahMarker.surah}');
 
-      await _audioManager!.startContinuousPlayback(ayahMarker, reciterName, surahAyahs);
+      // Pass all markers for continue-to-next-surah feature
+      await _audioManager!.startContinuousPlayback(
+        ayahMarker,
+        reciterName,
+        surahAyahs,
+        allAyahMarkers: _allMarkers,
+      );
 
       // Removed annoying snackbar - user can control playback through media player controls
     } catch (e) {
@@ -675,8 +690,17 @@ class _ViewerScreenState extends State<ViewerScreen> with TickerProviderStateMix
   }
 
   // Navigate to settings with smooth animation
-  void _openSelectionScreen() {
+  void _openSelectionScreen() async {
     HapticUtils.navigation(); // Haptic feedback for navigation
+
+    // Save current screen and page before navigating
+    await NavigationService.saveLastScreen(
+      NavigationService.routeViewer,
+      pageNumber: _currentPageNotifier.value,
+    );
+
+    if (!mounted) return;
+
     Navigator.of(context).push(
       AnimatedRoute(
         builder: (context) => FeatureSelectionScreen(
@@ -995,6 +1019,7 @@ class _ViewerScreenState extends State<ViewerScreen> with TickerProviderStateMix
                     style: TextStyle(
                       color: Theme.of(context).colorScheme.onSurface,
                       fontWeight: FontWeight.w600,
+                      fontFamily: 'Uthmanic',
                       fontSize: 16,
                     ),
                     textDirection: TextDirection.rtl,

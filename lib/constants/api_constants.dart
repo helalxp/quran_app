@@ -65,8 +65,8 @@ class ApiConstants {
     'Mohammad_al_Tablaway_128kbps' : 'محمد الطبلاوي',
     'Muhammad_AbdulKareem_128kbps' : 'محمد عبد الكريم',
     'Muhammad_Jibreel_128kbps' : 'محمد جبريل',
-    'Muhsin_Al_Qasim_192kbps' : 'عبد المحسن القاسم'
-
+    'Muhsin_Al_Qasim_192kbps' : 'عبد المحسن القاسم',
+    'mahmoud_ali_al_banna_32kbps' : 'محمود على البنا'
   };
 
   /// Audio reciter configurations
@@ -167,7 +167,7 @@ class ApiConstants {
       baseUrl: '$everyAyahBase/aziz_alili_128kbps',
       format: 'mp3',
     ),
-    'Fares_Abbad_64kbps': ReciterConfig(
+    'فارس عباد': ReciterConfig(
       baseUrl: '$everyAyahBase/Fares_Abbad_64kbps',
       format: 'mp3',
     ),
@@ -197,6 +197,10 @@ class ApiConstants {
     ),
     'عبد المحسن القاسم': ReciterConfig(
       baseUrl: '$everyAyahBase/Muhsin_Al_Qasim_192kbps',
+      format: 'mp3',
+    ),
+    'محمود على البنا': ReciterConfig(
+      baseUrl: '$everyAyahBase/mahmoud_ali_al_banna_32kbps',
       format: 'mp3',
     ),
   };

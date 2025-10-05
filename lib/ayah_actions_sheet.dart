@@ -585,8 +585,9 @@ class _AyahActionsSheetState extends State<AyahActionsSheet> with TickerProvider
       onTap: () => Navigator.of(context).pop(),
       child: DraggableScrollableSheet(
         initialChildSize: 0.6,
-        minChildSize: 0.4,
-        maxChildSize: 0.9,
+        minChildSize: 0.3,
+        maxChildSize: 0.95,
+        expand: false,
         builder: (context, scrollController) {
           return GestureDetector(
             onTap: () {},
@@ -597,18 +598,27 @@ class _AyahActionsSheetState extends State<AyahActionsSheet> with TickerProvider
               ),
               child: Column(
                 children: [
-                  // Handle bar
-                  Container(
-                    width: AppConstants.actionSheetHandleWidth,
-                    height: AppConstants.actionSheetHandleHeight,
-                    margin: const EdgeInsets.symmetric(vertical: 12),
-                    decoration: BoxDecoration(
-                      color: Theme.of(context).colorScheme.outline,
-                      borderRadius: BorderRadius.circular(AppConstants.actionSheetHandleBorderRadius),
+                  // Handle bar (centered)
+                  Center(
+                    child: Container(
+                      width: AppConstants.actionSheetHandleWidth,
+                      height: AppConstants.actionSheetHandleHeight,
+                      margin: const EdgeInsets.symmetric(vertical: 12),
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).colorScheme.outline,
+                        borderRadius: BorderRadius.circular(AppConstants.actionSheetHandleBorderRadius),
+                      ),
                     ),
                   ),
 
-                  // Header
+                  // Content in Expanded ListView
+                  Expanded(
+                    child: ListView(
+                      controller: scrollController,
+                      padding: const EdgeInsets.all(0),
+                      children: [
+
+                  // Header (now draggable as part of ListView)
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 16),
                     child: Row(
@@ -625,6 +635,7 @@ class _AyahActionsSheetState extends State<AyahActionsSheet> with TickerProvider
                             style: TextStyle(
                               fontSize: AppConstants.actionSheetTitleFontSize,
                               fontWeight: FontWeight.bold,
+                              fontFamily: 'Uthmanic',
                               color: Theme.of(context).colorScheme.onSurface,
                             ),
                             textDirection: TextDirection.rtl,
@@ -646,10 +657,10 @@ class _AyahActionsSheetState extends State<AyahActionsSheet> with TickerProvider
                   const Divider(height: AppConstants.actionSheetDividerHeight),
 
                   // Content
-                  Expanded(
-                    child: ListView(
-                      controller: scrollController,
-                      padding: const EdgeInsets.all(AppConstants.actionSheetPadding),
+                  Padding(
+                    padding: const EdgeInsets.all(AppConstants.actionSheetPadding),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         // Error display
                         if (_error != null)
@@ -689,6 +700,7 @@ class _AyahActionsSheetState extends State<AyahActionsSheet> with TickerProvider
                           Center(child: LoadingStates.circular(size: 24))
                         else if (_ayahText != null) ...[
                           Container(
+                            width: double.infinity,
                             padding: const EdgeInsets.all(AppConstants.actionSheetPadding),
                             decoration: BoxDecoration(
                               color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
@@ -702,6 +714,7 @@ class _AyahActionsSheetState extends State<AyahActionsSheet> with TickerProvider
                               style: const TextStyle(
                                 fontSize: 20,
                                 fontWeight: FontWeight.w500,
+                                fontFamily: 'Uthmanic',
                                 height: 1.8,
                               ),
                               textDirection: TextDirection.rtl,
@@ -931,11 +944,14 @@ class _AyahActionsSheetState extends State<AyahActionsSheet> with TickerProvider
                               ],
                             ),
                           ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
+                      ], // Column children
+                    ), // Column
+                  ), // Padding
+                      ], // ListView children
+                    ), // ListView
+                  ), // Expanded
+                ], // Column children
+              ), // Column
             ),
           );
         },

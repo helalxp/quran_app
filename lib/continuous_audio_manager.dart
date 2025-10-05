@@ -109,10 +109,13 @@ class ContinuousAudioManager {
   AyahMarker? _currentAyah;
   String? _currentReciter;
   final List<AyahMarker> _playQueue = [];
+  List<AyahMarker> _allAyahMarkers = []; // Store all 6236 ayah markers for cross-surah playback
   int _currentIndex = 0;
   double _playbackSpeed = 1.0;
   bool _autoPlayNext = true;
   bool _repeatSurah = false;
+  int _repeatMode = 0; // 0 = off, 1 = repeat once, 2 = repeat twice, 3 = infinite
+  int _currentRepeatCount = 0; // Track how many times current surah has been repeated
   bool _continueToNextSurah = false;
   int _consecutiveErrors = 0;
   // Use constant from AudioConstants
@@ -152,6 +155,8 @@ class ContinuousAudioManager {
   final ValueNotifier<double> playbackSpeedNotifier = ValueNotifier(1.0);
   final ValueNotifier<Duration> positionNotifier = ValueNotifier(Duration.zero);
   final ValueNotifier<Duration> durationNotifier = ValueNotifier(Duration.zero);
+  final ValueNotifier<bool> repeatSurahNotifier = ValueNotifier(false);
+  final ValueNotifier<int> repeatModeNotifier = ValueNotifier(0); // 0 = off, 1 = once, 2 = twice, 3 = infinite
 
   // Available speeds
   final List<double> _availableSpeeds = [0.5, 0.75, 1.0, 1.25, 1.5, 2.0];
@@ -317,11 +322,16 @@ class ContinuousAudioManager {
 
       // Load repeat surah
       _repeatSurah = prefs.getBool('repeat_surah') ?? false;
+      repeatSurahNotifier.value = _repeatSurah;
+
+      // Load repeat mode
+      _repeatMode = prefs.getInt('repeat_mode') ?? 0;
+      repeatModeNotifier.value = _repeatMode;
 
       // Load continue to next surah
       _continueToNextSurah = prefs.getBool('continue_to_next_surah') ?? false;
 
-      debugPrint('⚙️ Settings loaded - Speed: ${_playbackSpeed}x, AutoPlay: $_autoPlayNext, Repeat: $_repeatSurah, Continue: $_continueToNextSurah');
+      debugPrint('⚙️ Settings loaded - Speed: ${_playbackSpeed}x, AutoPlay: $_autoPlayNext, Repeat: $_repeatSurah, RepeatMode: $_repeatMode, Continue: $_continueToNextSurah');
       
     } catch (e) {
       debugPrint('⚠️ Error loading audio settings: $e');
@@ -330,6 +340,7 @@ class ContinuousAudioManager {
       _playbackSpeed = 1.0;
       _autoPlayNext = true;
       _repeatSurah = false;
+      _repeatMode = 0;
       _continueToNextSurah = false;
     }
   }
@@ -428,6 +439,7 @@ class ContinuousAudioManager {
     _isTransitioning = false;
     _completionHandled = false;
     _consecutiveErrors = 0;
+    _currentRepeatCount = 0;
     _isPreloadingNext = false;
     _preloadedIndex = null;
     _preloadedAudioUrl = null;
@@ -437,7 +449,7 @@ class ContinuousAudioManager {
     _completionTimer?.cancel();
     _completionTimer = null;
     _clearTimeouts();
-    
+
     // Clear network recovery state
     _networkRecoveryMode = false;
     _lastNetworkError = null;
@@ -840,10 +852,16 @@ class ContinuousAudioManager {
 
   // -------- Playback control API (public) --------
 
-  Future<void> startContinuousPlayback(AyahMarker startingAyah, String reciterName, List<AyahMarker> allAyahsInSurah) async {
+  Future<void> startContinuousPlayback(AyahMarker startingAyah, String reciterName, List<AyahMarker> allAyahsInSurah, {List<AyahMarker>? allAyahMarkers}) async {
     try {
       await initialize();
-      
+
+      // Store all ayah markers if provided (for continue-to-next-surah feature)
+      if (allAyahMarkers != null && allAyahMarkers.isNotEmpty) {
+        _allAyahMarkers = allAyahMarkers;
+        debugPrint('📚 Stored ${_allAyahMarkers.length} ayah markers for cross-surah playback');
+      }
+
       // Reset timeout counters for new playback session
       _currentRetryAttempt = 0;
       _clearTimeouts();
@@ -862,6 +880,7 @@ class ContinuousAudioManager {
         // _currentIndex is already set by _buildPlayQueue
         _consecutiveErrors = 0;
         _completionHandled = false;
+        _currentRepeatCount = 0; // Reset repeat counter for new surah
         playbackSpeedNotifier.value = _playbackSpeed;
 
         debugPrint('🎵 Starting playback with ${_playQueue.length} ayahs');
@@ -1091,7 +1110,20 @@ class ContinuousAudioManager {
   
   Future<void> updateRepeatSurah(bool enabled) async {
     _repeatSurah = enabled;
+    repeatSurahNotifier.value = enabled;
     debugPrint('🔁 Repeat surah updated to: $enabled');
+  }
+
+  /// Cycle through repeat modes: 0 (off) -> 1 (once) -> 2 (twice) -> 3 (infinite) -> 0
+  Future<void> cycleRepeatMode() async {
+    _repeatMode = (_repeatMode + 1) % 4;
+    repeatModeNotifier.value = _repeatMode;
+
+    // Save to preferences
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt('repeat_mode', _repeatMode);
+
+    debugPrint('🔁 Repeat mode cycled to: $_repeatMode');
   }
 
   Future<void> updateContinueToNextSurah(bool enabled) async {
@@ -1221,9 +1253,42 @@ class ContinuousAudioManager {
     } else {
       debugPrint('🏁 Reached end of surah');
 
-      // Priority 1: Repeat surah (if enabled)
-      if (_repeatSurah && _playQueue.isNotEmpty) {
-        debugPrint('🔄 Repeat surah enabled, restarting from beginning');
+      // Priority 1: Check repeat mode
+      bool shouldRepeat = false;
+
+      switch (_repeatMode) {
+        case 0: // Off - no repeat
+          shouldRepeat = false;
+          break;
+        case 1: // Repeat once
+          if (_currentRepeatCount < 1) {
+            shouldRepeat = true;
+            _currentRepeatCount++;
+            debugPrint('🔄 Repeat mode: once (count: $_currentRepeatCount/1)');
+          }
+          break;
+        case 2: // Repeat twice
+          if (_currentRepeatCount < 2) {
+            shouldRepeat = true;
+            _currentRepeatCount++;
+            debugPrint('🔄 Repeat mode: twice (count: $_currentRepeatCount/2)');
+          }
+          break;
+        case 3: // Infinite
+          shouldRepeat = true;
+          _currentRepeatCount++;
+          debugPrint('🔄 Repeat mode: infinite (count: $_currentRepeatCount/∞)');
+          break;
+      }
+
+      if (shouldRepeat && _playQueue.isNotEmpty) {
+        debugPrint('🔄 Repeating surah from beginning');
+        _currentIndex = 0;
+        await _playCurrentAyah();
+      }
+      // Also check legacy _repeatSurah for backward compatibility
+      else if (_repeatSurah && _playQueue.isNotEmpty) {
+        debugPrint('🔄 Repeat surah enabled (legacy), restarting from beginning');
         _currentIndex = 0;
         await _playCurrentAyah();
       }
@@ -1233,18 +1298,38 @@ class ContinuousAudioManager {
         final nextSurah = currentSurah >= 114 ? 1 : currentSurah + 1;
         debugPrint('➡️ Continue to next surah enabled, moving from surah $currentSurah to $nextSurah');
 
-        // TODO: Need to implement loading next surah's ayahs
-        // For now, we'll need to rebuild the queue with the next surah's ayahs
-        // This requires access to all ayah markers which we don't have here yet
-        // We need to either:
-        // 1. Store all ayah markers in this manager
-        // 2. Add a callback to viewer screen to reload next surah
-        // 3. Fetch ayah data from a service
+        // Check if we have all ayah markers available
+        if (_allAyahMarkers.isEmpty) {
+          debugPrint('⚠️ No ayah markers available, cannot continue to next surah');
+          await stop();
+          return;
+        }
 
-        // Placeholder: Stop for now until we implement proper ayah loading
-        debugPrint('⚠️ Continue to next surah logic needs implementation');
-        debugPrint('⚠️ Would continue to surah $nextSurah');
-        await stop();
+        // Get all ayahs for the next surah
+        final nextSurahAyahs = _allAyahMarkers
+            .where((ayah) => ayah.surah == nextSurah)
+            .toList()
+          ..sort((a, b) => a.ayah.compareTo(b.ayah));
+
+        if (nextSurahAyahs.isEmpty) {
+          debugPrint('⚠️ No ayahs found for surah $nextSurah');
+          await stop();
+          return;
+        }
+
+        debugPrint('✅ Found ${nextSurahAyahs.length} ayahs for surah $nextSurah');
+
+        // Rebuild play queue with next surah's ayahs
+        _playQueue.clear();
+        _playQueue.addAll(nextSurahAyahs);
+        _currentIndex = 0;
+        _currentRepeatCount = 0; // Reset repeat counter for new surah
+
+        debugPrint('🎵 Queue rebuilt with ${_playQueue.length} ayahs from surah $nextSurah');
+        debugPrint('🎵 Starting surah $nextSurah from ayah 1');
+
+        // Play the first ayah of the next surah
+        await _playCurrentAyah();
       }
       // Priority 3: Stop playback
       else {
