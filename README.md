@@ -173,18 +173,45 @@ A comprehensive Islamic companion app featuring Quran reading, prayer times, Qib
   - Crash reporting
   - Performance monitoring
 
-- **Events Tracked:**
-  - `app_opened` - App launches
-  - `page_viewed` - Quran page navigation
-  - `audio_started` - Recitation playback
-  - `audio_paused` - Playback paused
-  - `audio_completed` - Recitation finished
-  - `bookmark_added` - Bookmark created
-  - `bookmark_removed` - Bookmark deleted
-  - `settings_opened` - Settings accessed
-  - `theme_changed` - Theme switched
-  - `prayer_time_set` - Prayer configured
-  - `khatma_created` - Khatma plan started
+- **Comprehensive Events Tracked:**
+  - **App & Navigation:**
+    - `app_opened` - App launches
+    - `screen_opened` - Screen navigation tracking
+    - `feature_selected` - Feature hub interactions
+
+  - **Quran Reading:**
+    - `page_viewed` - Quran page navigation with surah context
+    - `surah_opened` - Surah selection
+    - `bookmark_added` / `bookmark_removed` - Bookmark management
+
+  - **Audio Playback:**
+    - `audio_started` / `audio_paused` / `audio_completed` - Playback lifecycle
+    - `playlist_played` - Surah playlist playback
+    - `reciter_changed` - Reciter selection
+    - `autoplay_changed` / `repeat_mode_changed` - Playback settings
+
+  - **Downloads:**
+    - `audio_download_started` / `completed` / `failed` / `deleted` - Download tracking
+
+  - **Prayer Times:**
+    - `prayer_times_viewed` - Prayer times screen opened
+    - `location_changed` - Location selection
+    - `notification_settings_changed` / `azan_settings_changed` - Prayer configuration
+
+  - **Qibla:**
+    - `qibla_opened` - Qibla compass opened
+    - `qibla_direction_found` - Direction calculated
+
+  - **Tasbih Counter:**
+    - `tasbih_increment` / `tasbih_reset` - Counter interactions
+    - `tasbih_milestone` - Milestone achievements (33, 100)
+
+  - **Khatma Management:**
+    - `khatma_created` / `updated` / `completed` / `deleted` - Khatma lifecycle
+
+  - **Settings:**
+    - `settings_opened` - Settings accessed
+    - `theme_changed` - Theme/appearance changes
 
 ---
 

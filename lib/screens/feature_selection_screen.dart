@@ -4,6 +4,7 @@ import '../utils/haptic_utils.dart';
 import '../utils/animation_utils.dart';
 import '../memorization_manager.dart';
 import '../services/navigation_service.dart';
+import '../services/analytics_service.dart';
 import 'prayer_times_screen.dart';
 import 'qibla_screen.dart';
 import 'tasbih_screen.dart';
@@ -80,6 +81,7 @@ class _FeatureSelectionScreenState extends State<FeatureSelectionScreen> {
                               size: 100,
                               onPressed: () async {
                                 HapticUtils.selectionClick();
+                                AnalyticsService.logFeatureSelected('prayer_times');
                                 await NavigationService.saveLastScreen(NavigationService.routePrayerTimes);
                                 if (!mounted) return;
                                 Navigator.of(context).push(
@@ -96,6 +98,7 @@ class _FeatureSelectionScreenState extends State<FeatureSelectionScreen> {
                               size: 100,
                               onPressed: () async {
                                 HapticUtils.selectionClick();
+                                AnalyticsService.logFeatureSelected('qibla');
                                 await NavigationService.saveLastScreen(NavigationService.routeQibla);
                                 if (!mounted) return;
                                 Navigator.of(context).push(
@@ -112,6 +115,7 @@ class _FeatureSelectionScreenState extends State<FeatureSelectionScreen> {
                               size: 100,
                               onPressed: () async {
                                 HapticUtils.selectionClick();
+                                AnalyticsService.logFeatureSelected('mushaf');
                                 await NavigationService.saveLastScreen(NavigationService.routeViewer);
                                 if (!mounted) return;
                                 Navigator.pop(context); // Go back to Mushaf
@@ -124,6 +128,7 @@ class _FeatureSelectionScreenState extends State<FeatureSelectionScreen> {
                               size: 100,
                               onPressed: () {
                                 HapticUtils.selectionClick();
+                                AnalyticsService.logFeatureSelected('khatma');
                                 showDialog(
                                   context: context,
                                   builder: (context) => AlertDialog(
@@ -167,6 +172,7 @@ class _FeatureSelectionScreenState extends State<FeatureSelectionScreen> {
                               size: 100,
                               onPressed: () async {
                                 HapticUtils.selectionClick();
+                                AnalyticsService.logFeatureSelected('tasbih');
                                 await NavigationService.saveLastScreen(NavigationService.routeTasbih);
                                 if (!mounted) return;
                                 Navigator.of(context).push(
@@ -183,6 +189,7 @@ class _FeatureSelectionScreenState extends State<FeatureSelectionScreen> {
                               size: 100,
                               onPressed: () async {
                                 HapticUtils.selectionClick();
+                                AnalyticsService.logFeatureSelected('audio');
                                 await NavigationService.saveLastScreen(NavigationService.routeReciters);
                                 if (!mounted) return;
                                 Navigator.of(context).push(
@@ -199,6 +206,7 @@ class _FeatureSelectionScreenState extends State<FeatureSelectionScreen> {
                               size: 100,
                               onPressed: () {
                                 HapticUtils.selectionClick();
+                                AnalyticsService.logFeatureSelected('adhkar');
                                 showDialog(
                                   context: context,
                                   builder: (context) => AlertDialog(
@@ -242,6 +250,7 @@ class _FeatureSelectionScreenState extends State<FeatureSelectionScreen> {
                               size: 100,
                               onPressed: () {
                                 HapticUtils.selectionClick();
+                                AnalyticsService.logFeatureSelected('duaa');
                                 showDialog(
                                   context: context,
                                   builder: (context) => AlertDialog(
@@ -316,6 +325,7 @@ class _FeatureSelectionScreenState extends State<FeatureSelectionScreen> {
                               size: buttonSize,
                               onPressed: () async {
                                 HapticUtils.selectionClick();
+                                AnalyticsService.logFeatureSelected('prayer_times');
                                 await NavigationService.saveLastScreen(NavigationService.routePrayerTimes);
                                 if (!mounted) return;
                                 Navigator.of(context).push(
@@ -331,6 +341,7 @@ class _FeatureSelectionScreenState extends State<FeatureSelectionScreen> {
                               size: buttonSize,
                               onPressed: () async {
                                 HapticUtils.selectionClick();
+                                AnalyticsService.logFeatureSelected('qibla');
                                 await NavigationService.saveLastScreen(NavigationService.routeQibla);
                                 if (!mounted) return;
                                 Navigator.of(context).push(
@@ -346,6 +357,7 @@ class _FeatureSelectionScreenState extends State<FeatureSelectionScreen> {
                               size: buttonSize,
                               onPressed: () async {
                                 HapticUtils.selectionClick();
+                                AnalyticsService.logFeatureSelected('mushaf');
                                 await NavigationService.saveLastScreen(NavigationService.routeViewer);
                                 if (!mounted) return;
                                 Navigator.pop(context);
@@ -357,6 +369,7 @@ class _FeatureSelectionScreenState extends State<FeatureSelectionScreen> {
                               size: buttonSize,
                               onPressed: () {
                                 HapticUtils.selectionClick();
+                                AnalyticsService.logFeatureSelected('khatma');
                                 showDialog(
                                   context: context,
                                   builder: (context) => AlertDialog(
@@ -399,6 +412,7 @@ class _FeatureSelectionScreenState extends State<FeatureSelectionScreen> {
                               size: buttonSize,
                               onPressed: () async {
                                 HapticUtils.selectionClick();
+                                AnalyticsService.logFeatureSelected('tasbih');
                                 await NavigationService.saveLastScreen(NavigationService.routeTasbih);
                                 if (!mounted) return;
                                 Navigator.of(context).push(
@@ -414,6 +428,7 @@ class _FeatureSelectionScreenState extends State<FeatureSelectionScreen> {
                               size: buttonSize,
                               onPressed: () async {
                                 HapticUtils.selectionClick();
+                                AnalyticsService.logFeatureSelected('audio');
                                 await NavigationService.saveLastScreen(NavigationService.routeReciters);
                                 if (!mounted) return;
                                 Navigator.of(context).push(
@@ -429,6 +444,7 @@ class _FeatureSelectionScreenState extends State<FeatureSelectionScreen> {
                               size: buttonSize,
                               onPressed: () {
                                 HapticUtils.selectionClick();
+                                AnalyticsService.logFeatureSelected('adhkar');
                                 showDialog(
                                   context: context,
                                   builder: (context) => AlertDialog(
@@ -471,6 +487,7 @@ class _FeatureSelectionScreenState extends State<FeatureSelectionScreen> {
                               size: buttonSize,
                               onPressed: () {
                                 HapticUtils.selectionClick();
+                                AnalyticsService.logFeatureSelected('duaa');
                                 showDialog(
                                   context: context,
                                   builder: (context) => AlertDialog(

@@ -8,6 +8,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'constants/api_constants.dart';
 import 'constants/quran_data.dart';
 import 'audio_cache_manager.dart';
+import 'services/analytics_service.dart';
 
 /// Semaphore for controlling concurrent operations
 class Semaphore {
@@ -371,6 +372,14 @@ class AudioDownloadManager with ChangeNotifier {
 
       debugPrint('📥 Starting download: ${task.type.name} ${task.number} (${task.totalAyahs} ayahs)');
 
+      // Log analytics for download started
+      AnalyticsService.logAudioDownloadStarted(
+        task.type.name,
+        task.number,
+        task.reciter,
+        task.totalAyahs,
+      );
+
       // Process downloads in concurrent batches for speed
       final results = await _downloadAyahsConcurrently(task, config);
       final successful = results['successful'] as int;
@@ -380,22 +389,55 @@ class AudioDownloadManager with ChangeNotifier {
       if (task.status != DownloadStatus.cancelled) {
         if (failed == 0) {
           task.status = DownloadStatus.completed;
+          task.completionTime = DateTime.now();
           debugPrint('✅ Download completed: ${task.type.name} ${task.number} ($successful/${task.totalAyahs} ayahs)');
+
+          // Log analytics for successful download
+          AnalyticsService.logAudioDownloadCompleted(
+            task.type.name,
+            task.number,
+            task.reciter,
+            successful,
+          );
         } else if (successful > 0) {
           task.status = DownloadStatus.completed;
+          task.completionTime = DateTime.now();
           debugPrint('⚠️ Download completed with errors: ${task.type.name} ${task.number} ($successful/${task.totalAyahs} successful, $failed failed)');
+
+          // Log analytics for partial download
+          AnalyticsService.logAudioDownloadCompleted(
+            task.type.name,
+            task.number,
+            task.reciter,
+            successful,
+          );
         } else {
           task.status = DownloadStatus.failed;
           task.error = 'All downloads failed';
           debugPrint('❌ Download failed: ${task.type.name} ${task.number}');
+
+          // Log analytics for failed download
+          AnalyticsService.logAudioDownloadFailed(
+            task.type.name,
+            task.number,
+            task.reciter,
+            'All downloads failed',
+          );
         }
-        task.completionTime = DateTime.now();
       }
 
     } catch (e) {
       task.status = DownloadStatus.failed;
       task.error = e.toString();
       debugPrint('❌ Download error for ${task.type.name} ${task.number}: $e');
+
+      // Log analytics for failed download
+      AnalyticsService.logAudioDownloadFailed(
+        task.type.name,
+        task.number,
+        task.reciter,
+        e.toString(),
+      );
 
       // Stop download on critical errors like network issues
       if (e.toString().contains('Failed host lookup') || e.toString().contains('SocketException')) {
@@ -465,6 +507,14 @@ class AudioDownloadManager with ChangeNotifier {
     await _saveDownloadTasks();
 
     debugPrint('🗑️ Deleted download: ${task.type.name} ${task.number} - ${task.reciter}');
+
+    // Log analytics for deleted download
+    AnalyticsService.logAudioDownloadDeleted(
+      task.type.name,
+      task.number,
+      task.reciter,
+    );
+
     notifyListeners();
   }
 

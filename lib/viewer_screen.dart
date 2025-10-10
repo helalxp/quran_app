@@ -1040,6 +1040,8 @@ class _ViewerScreenState extends State<ViewerScreen> with TickerProviderStateMix
                   ),
                   onTap: () {
                     HapticUtils.selection(); // Haptic feedback for selection
+                    // Log surah opened analytics
+                    AnalyticsService.logSurahOpened(surah.nameArabic, surah.number);
                     Navigator.of(context).pop();
                     _jumpToPage(surah.pageNumber);
                   },

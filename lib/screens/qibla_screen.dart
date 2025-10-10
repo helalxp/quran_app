@@ -4,6 +4,7 @@ import 'dart:math' as math;
 import 'package:flutter_qiblah/flutter_qiblah.dart';
 import 'package:geolocator/geolocator.dart';
 import '../utils/haptic_utils.dart';
+import '../services/analytics_service.dart';
 
 class QiblaScreen extends StatefulWidget {
   const QiblaScreen({super.key});
@@ -18,6 +19,7 @@ class _QiblaScreenState extends State<QiblaScreen> {
   double _distanceToMakkah = 0;
   String? _errorMessage;
   bool _wasAligned = false;
+  bool _directionLogged = false;
   Timer? _alignmentVibrationTimer;
 
   final _deviceSupport = FlutterQiblah.androidDeviceSensorSupport();
@@ -26,6 +28,9 @@ class _QiblaScreenState extends State<QiblaScreen> {
   void initState() {
     super.initState();
     _getCurrentLocation();
+
+    // Log screen opened
+    AnalyticsService.logQiblaOpened();
   }
 
   @override
@@ -211,6 +216,12 @@ class _QiblaScreenState extends State<QiblaScreen> {
         final qiblahDirection = snapshot.data;
         if (qiblahDirection == null) {
           return const Center(child: CircularProgressIndicator());
+        }
+
+        // Log direction found (once)
+        if (!_directionLogged) {
+          _directionLogged = true;
+          AnalyticsService.logQiblaDirectionFound(qiblahDirection.offset);
         }
 
         // The Kaaba is positioned at offset degrees on the rotating compass

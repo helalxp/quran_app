@@ -234,6 +234,9 @@ class _SettingsScreenState extends State<SettingsScreen> with TickerProviderStat
       final audioManager = ContinuousAudioManager();
       await audioManager.updateReciter(reciter);
 
+      // Log analytics for reciter change
+      AnalyticsService.logReciterChanged(reciter);
+
     } catch (e) {
       debugPrint('Error saving reciter: $e');
     }
@@ -280,6 +283,9 @@ class _SettingsScreenState extends State<SettingsScreen> with TickerProviderStat
       // Update audio manager with new auto-play setting
       final audioManager = ContinuousAudioManager();
       await audioManager.updateAutoPlayNext(value);
+
+      // Log analytics for autoplay change
+      AnalyticsService.logAutoPlayChanged(value);
     } catch (e) {
       debugPrint('Error saving auto play setting: $e');
     }
@@ -303,6 +309,9 @@ class _SettingsScreenState extends State<SettingsScreen> with TickerProviderStat
       // Update audio manager with repeat setting
       final audioManager = ContinuousAudioManager();
       await audioManager.updateRepeatSurah(value);
+
+      // Log analytics for repeat mode change
+      AnalyticsService.logRepeatModeChanged(value ? 'repeat_surah' : 'off');
     } catch (e) {
       debugPrint('Error saving repeat surah setting: $e');
     }

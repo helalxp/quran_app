@@ -10,6 +10,7 @@ import '../models/ayah_marker.dart';
 import '../continuous_audio_manager.dart';
 import '../audio_download_manager.dart' show AudioDownloadManager, DownloadType;
 
+import '../services/analytics_service.dart';
 class PlaylistScreen extends StatefulWidget {
   const PlaylistScreen({super.key});
 
@@ -1127,6 +1128,13 @@ class _RecitersTabState extends State<_RecitersTab> {
         surahAyahs,
       );
 
+      // Log analytics for playlist played
+      AnalyticsService.logPlaylistPlayed(
+        'surah_${surah.number}',
+        reciterName,
+        surahAyahs.length,
+      );
+
     } catch (e) {
       if (kDebugMode) print('Error playing surah: $e');
       if (!context.mounted) return;
@@ -1920,6 +1928,7 @@ class _PlaylistsTabState extends State<_PlaylistsTab> {
         reciter,
         playlistQueue,
       );
+// Log analytics for playlist played      AnalyticsService.logPlaylistPlayed(        'surah_${surah.number}',        reciterName,        surahAyahs.length,      );
 
     } catch (e) {
       debugPrint('Error playing playlist: $e');

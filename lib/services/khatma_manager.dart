@@ -6,6 +6,7 @@ import '../models/khatma.dart';
 import '../constants/khatma_constants.dart';
 import '../utils/date_utils_khatma.dart';
 import 'khatma_notification_service.dart';
+import 'analytics_service.dart';
 
 class KhatmaManager {
   static final KhatmaManager _instance = KhatmaManager._internal();
@@ -231,7 +232,22 @@ class KhatmaManager {
         // CRITICAL: Update global allPagesRead using copyWith
         final updatedKhatma = khatma.copyWith(allPagesRead: updatedGlobalPages);
         final index = _khatmas.indexOf(khatma);
+
+        // Check if khatma was just completed
+        final wasCompleted = khatma.isCompleted;
         _khatmas[index] = updatedKhatma;
+        final nowCompleted = updatedKhatma.isCompleted;
+
+        // Log analytics for completion
+        if (!wasCompleted && nowCompleted) {
+          final totalDays = now.difference(khatma.createdAt).inDays + 1;
+          AnalyticsService.logKhatmaCompleted(khatma.name, totalDays);
+        }
+
+        // Log analytics for progress update
+        if (!nowCompleted) {
+          AnalyticsService.logKhatmaUpdated(khatma.name, updatedKhatma.pagesRead);
+        }
 
         anyUpdated = true;
       }

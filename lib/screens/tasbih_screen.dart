@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:just_audio/just_audio.dart';
 import '../utils/haptic_utils.dart';
+import '../services/analytics_service.dart';
 
 class TasbihScreen extends StatefulWidget {
   const TasbihScreen({super.key});
@@ -55,6 +56,9 @@ class _TasbihScreenState extends State<TasbihScreen> with SingleTickerProviderSt
     _customPageController = PageController();
     _tabController.addListener(_onTabChanged);
     _loadProgress();
+
+    // Log screen opened
+    AnalyticsService.logScreenOpened('tasbih');
   }
 
   Future<void> _loadProgress() async {
@@ -137,6 +141,13 @@ class _TasbihScreenState extends State<TasbihScreen> with SingleTickerProviderSt
     setState(() {
       _afterPrayerCount++;
 
+      // Log milestone events
+      if (_afterPrayerCount == 33 || _afterPrayerCount == 66 || _afterPrayerCount == 99) {
+        AnalyticsService.logTasbihMilestone('after_prayer', _afterPrayerCount);
+      } else if (_afterPrayerCount % 100 == 0) {
+        AnalyticsService.logTasbihMilestone('after_prayer', _afterPrayerCount);
+      }
+
       // Determine word index based on count
       final countMod100 = _afterPrayerCount % 100;
       final previousCountMod100 = previousCount % 100;
@@ -198,6 +209,11 @@ class _TasbihScreenState extends State<TasbihScreen> with SingleTickerProviderSt
     setState(() {
       _customCount++;
 
+      // Log milestone events
+      if (_customCount % 100 == 0 || _customCount % 1000 == 0) {
+        AnalyticsService.logTasbihMilestone('custom', _customCount);
+      }
+
       // Play sound at every 100
       if (_customCount % 100 == 0) {
         _playSound();
@@ -233,6 +249,7 @@ class _TasbihScreenState extends State<TasbihScreen> with SingleTickerProviderSt
           ),
           ElevatedButton(
             onPressed: () {
+              final mode = _tabController.index == 0 ? 'after_prayer' : 'custom';
               setState(() {
                 if (_tabController.index == 0) {
                   _afterPrayerCount = 0;
@@ -243,6 +260,7 @@ class _TasbihScreenState extends State<TasbihScreen> with SingleTickerProviderSt
                 }
               });
               _saveProgress();
+              AnalyticsService.logTasbihReset(mode);
               Navigator.pop(context);
             },
             child: const Text('إعادة تعيين'),

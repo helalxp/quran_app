@@ -200,4 +200,145 @@ class AnalyticsService {
       debugPrint('Failed to set user ID: $e');
     }
   }
+
+  // Khatma events
+  static Future<void> logKhatmaCreated(String name, int pagesPerDay, int duration) async {
+    await _logEvent('khatma_created', {
+      'khatma_name': name,
+      'pages_per_day': pagesPerDay,
+      'duration_days': duration,
+    });
+  }
+
+  static Future<void> logKhatmaUpdated(String name, int pagesRead) async {
+    await _logEvent('khatma_updated', {
+      'khatma_name': name,
+      'pages_read': pagesRead,
+    });
+  }
+
+  static Future<void> logKhatmaCompleted(String name, int totalDays) async {
+    await _logEvent('khatma_completed', {
+      'khatma_name': name,
+      'total_days': totalDays,
+    });
+  }
+
+  static Future<void> logKhatmaDeleted(String name, int progressPercent) async {
+    await _logEvent('khatma_deleted', {
+      'khatma_name': name,
+      'progress_percent': progressPercent,
+    });
+  }
+
+  // Tasbih events
+  static Future<void> logTasbihIncrement(String mode, int count) async {
+    await _logEvent('tasbih_increment', {
+      'mode': mode, // 'after_prayer', 'custom'
+      'count': count,
+    });
+  }
+
+  static Future<void> logTasbihReset(String mode) async {
+    await _logEvent('tasbih_reset', {
+      'mode': mode,
+    });
+  }
+
+  static Future<void> logTasbihMilestone(String mode, int milestone) async {
+    await _logEvent('tasbih_milestone', {
+      'mode': mode,
+      'milestone': milestone, // 33, 100, 1000, etc.
+    });
+  }
+
+  // Qibla events
+  static Future<void> logQiblaOpened() async {
+    await _logEvent('qibla_opened');
+  }
+
+  static Future<void> logQiblaDirectionFound(double direction) async {
+    await _logEvent('qibla_direction_found', {
+      'direction_degrees': direction.toInt(),
+    });
+  }
+
+  // Feature selection events
+  static Future<void> logFeatureSelected(String featureName) async {
+    await _logEvent('feature_selected', {
+      'feature_name': featureName,
+    });
+  }
+
+  // Download events
+  static Future<void> logAudioDownloadStarted(String reciter, String surahName) async {
+    await _logEvent('audio_download_started', {
+      'reciter': reciter,
+      'surah_name': surahName,
+    });
+  }
+
+  static Future<void> logAudioDownloadCompleted(String reciter, String surahName, double sizeMB) async {
+    await _logEvent('audio_download_completed', {
+      'reciter': reciter,
+      'surah_name': surahName,
+      'size_mb': sizeMB.toInt(),
+    });
+  }
+
+  static Future<void> logAudioDownloadFailed(String reciter, String surahName, String error) async {
+    await _logEvent('audio_download_failed', {
+      'reciter': reciter,
+      'surah_name': surahName,
+      'error': error,
+    });
+  }
+
+  static Future<void> logAudioDeleted(String reciter, String surahName) async {
+    await _logEvent('audio_deleted', {
+      'reciter': reciter,
+      'surah_name': surahName,
+    });
+  }
+
+  // Playlist events
+  static Future<void> logPlaylistCreated(int surahCount) async {
+    await _logEvent('playlist_created', {
+      'surah_count': surahCount,
+    });
+  }
+
+  static Future<void> logPlaylistPlayed(int surahCount, String reciter) async {
+    await _logEvent('playlist_played', {
+      'surah_count': surahCount,
+      'reciter': reciter,
+    });
+  }
+
+  // Navigation events
+  static Future<void> logScreenOpened(String screenName) async {
+    await _logEvent('screen_opened', {
+      'screen_name': screenName,
+    });
+  }
+
+  // Settings events
+  static Future<void> logReciterChanged(String oldReciter, String newReciter) async {
+    await _logEvent('reciter_changed', {
+      'old_reciter': oldReciter,
+      'new_reciter': newReciter,
+    });
+  }
+
+  static Future<void> logAutoPlayChanged(bool enabled) async {
+    await _logEvent('auto_play_changed', {
+      'enabled': enabled,
+    });
+  }
+
+  static Future<void> logRepeatModeChanged(String mode) async {
+    await _logEvent('repeat_mode_changed', {
+      'mode': mode, // 'none', 'one', 'all'
+    });
+  }
 }

@@ -4,6 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../models/khatma.dart';
 import '../utils/haptic_utils.dart';
 import '../services/khatma_manager.dart';
+import '../services/analytics_service.dart';
 import 'khatma_detail_screen.dart';
 
 class KhatmaScreen extends StatefulWidget {
@@ -115,6 +116,17 @@ class _KhatmaScreenState extends State<KhatmaScreen> {
             khatmaManager.updateKhatma(khatma.id, khatma);
           } else {
             khatmaManager.addKhatma(khatma);
+            // Log analytics for new khatma creation
+            final duration = khatma.mode == KhatmaMode.endDate && khatma.endDate != null
+                ? khatma.endDate!.difference(DateTime.now()).inDays
+                : khatma.mode == KhatmaMode.pagesPerDay && khatma.pagesPerDay != null
+                    ? (khatma.totalPages / khatma.pagesPerDay!).ceil()
+                    : 0;
+            AnalyticsService.logKhatmaCreated(
+              khatma.name,
+              khatma.pagesPerDay ?? 0,
+              duration,
+            );
           }
         },
       ),
@@ -266,6 +278,10 @@ class _KhatmaScreenState extends State<KhatmaScreen> {
               _khatmas.removeAt(index);
             });
             await _saveKhatmas();
+
+            // Log analytics for deletion
+            final progress = (deletedKhatma.pagesRead / deletedKhatma.totalPages * 100).round();
+            await AnalyticsService.logKhatmaDeleted(deletedKhatma.name, progress);
 
             // Cancel notifications
             final khatmaManager = KhatmaManager();
