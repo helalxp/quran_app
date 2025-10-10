@@ -14,9 +14,29 @@ import 'services/prayer_times_service.dart';
 import 'services/azan_service.dart';
 import 'services/notification_service.dart';
 import 'services/alarm_scheduler_service.dart';
+import 'services/native_azan_service.dart';
+import 'package:in_app_update/in_app_update.dart';
+import 'dart:ui';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Setup global error boundary
+  FlutterError.onError = (FlutterErrorDetails details) {
+    FlutterError.presentError(details);
+    if (kDebugMode) {
+      debugPrint('❌ Flutter Error: ${details.exception}');
+      debugPrint('Stack trace: ${details.stack}');
+    }
+  };
+
+  PlatformDispatcher.instance.onError = (error, stack) {
+    if (kDebugMode) {
+      debugPrint('❌ Platform Error: $error');
+      debugPrint('Stack trace: $stack');
+    }
+    return true;
+  };
 
   // Check if app was launched for background alarm rescheduling
   // This happens after device boot or at midnight
@@ -105,6 +125,24 @@ class _QuranAppState extends State<QuranApp> with WidgetsBindingObserver {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+
+    // Check for app updates on Play Store
+    _checkForUpdate();
+  }
+
+  /// Check for app updates and prompt user if available
+  Future<void> _checkForUpdate() async {
+    try {
+      if (!kIsWeb) {
+        final info = await InAppUpdate.checkForUpdate();
+        if (info.updateAvailability == UpdateAvailability.updateAvailable) {
+          await InAppUpdate.startFlexibleUpdate();
+          if (kDebugMode) debugPrint('📱 Flexible update started');
+        }
+      }
+    } catch (e) {
+      if (kDebugMode) debugPrint('❌ Update check failed: $e');
+    }
   }
 
   @override
@@ -116,12 +154,8 @@ class _QuranAppState extends State<QuranApp> with WidgetsBindingObserver {
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) async {
     if (state == AppLifecycleState.resumed) {
-      // Stop azan when app comes to foreground
-      if (AzanService.instance.isPlaying) {
-        await AnalyticsService.logAzanStopped('app_opened');
-        AzanService.instance.stopAzan();
-        if (kDebugMode) debugPrint('🕌 Azan stopped: App resumed');
-      }
+      // Azan stop on app resume is handled natively in MainActivity.onResume()
+      if (kDebugMode) debugPrint('🕌 App resumed - native azan will be stopped if playing');
     }
   }
 
@@ -131,16 +165,22 @@ class _QuranAppState extends State<QuranApp> with WidgetsBindingObserver {
       create: (context) => ThemeManager(),
       child: Consumer<ThemeManager>(
         builder: (context, themeManager, child) {
-          return MaterialApp(
-            title: 'Quran by Helal',
-            debugShowCheckedModeBanner: false,
-            themeMode: themeManager.themeMode,
-            theme: themeManager.getLightTheme(themeManager.currentTheme),
-            darkTheme: themeManager.getDarkTheme(themeManager.currentTheme),
-            navigatorObservers: AnalyticsService.observer != null
-                ? [AnalyticsService.observer!]
-                : [],
-            home: const ViewerScreen(),
+          return Listener(
+            onPointerDown: (_) {
+              // Stop azan when user taps anywhere in the app
+              NativeAzanService.stopAzanFromFlutter();
+            },
+            child: MaterialApp(
+              title: 'Quran by Helal',
+              debugShowCheckedModeBanner: false,
+              themeMode: themeManager.themeMode,
+              theme: themeManager.getLightTheme(themeManager.currentTheme),
+              darkTheme: themeManager.getDarkTheme(themeManager.currentTheme),
+              navigatorObservers: AnalyticsService.observer != null
+                  ? [AnalyticsService.observer!]
+                  : [],
+              home: const ViewerScreen(),
+            ),
           );
         },
       ),

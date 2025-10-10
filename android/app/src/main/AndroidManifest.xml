@@ -106,6 +106,17 @@
             </intent-filter>
         </receiver>
 
+        <!-- Khatma broadcast receiver (sends daily reading reminders) -->
+        <receiver
+            android:name=".KhatmaBroadcastReceiver"
+            android:enabled="true"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.helal.quran.ACTION_KHATMA_REMINDER" />
+                <action android:name="com.helal.quran.ACTION_PROGRESS_REMINDER" />
+            </intent-filter>
+        </receiver>
+
         <!-- Don't delete the meta-data below.
              This is used by the Flutter tool to generate GeneratedPluginRegistrant.java -->
         <meta-data

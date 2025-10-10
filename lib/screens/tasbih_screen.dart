@@ -81,13 +81,15 @@ class _TasbihScreenState extends State<TasbihScreen> with SingleTickerProviderSt
         _tabController.index = currentTab;
       });
 
-      // Jump to correct pages after setState
-      if (_afterPrayerWordIndex > 0) {
-        _afterPrayerPageController.jumpToPage(_afterPrayerWordIndex);
-      }
-      if (_customWordIndex > 0 && _customWords.isNotEmpty) {
-        _customPageController.jumpToPage(_customWordIndex);
-      }
+      // Jump to correct pages after first frame (when PageControllers are attached)
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (_afterPrayerWordIndex > 0 && _afterPrayerPageController.hasClients) {
+          _afterPrayerPageController.jumpToPage(_afterPrayerWordIndex);
+        }
+        if (_customWordIndex > 0 && _customWords.isNotEmpty && _customPageController.hasClients) {
+          _customPageController.jumpToPage(_customWordIndex);
+        }
+      });
     }
   }
 

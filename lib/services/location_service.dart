@@ -45,10 +45,10 @@ class LocationService {
     }
   }
 
-  // Get current device location (Fix #7 & #10: Better error handling with connectivity check)
+  // Get current device location
   Future<LocationData?> getCurrentLocation() async {
     try {
-      // Fix #10: Check internet connectivity first
+     
       final connectivityResult = await Connectivity().checkConnectivity();
       if (connectivityResult == ConnectivityResult.none) {
         if (kDebugMode) debugPrint('❌ Location: No internet connection');
@@ -150,7 +150,7 @@ class LocationService {
     }
   }
 
-  // Get saved location data (Fix #11: Auto-detect on first launch)
+  // Get saved location data
   Future<LocationData?> getSavedLocationData() async {
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -160,7 +160,7 @@ class LocationService {
         return LocationData.fromJson(locationDataString);
       }
 
-      // Fix #11: On first launch, try to auto-detect location
+     
       if (kDebugMode) debugPrint('🌍 First launch: Attempting to auto-detect location');
       try {
         final autoDetectedLocation = await getCurrentLocation();
@@ -260,13 +260,13 @@ class LocationData {
   }
 }
 
-// Custom exception for location errors (Fix #7 & #10)
+// Custom exception for location errors
 enum LocationErrorType {
   permissionDenied,
   permissionDeniedForever,
   serviceDisabled,
   timeout,
-  noInternet, // Fix #10
+  noInternet,
   unknown,
 }
 

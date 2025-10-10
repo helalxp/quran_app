@@ -125,16 +125,16 @@ class PrayerTimesService {
     }
   }
 
-  // Get current prayer times with proper timezone handling (Fix #15)
+  // Get current prayer times with proper timezone handling
   PrayerTimes getCurrentPrayerTimes() {
     if (_coordinates == null || _calculationParams == null) {
       // Return default prayer times
       final defaultCoords = Coordinates(_defaultLatitude, _defaultLongitude);
       final defaultParams = CalculationMethod.muslim_world_league.getParameters();
-      final today = DateTime.now(); // Fix #15: Uses local timezone automatically
+      final today = DateTime.now();
       final dateComponents = DateComponents(today.year, today.month, today.day);
 
-      // Fix #15: Log timezone information for debugging
+     
       if (kDebugMode) {
         final timezoneOffset = today.timeZoneOffset;
         debugPrint('🕰️ Prayer times calculated for local timezone: UTC${timezoneOffset.isNegative ? '' : '+'}${timezoneOffset.inHours}');
@@ -143,10 +143,10 @@ class PrayerTimesService {
       return PrayerTimes(defaultCoords, dateComponents, defaultParams);
     }
 
-    final today = DateTime.now(); // Fix #15: Uses local timezone automatically
+    final today = DateTime.now();
     final dateComponents = DateComponents(today.year, today.month, today.day);
 
-    // Fix #15: Log timezone information for debugging (first calculation only)
+   
     if (kDebugMode && _coordinates != null) {
       final timezoneOffset = today.timeZoneOffset;
       debugPrint('🕰️ Prayer times for ${_currentLocationData?.name ?? 'Unknown'} in timezone UTC${timezoneOffset.isNegative ? '' : '+'}${timezoneOffset.inHours}');
@@ -155,9 +155,9 @@ class PrayerTimesService {
     return PrayerTimes(_coordinates!, dateComponents, _calculationParams!);
   }
 
-  // Get prayer times for specific date (Fix #15: Explicit timezone handling)
+  // Get prayer times for specific date
   PrayerTimes getPrayerTimesForDate(DateTime date) {
-    // Fix #15: Ensure date is in local timezone
+   
     final localDate = date.isUtc ? date.toLocal() : date;
 
     if (_coordinates == null || _calculationParams == null) {
@@ -235,7 +235,7 @@ class PrayerTimesService {
   }
 
 
-  // Update location manually (Fix #15: Log timezone info)
+  // Update location manually
   Future<void> updateLocation(LocationData locationData) async {
     _currentLocationData = locationData;
     _coordinates = Coordinates(locationData.latitude, locationData.longitude);

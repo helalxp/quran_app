@@ -20,9 +20,9 @@ class _PrayerTimesScreenState extends State<PrayerTimesScreen> {
   final PrayerTimesService _prayerService = PrayerTimesService.instance;
   String currentLocation = "الرياض، السعودية";
   bool _isLoading = true;
-  SharedPreferences? _prefs; // Fix #8: Cache SharedPreferences instance
+  SharedPreferences? _prefs;
 
-  // Fix #9: Use ValueNotifier to update only countdown widget
+ 
   final ValueNotifier<String> _timerDisplay = ValueNotifier<String>('--:--:--');
   final ValueNotifier<String> _prayerName = ValueNotifier<String>('غير متوفر');
 
@@ -45,7 +45,7 @@ class _PrayerTimesScreenState extends State<PrayerTimesScreen> {
     _startCountdownTimer();
   }
 
-  // Load prayer settings from SharedPreferences (Fix #8: Cache prefs instance)
+  // Load prayer settings from SharedPreferences
   Future<void> _loadPrayerSettings() async {
     try {
       _prefs ??= await SharedPreferences.getInstance();
@@ -96,14 +96,14 @@ class _PrayerTimesScreenState extends State<PrayerTimesScreen> {
   @override
   void dispose() {
     _countdownTimer?.cancel();
-    _timerDisplay.dispose(); // Fix #9
-    _prayerName.dispose(); // Fix #9
+    _timerDisplay.dispose();
+    _prayerName.dispose();
     // Note: Services are singletons, don't dispose them here
     super.dispose();
   }
 
   void _startCountdownTimer() {
-    // Fix #9: Update only ValueNotifiers, avoid full setState
+   
     _updateTimerDisplay(); // Initial update
     _countdownTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
       if (!_isLoading) {
@@ -112,7 +112,7 @@ class _PrayerTimesScreenState extends State<PrayerTimesScreen> {
     });
   }
 
-  // Fix #9: Update timer display without setState
+ 
   void _updateTimerDisplay() {
     _prayerName.value = _getTimerPrayerName();
     _timerDisplay.value = _getSmartTimerDisplay();
@@ -375,7 +375,7 @@ class _PrayerTimesScreenState extends State<PrayerTimesScreen> {
       );
     }
 
-    // Fix #9: No longer need to call these methods in build
+   
     return Scaffold(
       appBar: AppBar(
         leadingWidth: 0,
@@ -459,7 +459,7 @@ class _PrayerTimesScreenState extends State<PrayerTimesScreen> {
                       ),
                     ),
                   ),
-                  // Content Overlay (Fix #9: Use ValueListenableBuilder)
+                  // Content Overlay
                   Positioned.fill(
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -530,7 +530,7 @@ class _PrayerTimesScreenState extends State<PrayerTimesScreen> {
 
   Future<void> _savePrayerSettings(Prayer prayer, String setting, bool value) async {
     try {
-      _prefs ??= await SharedPreferences.getInstance(); // Fix #8: Use cached instance
+      _prefs ??= await SharedPreferences.getInstance();
       final key = '${setting}_${prayer.name}';
       await _prefs!.setBool(key, value);
 
@@ -702,7 +702,7 @@ class _LocationDialogState extends State<_LocationDialog> {
                 ),
                 IconButton(
                   onPressed: () async {
-                    // Show loading indicator (Fix #7)
+                    // Show loading indicator
                     showDialog(
                       context: context,
                       barrierDismissible: false,

@@ -3,9 +3,10 @@ package com.helal.quran
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
+import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
-import android.database.ContentObserver
+import android.content.IntentFilter
 import android.media.AudioAttributes
 import android.media.AudioFocusRequest
 import android.media.AudioManager
@@ -14,20 +15,26 @@ import android.os.Build
 import android.os.Handler
 import android.os.Looper
 import android.os.PowerManager
-import android.provider.Settings
+import android.support.v4.media.session.MediaSessionCompat
+import android.support.v4.media.session.PlaybackStateCompat
 import androidx.core.app.NotificationCompat
+import androidx.media.VolumeProviderCompat
 import io.flutter.Log
 
 class NativeAzanPlayer(private val context: Context) {
     private var mediaPlayer: MediaPlayer? = null
     private var wakeLock: PowerManager.WakeLock? = null
-    private var volumeObserver: ContentObserver? = null
+    private var volumeReceiver: BroadcastReceiver? = null
+    private var screenUnlockReceiver: BroadcastReceiver? = null
+    private var mediaSession: MediaSessionCompat? = null
     val notificationId = 9998  // Match AzanService notification ID
     private val channelId = "azan_playback"
     private var isPlaying = false
     private var audioManager: AudioManager? = null
     private var audioFocusRequest: AudioFocusRequest? = null
     private var initialAlarmVolume: Int = 0
+    private var stopHandler: Handler? = null
+    private var stopRunnable: Runnable? = null
 
     companion object {
         private const val TAG = "NativeAzanPlayer"
@@ -61,6 +68,9 @@ class NativeAzanPlayer(private val context: Context) {
 
             // Request audio focus to handle volume button events
             requestAudioFocus()
+
+            // Set up MediaSession to capture volume buttons on lockscreen
+            setupMediaSession()
 
             // Initialize MediaPlayer with alarm stream
             mediaPlayer = MediaPlayer().apply {
@@ -102,8 +112,34 @@ class NativeAzanPlayer(private val context: Context) {
 
             isPlaying = true
 
+            // Check azan duration setting
+            val prefs = context.getSharedPreferences("FlutterSharedPreferences", Context.MODE_PRIVATE)
+            val azanDuration = prefs.getString("flutter.azan_duration", "long")
+
+            // If short version, stop after 15 seconds
+            if (azanDuration == "short") {
+                Log.d(TAG, "🕌 Playing short azan (15 seconds)")
+                stopHandler = Handler(Looper.getMainLooper())
+                stopRunnable = Runnable {
+                    if (isPlaying) {
+                        Log.d(TAG, "🕌 Short azan completed, stopping...")
+                        stopAzan()
+
+                        // Send broadcast to stop the service
+                        val stopIntent = Intent(AzanService.ACTION_STOP_AZAN).apply {
+                            setPackage(context.packageName)
+                        }
+                        context.sendBroadcast(stopIntent)
+                    }
+                }
+                stopHandler?.postDelayed(stopRunnable!!, 15000) // 15 seconds
+            }
+
             // Start monitoring volume changes for stop functionality
             startVolumeMonitoring()
+
+            // Start monitoring screen unlock
+            startScreenUnlockMonitoring()
 
             // Note: Notification is shown by AzanService via getNotificationForService()
             // No need to show it here to avoid duplicate notifications
@@ -120,6 +156,13 @@ class NativeAzanPlayer(private val context: Context) {
         try {
             Log.d(TAG, "Stopping azan")
 
+            // Cancel any pending stop runnable
+            stopRunnable?.let {
+                stopHandler?.removeCallbacks(it)
+            }
+            stopRunnable = null
+            stopHandler = null
+
             // Stop media player
             mediaPlayer?.apply {
                 if (isPlaying()) {
@@ -133,11 +176,17 @@ class NativeAzanPlayer(private val context: Context) {
             // Stop volume monitoring
             stopVolumeMonitoring()
 
+            // Stop screen unlock monitoring
+            stopScreenUnlockMonitoring()
+
             // Release wake lock
             releaseWakeLock()
 
             // Abandon audio focus
             abandonAudioFocus()
+
+            // Release MediaSession
+            releaseMediaSession()
 
             // Hide notification
             val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
@@ -151,38 +200,50 @@ class NativeAzanPlayer(private val context: Context) {
     }
 
     /**
-     * Monitor alarm volume changes to allow stopping azan with volume buttons.
-     * Since we use USAGE_ALARM, MediaSessionCompat doesn't work, but we can detect
-     * when user changes alarm volume and stop playback.
+     * Monitor volume changes using BroadcastReceiver to allow stopping azan with volume buttons.
+     * This approach works even when screen is locked.
      */
     private fun startVolumeMonitoring() {
         try {
             // Store initial volume
             initialAlarmVolume = audioManager?.getStreamVolume(AudioManager.STREAM_ALARM) ?: 0
 
-            volumeObserver = object : ContentObserver(Handler(Looper.getMainLooper())) {
-                override fun onChange(selfChange: Boolean) {
-                    val currentVolume = audioManager?.getStreamVolume(AudioManager.STREAM_ALARM) ?: 0
-                    if (currentVolume != initialAlarmVolume && isPlaying) {
-                        Log.d(TAG, "🔊 Alarm volume changed - stopping azan")
-                        stopAzan()
-
-                        // Send broadcast to stop the service
-                        val stopIntent = Intent(AzanService.ACTION_STOP_AZAN).apply {
-                            setPackage(context.packageName)
+            volumeReceiver = object : BroadcastReceiver() {
+                override fun onReceive(context: Context?, intent: Intent?) {
+                    if (intent?.action == "android.media.VOLUME_CHANGED_ACTION") {
+                        // Check if still playing before processing
+                        if (!isPlaying) {
+                            return
                         }
-                        context.sendBroadcast(stopIntent)
+
+                        val currentVolume = audioManager?.getStreamVolume(AudioManager.STREAM_ALARM) ?: 0
+
+                        // Stop azan if volume changed (either up or down)
+                        if (currentVolume != initialAlarmVolume) {
+                            Log.d(TAG, "🔊 Alarm volume changed from $initialAlarmVolume to $currentVolume - stopping azan")
+                            stopAzan()
+
+                            // Send broadcast to stop the service
+                            context?.let { ctx ->
+                                val stopIntent = Intent(AzanService.ACTION_STOP_AZAN).apply {
+                                    setPackage(ctx.packageName)
+                                }
+                                ctx.sendBroadcast(stopIntent)
+                            }
+                        }
                     }
                 }
             }
 
-            context.contentResolver.registerContentObserver(
-                Settings.System.CONTENT_URI,
-                true,
-                volumeObserver!!
-            )
+            // Register broadcast receiver for volume changes
+            val filter = IntentFilter("android.media.VOLUME_CHANGED_ACTION")
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                context.registerReceiver(volumeReceiver, filter, Context.RECEIVER_NOT_EXPORTED)
+            } else {
+                context.registerReceiver(volumeReceiver, filter)
+            }
 
-            Log.d(TAG, "📊 Volume monitoring started (initial volume: $initialAlarmVolume)")
+            Log.d(TAG, "📊 Volume monitoring started via BroadcastReceiver (initial alarm volume: $initialAlarmVolume)")
         } catch (e: Exception) {
             Log.e(TAG, "❌ Error starting volume monitoring: ${e.message}", e)
         }
@@ -193,13 +254,78 @@ class NativeAzanPlayer(private val context: Context) {
      */
     private fun stopVolumeMonitoring() {
         try {
-            volumeObserver?.let {
-                context.contentResolver.unregisterContentObserver(it)
-                volumeObserver = null
+            volumeReceiver?.let {
+                try {
+                    context.unregisterReceiver(it)
+                } catch (e: IllegalArgumentException) {
+                    // Receiver already unregistered, ignore
+                    Log.d(TAG, "Volume receiver already unregistered")
+                }
+                volumeReceiver = null
                 Log.d(TAG, "📊 Volume monitoring stopped")
             }
         } catch (e: Exception) {
             Log.e(TAG, "❌ Error stopping volume monitoring: ${e.message}", e)
+        }
+    }
+
+    /**
+     * Monitor screen unlock (USER_PRESENT) to stop azan when user unlocks device.
+     * This provides a natural way to stop azan - unlock device and it stops.
+     */
+    private fun startScreenUnlockMonitoring() {
+        try {
+            screenUnlockReceiver = object : BroadcastReceiver() {
+                override fun onReceive(context: Context?, intent: Intent?) {
+                    if (intent?.action == Intent.ACTION_USER_PRESENT) {
+                        // User unlocked the device - stop azan
+                        if (!isPlaying) return
+
+                        Log.d(TAG, "🔓 Device unlocked - stopping azan")
+                        stopAzan()
+
+                        // Send broadcast to stop the service
+                        context?.let { ctx ->
+                            val stopIntent = Intent(AzanService.ACTION_STOP_AZAN).apply {
+                                setPackage(ctx.packageName)
+                            }
+                            ctx.sendBroadcast(stopIntent)
+                        }
+                    }
+                }
+            }
+
+            // Register broadcast receiver for screen unlock
+            val filter = IntentFilter(Intent.ACTION_USER_PRESENT)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                context.registerReceiver(screenUnlockReceiver, filter, Context.RECEIVER_NOT_EXPORTED)
+            } else {
+                context.registerReceiver(screenUnlockReceiver, filter)
+            }
+
+            Log.d(TAG, "🔓 Screen unlock monitoring started")
+        } catch (e: Exception) {
+            Log.e(TAG, "❌ Error starting screen unlock monitoring: ${e.message}", e)
+        }
+    }
+
+    /**
+     * Stop monitoring screen unlock
+     */
+    private fun stopScreenUnlockMonitoring() {
+        try {
+            screenUnlockReceiver?.let {
+                try {
+                    context.unregisterReceiver(it)
+                } catch (e: IllegalArgumentException) {
+                    // Receiver already unregistered, ignore
+                    Log.d(TAG, "Screen unlock receiver already unregistered")
+                }
+                screenUnlockReceiver = null
+                Log.d(TAG, "🔓 Screen unlock monitoring stopped")
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "❌ Error stopping screen unlock monitoring: ${e.message}", e)
         }
     }
 
@@ -305,6 +431,71 @@ class NativeAzanPlayer(private val context: Context) {
         }
     }
 
+    /**
+     * Set up MediaSession to intercept volume button events when screen is locked.
+     * This is the ONLY reliable way to handle volume buttons on lockscreen.
+     */
+    private fun setupMediaSession() {
+        try {
+            // Create MediaSession
+            mediaSession = MediaSessionCompat(context, "AzanMediaSession").apply {
+                // Set playback state to PLAYING so system routes volume events to us
+                setPlaybackState(
+                    PlaybackStateCompat.Builder()
+                        .setState(PlaybackStateCompat.STATE_PLAYING, 0, 1.0f)
+                        .build()
+                )
+
+                // Create custom VolumeProvider that intercepts volume button events
+                val volumeProvider = object : VolumeProviderCompat(
+                    VOLUME_CONTROL_RELATIVE, // Allow volume up/down
+                    100, // Max volume
+                    50  // Current volume
+                ) {
+                    override fun onAdjustVolume(direction: Int) {
+                        // Volume button pressed (UP=1, DOWN=-1) - stop azan!
+                        if (isPlaying) {
+                            Log.d(TAG, "🔊 Volume button pressed (screen locked, direction=$direction) - stopping azan")
+                            stopAzan()
+
+                            // Send broadcast to stop the service
+                            val stopIntent = Intent(AzanService.ACTION_STOP_AZAN).apply {
+                                setPackage(context.packageName)
+                            }
+                            context.sendBroadcast(stopIntent)
+                        }
+                    }
+                }
+
+                // Use our custom volume provider
+                setPlaybackToRemote(volumeProvider)
+
+                // Activate the session
+                isActive = true
+            }
+
+            Log.d(TAG, "📻 MediaSession created and activated for volume button handling")
+        } catch (e: Exception) {
+            Log.e(TAG, "❌ Error setting up MediaSession: ${e.message}", e)
+        }
+    }
+
+    /**
+     * Release MediaSession when azan stops
+     */
+    private fun releaseMediaSession() {
+        try {
+            mediaSession?.let {
+                it.isActive = false
+                it.release()
+            }
+            mediaSession = null
+            Log.d(TAG, "📻 MediaSession released")
+        } catch (e: Exception) {
+            Log.e(TAG, "❌ Error releasing MediaSession: ${e.message}", e)
+        }
+    }
+
     fun isCurrentlyPlaying(): Boolean = isPlaying
 
     /**
@@ -318,6 +509,7 @@ class NativeAzanPlayer(private val context: Context) {
      * Get notification for use as foreground service notification
      */
     fun getNotificationForService(prayerName: String, prayerTime: String): android.app.Notification {
+        // Stop button intent
         val stopIntent = Intent(ACTION_STOP_AZAN).apply {
             setPackage(context.packageName)
         }
@@ -328,20 +520,45 @@ class NativeAzanPlayer(private val context: Context) {
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 
+        // Dismiss intent - stops azan when notification is swiped away
+        val dismissIntent = Intent(ACTION_STOP_AZAN).apply {
+            setPackage(context.packageName)
+        }
+        val dismissPendingIntent = PendingIntent.getBroadcast(
+            context,
+            1,
+            dismissIntent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+
+        // Tap intent - opens app AND stops azan
+        val tapIntent = context.packageManager.getLaunchIntentForPackage(context.packageName)?.apply {
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+            putExtra("stop_azan", true)
+        }
+        val tapPendingIntent = PendingIntent.getActivity(
+            context,
+            2,
+            tapIntent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+
         return NotificationCompat.Builder(context, channelId)
             .setSmallIcon(android.R.drawable.ic_media_play)
             .setContentTitle("🕌 $prayerTime - $prayerName")
             .setContentText("حان الان موعد صلاة $prayerName")
             .setPriority(NotificationCompat.PRIORITY_MAX)
             .setCategory(NotificationCompat.CATEGORY_ALARM)
-            .setOngoing(true)
+            .setOngoing(false) // Allow dismissal
             .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
+            .setContentIntent(tapPendingIntent) // Tap notification to open app and stop
+            .setDeleteIntent(dismissPendingIntent) // Swipe to dismiss stops azan
             .addAction(
                 android.R.drawable.ic_media_pause,
                 "إيقاف",
                 stopPendingIntent
             )
-            .setAutoCancel(false)
+            .setAutoCancel(true) // Auto-dismiss when tapped
             .build()
     }
 }
