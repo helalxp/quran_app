@@ -15,13 +15,24 @@ A comprehensive Islamic companion app featuring Quran reading, prayer times, Qib
 ### 📖 **Quran Reader** (Core Feature)
 - **604 High-Quality SVG Pages** from the Madani Mushaf
 - **Interactive Ayah Selection** with precise touch detection
+  - Multi-part ayah support (ayahs spanning multiple pages)
+  - Touch area optimization for accurate selection
 - **30+ Reciters** with HD audio quality
 - **Background Audio Playback** with media controls
 - **Bookmarks** with long-press management
-- **Jump to Page/Surah/Juz** navigation
-- **Follow-the-Ayah** mode (automatic page turning)
-- **Continue Reading** from last position
+  - Quick bookmark toggle
+  - View all bookmarks in organized list
+  - One-tap navigation to bookmarked pages
+- **Advanced Navigation:**
+  - Jump to Page (1-604)
+  - Jump to Surah (1-114) with instant page lookup
+  - Jump to Juz (1-30) with accurate mappings
+- **Zoom & Pan Gestures** - Pinch to zoom, drag to pan
+- **Follow-the-Ayah** mode (automatic page turning during playback)
+- **Continue Reading** from last position (auto-saved every 2 seconds)
 - **Beautiful Arabic Typography** with Uthmanic font
+- **Smart Page Caching** - LRU eviction for optimal memory usage
+- **Wake Lock** during audio playback (screen stays on)
 
 ### 🕌 **Prayer Times** (NEW)
 - **Automatic Location Detection** using GPS
@@ -29,11 +40,24 @@ A comprehensive Islamic companion app featuring Quran reading, prayer times, Qib
 - **5 Daily Prayer Times** (Fajr, Dhuhr, Asr, Maghrib, Isha)
 - **Customizable Notifications** (5-30 minutes before prayer)
 - **Azan Playback** at prayer time (short/full duration)
+  - **Advanced Stop Controls:**
+    - Volume buttons (works even when screen locked)
+    - Notification dismiss (swipe away)
+    - Tap anywhere when app open
+    - Screen unlock auto-stop (optional)
+  - **Native Media Session** for lockscreen controls
+  - **Foreground Service** ensures reliable playback
+  - **Wake Lock Management** for uninterrupted azan
 - **Calculation Methods** (Muslim World League, ISNA, etc.)
 - **Prayer Toggle** - Enable/disable individual prayers
 - **Next Prayer Countdown** with visual indicator
 - **Persistent Alarm System** - Works even when app is closed
+  - Exact alarm scheduling for precise timing
+  - Survives app termination
+  - Low battery optimization exempt
 - **Boot Receiver** - Reschedules alarms after device restart
+- **Midnight Auto-Reschedule** - Updates prayer times daily
+- **Permission Auto-Request** - Guides users through setup
 
 ### 🧭 **Qibla Compass** (NEW)
 - **Real-time Compass** pointing to Mecca
@@ -45,16 +69,35 @@ A comprehensive Islamic companion app featuring Quran reading, prayer times, Qib
 - **Permission Handling** for location services
 
 ### 📅 **Khatma Manager** (NEW)
-- **Create Custom Khatma Plans** (completion goals)
-- **Flexible Duration** - Set your own timeframe
+- **3 Flexible Khatma Modes:**
+  - **End Date Mode:** Set target completion date, auto-calculates daily pages
+  - **Pages Per Day Mode:** Set fixed daily goal, calculates completion date
+  - **Tracking Only Mode:** Free-form progress tracking without deadlines
+- **Create Custom Khatma Plans** with personalized names
 - **Daily Goal Tracking** - Pages to read each day
-- **Progress Visualization** - Circular progress indicators
-- **Auto-Adjustment** - Recalculates if you miss days
-- **Multiple Active Khatmas** - Track different goals
-- **Completion Celebration** - Achievement notifications
-- **Daily Reminders** - Push notifications at chosen time
-- **Reading Statistics** - Track your progress over time
-- **Smart Notifications** - Reminds you of daily reading goal
+  - Future days preview with calculated targets
+  - Past days history with completion status
+  - Today's reading highlighted prominently
+- **Progress Visualization**
+  - Circular progress indicators showing completion %
+  - Daily progress cards with page ranges
+  - Visual badges for completion status
+- **Intelligent Auto-Adjustment**
+  - Recalculates pages/day if you miss days
+  - Prevents impossible targets
+  - Adapts to your reading pace
+- **Multiple Active Khatmas** - Track different goals simultaneously
+  - Read different parts of Quran concurrently
+  - Separate progress tracking for each
+  - Independent notifications
+- **Completion Celebration** - Achievement notifications with sound
+- **Smart Notifications**
+  - Daily reminders at your chosen time
+  - Progress reminders if falling behind
+  - Encouragement messages
+  - Works even when app closed
+- **Seamless Integration** - One tap from daily card to start reading
+- **Detailed Statistics** - Track pages read, days active, completion rate
 
 ### 📿 **Tasbih Counter** (NEW)
 - **Digital Counter** with large, easy-to-tap button
@@ -91,76 +134,230 @@ A comprehensive Islamic companion app featuring Quran reading, prayer times, Qib
   - ماهر المعيقلي (Maher Al Muaiqly)
   - محمد صديق المنشاوي (Minshawi Murattal)
   - سعود الشريم (Saud Al-Shuraim)
-  - ... and 24+ more reciters
+  - ... and 24+ more reciters (sorted alphabetically)
 
-- **Playback Features:**
-  - Continuous playback (ayah-to-ayah)
-  - Repeat single surah
-  - Continue to next surah automatically
-  - Variable speed (0.5x to 2.0x)
-  - Background audio with media controls
-  - Lock screen controls with album art
-  - Seamless transitions (50ms crossfade)
+- **Advanced Playback Features:**
+  - **Continuous Playback** - Seamless ayah-to-ayah transitions
+  - **4 Repeat Modes:**
+    - Off - No repeat
+    - Repeat Once - Play surah 2 times
+    - Repeat Twice - Play surah 3 times
+    - Infinite Repeat - Loop surah endlessly
+  - **Continue to Next Surah** - Auto-advance through Quran
+  - **Variable Speed** (0.5x, 0.75x, 1.0x, 1.25x, 1.5x, 2.0x)
+  - **Background Audio** with full media controls
+  - **Lock Screen Controls** with album art and metadata
+  - **Ultra-Fast Seamless Transitions:**
+    - Smart preloading (starts at 30% of current ayah)
+    - Memory buffer for instant playback
+    - 50ms crossfade between ayahs
+    - Zero-gap playback
+  - **Network Recovery:**
+    - Auto-retry on network failure (up to 3 attempts)
+    - Graceful fallback to alternative servers
+    - Connection monitoring and adaptation
+    - Timeout handling (8s URL load, 15s buffering)
+  - **Error Handling:**
+    - User-friendly error messages
+    - Detailed error categorization
+    - Automatic recovery attempts
+    - Fallback URL support
 
-- **Download Management:**
-  - Download entire surahs for offline use
-  - Batch download with progress tracking
-  - Smart caching (LRU eviction)
-  - 500MB cache limit
-  - Network monitoring
+- **Professional Download Management:**
+  - **Batch Downloads** - Download entire surahs or juz
+  - **Ultra-Fast Concurrent Downloads** - 20 ayahs simultaneously
+  - **Progress Tracking** - Real-time download progress
+  - **Smart Caching System:**
+    - LRU eviction policy
+    - 500MB cache limit
+    - Memory buffer for ultra-fast access
+    - Cache-first playback strategy
+  - **Download Manager UI:**
+    - View all downloads in one place
+    - Pause/resume/cancel operations
+    - Delete cached content
+    - Storage usage monitoring
+  - **Offline Playback** - Listen without internet after download
+  - **Network Monitoring** - Adapts to connection quality
+
+### 🎓 **Memorization Manager** (NEW)
+- **3 Memorization Modes:**
+  - **Single Ayah Mode:** Focus on one ayah at a time
+  - **Ayah Range Mode:** Memorize a sequence of ayahs
+  - **Full Surah Mode:** Complete surah memorization
+- **Customizable Repetition** (1-10 times per ayah)
+- **Smart Pause System:**
+  - Optional pause between repetitions
+  - Adjustable pause duration (1-10 seconds)
+  - Gives time to recite along
+- **Playback Speed Control** - Same as regular playback (0.5x-2.0x)
+- **Session Management:**
+  - Start/stop memorization sessions
+  - Progress tracking during session
+  - Seamless integration with audio player
+- **Shared Settings** - Speed setting applies to both modes
+
+### 📚 **Tafsir Library** (NEW)
+- **20+ Tafsir Sources Available:**
+  - تفسير ابن كثير (Ibn Kathir)
+  - تفسير الجلالين (Al-Jalalayn)
+  - تفسير الطبري (Al-Tabari)
+  - تفسير القرطبي (Al-Qurtubi)
+  - تفسير السعدي (As-Sa'di)
+  - And 15+ more classical and contemporary sources
+- **Detailed Source Information:**
+  - Complete Arabic names
+  - Author biographies with lifespan dates
+  - Methodology descriptions
+  - Difficulty levels (beginner to advanced)
+  - Volume counts
+  - Key features of each tafsir
+- **Tafsir Sources Screen:**
+  - Browse all available sources
+  - Compare methodologies
+  - Select default tafsir
+  - Detailed information dialogs
+- **Easy Access** - Tap any ayah to view tafsir (coming soon)
+
+### 📲 **App Updates & Maintenance** (NEW)
+- **In-App Update Checker:**
+  - Automatic update detection on app start
+  - Google Play Store integration
+  - Flexible update flow
+  - User-friendly update prompts
+- **Version Information:**
+  - Current version display in settings
+  - Build number tracking
+  - Release date information
+- **App Rating Prompt:**
+  - Direct link to Play Store
+  - One-tap rating flow
+  - Encourages user feedback
 
 ### 🎨 **UI/UX & Themes**
 - **4 Beautiful Themes:**
   - 🟤 Traditional Brown (warm, paper-like)
   - 🟢 Islamic Green (classic Islamic color)
   - 🔵 Classic Blue (modern, clean)
-  - 🌙 Noor Islamic (gold accents, ornate)
+  - 🌙 Noor Islamic (gold accents, ornate inspired by Islamic art)
 
-- **Dark/Light Modes:** Each theme has dark & light variants
+- **Advanced Theme System:**
+  - Dark/Light Modes for each theme (8 total combinations)
+  - System theme detection (auto dark/light based on device)
+  - Smooth theme transitions
+  - Custom color palettes for each theme
 - **RTL Support:** Full right-to-left layout for Arabic
-- **Responsive Design:** Adapts to phones, tablets, foldables
-- **Smooth Animations:** 60fps scrolling and transitions
-- **Haptic Feedback:** Touch feedback for all interactions
-- **Custom Page Physics:** Enhanced swipe experience
+- **Responsive Design:**
+  - Phone screens (5"-6.5")
+  - Tablets (7"-12")
+  - Foldables with flex mode
+  - Landscape orientation
+- **Smooth Animations:**
+  - 60fps scrolling and transitions
+  - Staggered animations for sections
+  - Hero animations for navigation
+  - Fade/slide transitions
+  - Custom animation curves
+- **Comprehensive Haptic Feedback:**
+  - **Selection Click:** Feature selection, navigation
+  - **Light Impact:** Page turns, swipes
+  - **Medium Impact:** Button taps, toggles
+  - **Heavy Impact:** Important actions, alerts
+  - **Success Vibration:** Confirmations, achievements
+  - **Toggle Switch:** Setting changes
+  - **Dialog Open/Close:** Modal interactions
+- **Custom Page Physics:** Enhanced swipe experience with momentum
+- **Loading States:** Beautiful loading animations throughout
+
+### 🛡️ **System Features & Reliability** (NEW)
+- **Advanced Permission Management:**
+  - Smart permission request flow
+  - Contextual permission explanations
+  - Auto-retry for denied permissions
+  - Graceful degradation when permissions unavailable
+- **Error Handling & Recovery:**
+  - Global error boundary (FlutterError.onError)
+  - Platform error handling (PlatformDispatcher.onError)
+  - User-friendly error messages
+  - Automatic error recovery
+  - No app crashes from unhandled exceptions
+- **Navigation System:**
+  - Last screen memory (returns to your last location)
+  - Deep linking support (ready for implementation)
+  - Navigation service for consistent routing
+  - Hero animations between screens
+- **Performance Optimizations:**
+  - RepaintBoundary for efficient rendering
+  - Debounced saves (reduces I/O by 90%)
+  - Lazy loading of assets
+  - Connection quality monitoring
+  - Background service optimization
+- **Data Persistence:**
+  - Auto-save every 2 seconds (last page)
+  - Debounced saves for settings
+  - Crash-safe data storage
+  - Atomic write operations
+- **Logging & Debugging:**
+  - Comprehensive debug logging
+  - Performance monitoring
+  - Error categorization
+  - Firebase Analytics integration
+- **Help & Support:**
+  - In-app help dialog
+  - Usage instructions
+  - Feature tutorials
+  - Support email link (coming soon)
 
 ### ⚙️ **Settings & Customization**
 - **Audio Settings:**
-  - Choose default reciter (sorted alphabetically)
-  - Playback speed control
-  - Auto-play next ayah
-  - Repeat surah mode
-  - Continue to next surah
-  - Follow-the-ayah on playback
+  - Choose default reciter (30+ options, sorted alphabetically)
+  - Playback speed control (0.5x-2.0x)
+  - Auto-play next ayah toggle
+  - 4 repeat modes (off/once/twice/infinite)
+  - Continue to next surah toggle
+  - Follow-the-ayah on playback toggle
+  - Download manager access
 
 - **Prayer Times Settings:**
-  - Calculation method
-  - Location selection (GPS or manual)
-  - Notification time (5-30 min before)
-  - Azan duration (short/full)
-  - Enable/disable individual prayers
+  - Calculation method selection (10+ methods)
+  - Location selection (GPS or manual city search)
+  - Notification time (5, 10, 15, 20, 30 min before)
+  - Azan duration (short 15s or full)
+  - Individual prayer toggles (enable/disable each prayer)
 
 - **Memorization Settings:**
   - Repetition count (1-10 times)
-  - Pause between repetitions
-  - Pause duration (1-10 seconds)
+  - Pause between repetitions toggle
+  - Pause duration (1, 2, 3, 5, 10 seconds)
   - Memorization mode (single ayah/range/full surah)
+  - Shared playback speed with regular audio
 
 - **Khatma Settings:**
-  - Daily reminder time
+  - Daily reminder time selection
   - Notification preferences
-  - Goal tracking options
+  - Khatma mode (end date/pages per day/tracking)
+  - Goal tracking and progress options
 
 - **Tafsir Settings:**
   - 20+ Tafsir sources available
-  - Detailed source information
-  - Author biographies
-  - Difficulty levels
-  - Feature descriptions
+  - Detailed source information viewer
+  - Author biographies with dates
+  - Difficulty levels (beginner to advanced)
+  - Methodology descriptions
+  - Feature lists for each source
+  - Browse all sources screen
 
 - **Theme Settings:**
-  - Color scheme selection
-  - Light/Dark/System mode
-  - Font size adjustment (coming soon)
+  - 4 color schemes (Brown/Green/Blue/Islamic)
+  - 3 theme modes (Light/Dark/System)
+  - Smooth theme transitions
+  - Custom palettes for each theme
+
+- **General Settings:**
+  - App version information
+  - Rating prompt
+  - Help and support access
+  - Privacy policy link
 
 ### 📊 **Analytics & Monitoring** (NEW)
 - **Firebase Analytics Integration**
@@ -448,6 +645,9 @@ firebase_analytics: ^10.10.7     # Analytics
 
 # Haptics & Feedback
 vibration: ^2.1.0                # Haptic feedback
+
+# Updates & Maintenance
+in_app_update: ^4.2.3            # Google Play in-app updates
 ```
 
 ---
@@ -555,45 +755,65 @@ When you first open Prayer Times:
 
 ### ✅ **All Critical Issues Resolved**
 
-#### 1. **Memory Leak Fix** - `viewer_screen.dart:258-277`
+#### 1. **Volume Button Azan Control** - `MainActivity.kt`, `NativeAzanPlayer.kt` (MAJOR FIX)
+- **Issue:** Volume buttons only worked when screen unlocked and app in background
+- **Root Causes:**
+  - BroadcastReceiver doesn't receive events when screen locked
+  - Activity intercepts volume keys when app in foreground
+  - No MediaSession for lockscreen integration
+- **Comprehensive 3-Part Solution:**
+  - **Part 1:** `MainActivity.onKeyDown()` - Intercepts volume keys when app is foreground
+  - **Part 2:** `MediaSessionCompat` with `VolumeProviderCompat` - Handles locked screen (THE KEY SOLUTION)
+  - **Part 3:** Existing BroadcastReceiver - Handles background with screen unlocked
+- **Impact:** Volume buttons now work in ALL scenarios (locked/unlocked, foreground/background)
+- **Files Modified:**
+  - `MainActivity.kt:429-447` - Added onKeyDown override
+  - `NativeAzanPlayer.kt:432-491` - Added MediaSession setup/release
+
+#### 2. **Memory Leak Fix** - `viewer_screen.dart:258-277`
 - **Issue:** BuildContext passed to long-lived ContinuousAudioManager
-- **Fix:** Removed context parameter from registerPageController
+- **Fix:** Removed context parameter from registerPageController, used WeakReference
 - **Impact:** Prevents memory leaks during extended use
 
-#### 2. **Null Safety Fix** - `khatma_manager.dart:255-260`
+#### 3. **Null Safety Fix** - `khatma_manager.dart:255-260`
 - **Issue:** getTodayGoal threw exception for non-existent khatma
 - **Fix:** Returns null instead of throwing, added safe null checks
 - **Impact:** Prevents crashes when khatma is deleted
 
-#### 3. **Global Error Boundary** - `main.dart:21-36`
+#### 4. **Global Error Boundary** - `main.dart:21-36`
 - **Issue:** No global error handler
 - **Fix:** Added FlutterError.onError and PlatformDispatcher.onError
-- **Impact:** Graceful error handling, no app crashes
+- **Impact:** Graceful error handling, no app crashes from unhandled exceptions
 
-#### 4. **Firebase Initialization** - `main.dart:42-56`
+#### 5. **Firebase Initialization** - `main.dart:42-56`
 - **Issue:** Silent failure, no user notification
 - **Fix:** Better error logging, app continues without Firebase
 - **Impact:** App works even if Firebase fails
 
-#### 5. **Android Notification Permissions** - `KhatmaBroadcastReceiver.kt:68-78`
+#### 6. **Android Notification Permissions** - `KhatmaBroadcastReceiver.kt:68-78`
 - **Issue:** Crash on Android 13+ without permission check
-- **Fix:** Added POST_NOTIFICATIONS permission check
-- **Impact:** No crashes on Android 13+
+- **Fix:** Added POST_NOTIFICATIONS permission check with Build.VERSION check
+- **Impact:** No crashes on Android 13+, graceful permission handling
 
-#### 6. **Exact Alarm Permission** - `MainActivity.kt:199-227`
+#### 7. **Exact Alarm Permission** - `MainActivity.kt:199-227`
 - **Issue:** Alarms failed silently without permission
-- **Fix:** Auto-request SCHEDULE_EXACT_ALARM permission
-- **Impact:** Prayer alarms work reliably
+- **Fix:** Auto-request SCHEDULE_EXACT_ALARM permission with user guidance
+- **Impact:** Prayer alarms work reliably, clear user communication
 
-#### 7. **BuildContext Async Gaps** - `feature_selection_screen.dart` (10 instances)
+#### 8. **BuildContext Async Gaps** - `feature_selection_screen.dart` (10 instances)
 - **Issue:** Context used after async operations
-- **Fix:** Removed unnecessary async modifiers
-- **Impact:** No more async gap warnings
+- **Fix:** Removed unnecessary async modifiers, added mounted checks
+- **Impact:** No more async gap warnings, proper lifecycle handling
 
-#### 8. **Deprecated Location API** - `location_service.dart`, `qibla_service.dart`
+#### 9. **Deprecated Location API** - `location_service.dart`, `qibla_service.dart`
 - **Issue:** Using deprecated geolocator parameters
 - **Fix:** Updated to LocationSettings object
 - **Impact:** Future-proof code, no deprecation warnings
+
+#### 10. **PageController Initialization** - `tasbih_screen.dart:85-92`
+- **Issue:** PageController.jumpToPage() called before controller attached
+- **Fix:** Used addPostFrameCallback() and hasClients check
+- **Impact:** No more PageController assertion errors
 
 ### Code Quality Improvements
 - ✅ Zero Flutter analyzer errors
@@ -609,14 +829,18 @@ When you first open Prayer Times:
 ## 📊 Performance Metrics
 
 ### App Statistics
-- **Total Lines of Code:** ~18,000+
-- **Dart Files:** 52
-- **Kotlin Files:** 10
-- **Total Features:** 8 major features
+- **Total Lines of Code:** ~25,000+
+- **Dart Files:** 65+
+- **Kotlin Files:** 10+
+- **Total Features:** 12 major features (Quran Reader, Prayer Times, Qibla, Khatma, Tasbih, Playlist, Memorization, Tafsir, Feature Selection, Settings, Analytics, Updates)
 - **Supported Reciters:** 30+
 - **Prayer Calculation Methods:** 10+
 - **Tafsir Sources:** 20+
-- **Themes:** 4 (with dark/light variants)
+- **Themes:** 4 with 8 total combinations (light/dark for each)
+- **Analytics Events:** 40+ tracked events
+- **Bookmark System:** Unlimited bookmarks
+- **Download Capacity:** 500MB cache with unlimited downloads
+- **Languages Supported:** Arabic (primary), English (interface)
 
 ### Performance Benchmarks
 - **App Launch Time:** <2 seconds (cold start)

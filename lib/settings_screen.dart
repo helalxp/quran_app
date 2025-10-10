@@ -224,18 +224,21 @@ class _SettingsScreenState extends State<SettingsScreen> with TickerProviderStat
 
   Future<void> _saveReciter(String reciter) async {
     try {
+      // Store old reciter for analytics
+      final oldReciter = _selectedReciter;
+
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString('selected_reciter', reciter);
       setState(() {
         _selectedReciter = reciter;
       });
-      
+
       // Update audio manager with new reciter
       final audioManager = ContinuousAudioManager();
       await audioManager.updateReciter(reciter);
 
       // Log analytics for reciter change
-      AnalyticsService.logReciterChanged(reciter);
+      AnalyticsService.logReciterChanged(oldReciter, reciter);
 
     } catch (e) {
       debugPrint('Error saving reciter: $e');

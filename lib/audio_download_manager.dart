@@ -373,11 +373,10 @@ class AudioDownloadManager with ChangeNotifier {
       debugPrint('📥 Starting download: ${task.type.name} ${task.number} (${task.totalAyahs} ayahs)');
 
       // Log analytics for download started
+      final typeName = task.type.name == 'surah' ? 'Surah' : 'Juz';
       AnalyticsService.logAudioDownloadStarted(
-        task.type.name,
-        task.number,
         task.reciter,
-        task.totalAyahs,
+        '$typeName ${task.number}',
       );
 
       // Process downloads in concurrent batches for speed
@@ -393,11 +392,11 @@ class AudioDownloadManager with ChangeNotifier {
           debugPrint('✅ Download completed: ${task.type.name} ${task.number} ($successful/${task.totalAyahs} ayahs)');
 
           // Log analytics for successful download
+          final typeName1 = task.type.name == 'surah' ? 'Surah' : 'Juz';
           AnalyticsService.logAudioDownloadCompleted(
-            task.type.name,
-            task.number,
             task.reciter,
-            successful,
+            '$typeName1 ${task.number}',
+            0.0, // Size tracking not implemented yet
           );
         } else if (successful > 0) {
           task.status = DownloadStatus.completed;
@@ -405,11 +404,11 @@ class AudioDownloadManager with ChangeNotifier {
           debugPrint('⚠️ Download completed with errors: ${task.type.name} ${task.number} ($successful/${task.totalAyahs} successful, $failed failed)');
 
           // Log analytics for partial download
+          final typeName2 = task.type.name == 'surah' ? 'Surah' : 'Juz';
           AnalyticsService.logAudioDownloadCompleted(
-            task.type.name,
-            task.number,
             task.reciter,
-            successful,
+            '$typeName2 ${task.number}',
+            0.0, // Size tracking not implemented yet
           );
         } else {
           task.status = DownloadStatus.failed;
@@ -417,10 +416,10 @@ class AudioDownloadManager with ChangeNotifier {
           debugPrint('❌ Download failed: ${task.type.name} ${task.number}');
 
           // Log analytics for failed download
+          final typeName3 = task.type.name == 'surah' ? 'Surah' : 'Juz';
           AnalyticsService.logAudioDownloadFailed(
-            task.type.name,
-            task.number,
             task.reciter,
+            '$typeName3 ${task.number}',
             'All downloads failed',
           );
         }
@@ -432,10 +431,10 @@ class AudioDownloadManager with ChangeNotifier {
       debugPrint('❌ Download error for ${task.type.name} ${task.number}: $e');
 
       // Log analytics for failed download
+      final typeName4 = task.type.name == 'surah' ? 'Surah' : 'Juz';
       AnalyticsService.logAudioDownloadFailed(
-        task.type.name,
-        task.number,
         task.reciter,
+        '$typeName4 ${task.number}',
         e.toString(),
       );
 
@@ -509,10 +508,10 @@ class AudioDownloadManager with ChangeNotifier {
     debugPrint('🗑️ Deleted download: ${task.type.name} ${task.number} - ${task.reciter}');
 
     // Log analytics for deleted download
-    AnalyticsService.logAudioDownloadDeleted(
-      task.type.name,
-      task.number,
+    final typeName5 = task.type.name == 'surah' ? 'Surah' : 'Juz';
+    AnalyticsService.logAudioDeleted(
       task.reciter,
+      '$typeName5 ${task.number}',
     );
 
     notifyListeners();

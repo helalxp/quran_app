@@ -1128,11 +1128,10 @@ class _RecitersTabState extends State<_RecitersTab> {
         surahAyahs,
       );
 
-      // Log analytics for playlist played
+      // Log analytics for playlist played (single surah)
       AnalyticsService.logPlaylistPlayed(
-        'surah_${surah.number}',
+        1, // Playing single surah
         reciterName,
-        surahAyahs.length,
       );
 
     } catch (e) {
