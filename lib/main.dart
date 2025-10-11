@@ -135,13 +135,27 @@ class _QuranAppState extends State<QuranApp> with WidgetsBindingObserver {
     try {
       if (!kIsWeb) {
         final info = await InAppUpdate.checkForUpdate();
+
         if (info.updateAvailability == UpdateAvailability.updateAvailable) {
+          if (kDebugMode) debugPrint('📱 Update available! Starting flexible update...');
+
+          // Start flexible update (downloads in background)
           await InAppUpdate.startFlexibleUpdate();
-          if (kDebugMode) debugPrint('📱 Flexible update started');
+
+          // Listen for update download completion
+          InAppUpdate.completeFlexibleUpdate().then((_) {
+            if (kDebugMode) debugPrint('✅ Update downloaded and ready to install');
+            // The update will be installed on next app restart
+          }).catchError((e) {
+            if (kDebugMode) debugPrint('❌ Update installation failed: $e');
+          });
+        } else {
+          if (kDebugMode) debugPrint('✅ App is up to date');
         }
       }
     } catch (e) {
       if (kDebugMode) debugPrint('❌ Update check failed: $e');
+      // Continue normally - updates are not critical
     }
   }
 
