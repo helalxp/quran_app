@@ -448,7 +448,7 @@ class _PrayerTimesScreenState extends State<PrayerTimesScreen> {
                       child: Opacity(
                         opacity: 0.15,
                         child: Image.asset(
-                          'assets/silhouette.png',
+                          'assets/images/silhouette.png',
                           fit: BoxFit.contain,
                           alignment: Alignment.bottomCenter,
                           errorBuilder: (context, error, stackTrace) {

@@ -125,7 +125,7 @@ class _TasbihScreenState extends State<TasbihScreen> with SingleTickerProviderSt
 
   Future<void> _playSound() async {
     try {
-      await _audioPlayer.setAsset('assets/azan.mp3');
+      await _audioPlayer.setAsset('assets/audio/tasbih_sound_effect.mp3');
       await _audioPlayer.setVolume(0.3);
       await _audioPlayer.play();
     } catch (e) {

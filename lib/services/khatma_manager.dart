@@ -27,6 +27,10 @@ class KhatmaManager {
   Timer? _saveDebounceTimer;
   static const _saveDebounceDuration = Duration(seconds: KhatmaConstants.saveDebounceDurationSeconds);
 
+  // Queue for page tracking to prevent race conditions
+  final List<int> _pageTrackingQueue = [];
+  bool _isProcessingQueue = false;
+
   Future<void> loadKhatmas() async {
     try {
       errorNotifier.value = null; // Clear previous errors
@@ -76,7 +80,16 @@ class KhatmaManager {
     try {
       errorNotifier.value = null;
       _khatmas.add(khatma);
-      await saveKhatmas(immediate: true); // Save immediately for user actions
+
+      try {
+        await saveKhatmas(immediate: true); // Save immediately for user actions
+      } catch (saveError) {
+        // Rollback on save failure
+        _khatmas.remove(khatma);
+        debugPrint('❌ Error saving khatma, rolled back: $saveError');
+        errorNotifier.value = 'فشل حفظ الختمة. الرجاء المحاولة مرة أخرى.';
+        rethrow;
+      }
 
       // Schedule notification if time is set
       if (khatma.notificationTime != null) {
@@ -96,8 +109,18 @@ class KhatmaManager {
       errorNotifier.value = null;
       final index = _khatmas.indexWhere((k) => k.id == id);
       if (index != -1) {
+        final oldKhatma = _khatmas[index];
         _khatmas[index] = updatedKhatma;
-        await saveKhatmas(immediate: true); // Save immediately for user actions
+
+        try {
+          await saveKhatmas(immediate: true); // Save immediately for user actions
+        } catch (saveError) {
+          // Rollback on save failure
+          _khatmas[index] = oldKhatma;
+          debugPrint('❌ Error saving khatma update, rolled back: $saveError');
+          errorNotifier.value = 'فشل تحديث الختمة. الرجاء المحاولة مرة أخرى.';
+          rethrow;
+        }
 
         // Reschedule notifications if time is set
         if (updatedKhatma.notificationTime != null) {
@@ -113,13 +136,25 @@ class KhatmaManager {
   }
 
   Future<void> deleteKhatma(String id) async {
+    Khatma? deletedKhatma;
     try {
       errorNotifier.value = null;
       // Cancel notification before deleting
       await KhatmaNotificationService.cancelKhatmaNotification(id);
 
+      // Store for potential rollback
+      deletedKhatma = _khatmas.firstWhere((k) => k.id == id);
       _khatmas.removeWhere((k) => k.id == id);
-      await saveKhatmas(immediate: true); // Save immediately for user actions
+
+      try {
+        await saveKhatmas(immediate: true); // Save immediately for user actions
+      } catch (saveError) {
+        // Rollback on save failure
+        _khatmas.add(deletedKhatma);
+        debugPrint('❌ Error saving khatma deletion, rolled back: $saveError');
+        errorNotifier.value = 'فشل حذف الختمة. الرجاء المحاولة مرة أخرى.';
+        rethrow;
+      }
     } catch (e) {
       debugPrint('❌ Error deleting khatma: $e');
       errorNotifier.value = 'فشل حذف الختمة. الرجاء المحاولة مرة أخرى.';
@@ -129,10 +164,42 @@ class KhatmaManager {
 
   List<Khatma> get activeKhatmas => _khatmas.where((k) => !k.isCompleted).toList();
 
-  // Track page view for all active khatmas
+  // Track page view for all active khatmas (with queue to prevent race conditions)
   Future<void> trackPageView(int pageNumber) async {
-    if (_khatmas.isEmpty) return;
+    if (_khatmas.isEmpty) {
+      debugPrint('⚠️ Khatma tracking: No khatmas loaded');
+      return;
+    }
 
+    // Validate page number
+    if (pageNumber < 1 || pageNumber > 604) {
+      debugPrint('⚠️ ERROR: Invalid page number: $pageNumber');
+      return;
+    }
+
+    debugPrint('📖 Khatma tracking page: $pageNumber (${_khatmas.length} khatmas loaded)');
+
+    // Add to queue and process
+    _pageTrackingQueue.add(pageNumber);
+
+    // If not already processing, start processing queue
+    if (!_isProcessingQueue) {
+      _isProcessingQueue = true;
+      await _processPageTrackingQueue();
+      _isProcessingQueue = false;
+    }
+  }
+
+  // Process page tracking queue one at a time to prevent race conditions
+  Future<void> _processPageTrackingQueue() async {
+    while (_pageTrackingQueue.isNotEmpty) {
+      final pageNumber = _pageTrackingQueue.removeAt(0);
+      await _trackSinglePageView(pageNumber);
+    }
+  }
+
+  // Internal method to track a single page view (protected from race conditions)
+  Future<void> _trackSinglePageView(int pageNumber) async {
     final now = DateTime.now();
     final today = DateUtilsKhatma.getToday();
     final todayKey = DateUtilsKhatma.getTodayKey();
@@ -149,11 +216,14 @@ class KhatmaManager {
 
     bool anyUpdated = false;
 
-    for (var khatma in _khatmas) {
+    // Use index-based loop to always work with the latest khatma state
+    for (int i = 0; i < _khatmas.length; i++) {
+      final khatma = _khatmas[i]; // Get current khatma from array
       if (khatma.isCompleted) continue;
 
       // Check if this page is within khatma range
       if (pageNumber >= khatma.startPage && pageNumber <= khatma.endPage) {
+        debugPrint('✅ Page $pageNumber is within khatma "${khatma.name}" range (${khatma.startPage}-${khatma.endPage})');
         // Get or create today's progress
         var todayProgress = khatma.dailyProgress[todayKey];
 
@@ -202,21 +272,9 @@ class KhatmaManager {
         final updatedGlobalPages = Set<int>.from(khatma.allPagesRead)..add(pageNumber);
         final updatedTodayPages = Set<int>.from(todayProgress.uniquePagesRead)..add(pageNumber);
 
-        // Calculate how many NEW pages were read today (pages not in global set before today)
-        int newPagesReadToday = 0;
-        for (var page in updatedTodayPages) {
-          // Check if this page was read before today
-          bool wasReadBefore = false;
-          for (var entry in khatma.dailyProgress.entries) {
-            if (entry.key != todayKey && entry.value.uniquePagesRead.contains(page)) {
-              wasReadBefore = true;
-              break;
-            }
-          }
-          if (!wasReadBefore) {
-            newPagesReadToday++;
-          }
-        }
+        // INCREMENT pagesRead since we confirmed this page is NEW to the khatma
+        final newPagesReadToday = todayProgress.pagesRead + 1;
+        debugPrint('📈 Incrementing today\'s count: ${todayProgress.pagesRead} → $newPagesReadToday');
 
         final isCompleted = khatma.mode == KhatmaMode.tracking
             ? false  // Tracking mode never marks as completed
@@ -231,17 +289,19 @@ class KhatmaManager {
 
         // CRITICAL: Update global allPagesRead using copyWith
         final updatedKhatma = khatma.copyWith(allPagesRead: updatedGlobalPages);
-        final index = _khatmas.indexOf(khatma);
 
         // Check if khatma was just completed
         final wasCompleted = khatma.isCompleted;
-        _khatmas[index] = updatedKhatma;
+        _khatmas[i] = updatedKhatma; // Update using index to ensure we modify the correct khatma
         final nowCompleted = updatedKhatma.isCompleted;
+
+        debugPrint('✅ Khatma "${khatma.name}" progress: ${updatedKhatma.pagesRead}/${updatedKhatma.totalPages} pages (${newPagesReadToday} new today)');
 
         // Log analytics for completion
         if (!wasCompleted && nowCompleted) {
           final totalDays = now.difference(khatma.createdAt).inDays + 1;
           AnalyticsService.logKhatmaCompleted(khatma.name, totalDays);
+          debugPrint('🎉 Khatma "${khatma.name}" completed!');
         }
 
         // Log analytics for progress update

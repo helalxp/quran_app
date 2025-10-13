@@ -154,15 +154,18 @@ class _KhatmaDetailScreenState extends State<KhatmaDetailScreen> {
             child: Stack(
               alignment: Alignment.center,
               children: [
-                SizedBox(
-                  width: 120,
-                  height: 120,
-                  child: CircularProgressIndicator(
-                    value: progress,
-                    strokeWidth: 10,
-                    backgroundColor: Theme.of(context).colorScheme.surface.withValues(alpha: 0.3),
-                    valueColor: AlwaysStoppedAnimation<Color>(
-                      Theme.of(context).colorScheme.primary,
+                Directionality(
+                  textDirection: TextDirection.rtl,
+                  child: SizedBox(
+                    width: 120,
+                    height: 120,
+                    child: CircularProgressIndicator(
+                      value: progress,
+                      strokeWidth: 10,
+                      backgroundColor: Theme.of(context).colorScheme.surface.withValues(alpha: 0.3),
+                      valueColor: AlwaysStoppedAnimation<Color>(
+                        Theme.of(context).colorScheme.primary,
+                      ),
                     ),
                   ),
                 ),
@@ -348,6 +351,22 @@ class _KhatmaDetailScreenState extends State<KhatmaDetailScreen> {
           final startPage = _khatma.startPage + cumulativePagesRead;
           final endPage = (startPage + pagesPerDayForThisDay - 1).clamp(startPage, _khatma.endPage);
 
+          // Calculate next unread page for today
+          int navigationPage = existingProgress?.startPage ?? startPage;
+          if (isToday && existingProgress != null && existingProgress.uniquePagesRead.isNotEmpty) {
+            // Find first unread page in today's range
+            for (int page = existingProgress.startPage; page <= existingProgress.endPage; page++) {
+              if (!existingProgress.uniquePagesRead.contains(page)) {
+                navigationPage = page;
+                break;
+              }
+            }
+            // If all pages in range are read, go to the next page after the range
+            if (existingProgress.uniquePagesRead.length >= (existingProgress.endPage - existingProgress.startPage + 1)) {
+              navigationPage = existingProgress.endPage + 1;
+            }
+          }
+
           cards.add(
             _DailyProgressCard(
               date: date,
@@ -357,13 +376,14 @@ class _KhatmaDetailScreenState extends State<KhatmaDetailScreen> {
               endPage: existingProgress?.endPage ?? endPage,
               targetPages: existingProgress?.targetPages ?? pagesPerDayForThisDay,
               pagesRead: existingProgress?.pagesRead ?? 0,
+              uniquePagesReadCount: existingProgress?.uniquePagesRead.length ?? 0,
               isCompleted: existingProgress?.isCompleted ?? false,
               onTap: isToday ? () {
                 HapticUtils.selectionClick();
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => ViewerScreen(initialPage: existingProgress?.startPage ?? startPage),
+                    builder: (context) => ViewerScreen(initialPage: navigationPage),
                   ),
                 );
               } : null,
@@ -404,6 +424,18 @@ class _KhatmaDetailScreenState extends State<KhatmaDetailScreen> {
         ),
       );
 
+      // Calculate next unread page for tracking mode
+      int navigationPage = todayProgress?.startPage ?? startPage;
+      if (todayProgress != null && todayProgress.uniquePagesRead.isNotEmpty) {
+        // Find first unread page from start of khatma
+        for (int page = _khatma.startPage; page <= _khatma.endPage; page++) {
+          if (!_khatma.allPagesRead.contains(page)) {
+            navigationPage = page;
+            break;
+          }
+        }
+      }
+
       cards.add(
         _DailyProgressCard(
           date: todayDate,
@@ -413,13 +445,14 @@ class _KhatmaDetailScreenState extends State<KhatmaDetailScreen> {
           endPage: todayProgress?.endPage ?? _khatma.endPage,
           targetPages: 0, // No target in tracking mode
           pagesRead: todayProgress?.pagesRead ?? 0,
+          uniquePagesReadCount: todayProgress?.uniquePagesRead.length ?? 0,
           isCompleted: false,
           onTap: () {
             HapticUtils.selectionClick();
             Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (context) => ViewerScreen(initialPage: todayProgress?.startPage ?? startPage),
+                builder: (context) => ViewerScreen(initialPage: navigationPage),
               ),
             );
           },
@@ -482,6 +515,7 @@ class _KhatmaDetailScreenState extends State<KhatmaDetailScreen> {
           endPage: progress.endPage,
           targetPages: progress.targetPages,
           pagesRead: progress.pagesRead,
+          uniquePagesReadCount: progress.uniquePagesRead.length,
           isCompleted: progress.isCompleted,
           onTap: null, // History cards are not tappable
           onToggleComplete: null,
@@ -552,6 +586,7 @@ class _DailyProgressCard extends StatelessWidget {
   final int endPage;
   final int targetPages;
   final int pagesRead;
+  final int uniquePagesReadCount;
   final bool isCompleted;
   final VoidCallback? onTap;
   final VoidCallback? onToggleComplete;
@@ -564,6 +599,7 @@ class _DailyProgressCard extends StatelessWidget {
     required this.endPage,
     required this.targetPages,
     required this.pagesRead,
+    required this.uniquePagesReadCount,
     required this.isCompleted,
     this.onTap,
     this.onToggleComplete,
@@ -571,7 +607,9 @@ class _DailyProgressCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final progress = targetPages > 0 ? pagesRead / targetPages : 0.0;
+    // Use uniquePagesReadCount for progress calculation (all pages read today)
+    // but display pagesRead for text (only new pages, not re-reads)
+    final progress = targetPages > 0 ? uniquePagesReadCount / targetPages : 0.0;
 
     return Container(
       decoration: BoxDecoration(
@@ -706,22 +744,25 @@ class _DailyProgressCard extends StatelessWidget {
 
                 // Progress bar (only if not future and has target)
                 if (!isFuture && targetPages > 0) ...[
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(8),
-                    child: LinearProgressIndicator(
-                      value: progress,
-                      minHeight: 8,
-                      backgroundColor: Theme.of(context).colorScheme.surface.withValues(alpha: 0.5),
-                      valueColor: AlwaysStoppedAnimation<Color>(
-                        isCompleted
-                            ? Colors.green
-                            : Theme.of(context).colorScheme.primary,
+                  Directionality(
+                    textDirection: TextDirection.rtl,
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(8),
+                      child: LinearProgressIndicator(
+                        value: progress,
+                        minHeight: 8,
+                        backgroundColor: Theme.of(context).colorScheme.surface.withValues(alpha: 0.5),
+                        valueColor: AlwaysStoppedAnimation<Color>(
+                          isCompleted
+                              ? Colors.green
+                              : Theme.of(context).colorScheme.primary,
+                        ),
                       ),
                     ),
                   ),
                   const SizedBox(height: 8),
 
-                  // Progress text - show if user exceeded target
+                  // Progress text - show only NEW pages read (not re-reads)
                   Text(
                     pagesRead > targetPages
                         ? '✓ رائع! قرأت $pagesRead من $targetPages صفحة (${pagesRead - targetPages}+ إضافية)'
@@ -740,7 +781,7 @@ class _DailyProgressCard extends StatelessWidget {
                     textDirection: TextDirection.rtl,
                   ),
                 ] else if (!isFuture && targetPages == 0) ...[
-                  // Tracking mode - show pages read
+                  // Tracking mode - show only NEW pages read
                   Text(
                     pagesRead > 0 ? 'قرأت $pagesRead صفحة اليوم' : 'لم تبدأ القراءة بعد',
                     style: TextStyle(

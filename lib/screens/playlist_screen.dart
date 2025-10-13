@@ -472,7 +472,7 @@ class _MiniMediaPlayer extends StatelessWidget {
 
   Future<String> _getSurahName(int surahNumber) async {
     try {
-      final surahsJsonString = await rootBundle.loadString('assets/surah.json');
+      final surahsJsonString = await rootBundle.loadString('assets/data/surah.json');
       final List<dynamic> surahsJsonList = json.decode(surahsJsonString);
       final surahs = surahsJsonList.map((json) => Surah.fromJson(json)).toList();
       final surah = surahs.firstWhere((s) => s.number == surahNumber);
@@ -734,7 +734,7 @@ class _RecitersTabState extends State<_RecitersTab> {
     HapticUtils.dialogOpen();
 
     // Load surahs
-    final surahsJsonString = await rootBundle.loadString('assets/surah.json');
+    final surahsJsonString = await rootBundle.loadString('assets/data/surah.json');
     final List<dynamic> surahsJsonList = json.decode(surahsJsonString);
     final surahs = surahsJsonList.map((json) => Surah.fromJson(json)).toList();
 
@@ -982,7 +982,7 @@ class _RecitersTabState extends State<_RecitersTab> {
 
     try {
       // Load ayah markers for the surah
-      final ayahMarkersJsonString = await rootBundle.loadString('assets/markers.json');
+      final ayahMarkersJsonString = await rootBundle.loadString('assets/data/markers.json');
       final List<dynamic> ayahMarkersJsonList = json.decode(ayahMarkersJsonString);
       final ayahMarkers = ayahMarkersJsonList.map((json) => AyahMarker.fromJson(json)).toList();
 
@@ -1089,7 +1089,7 @@ class _RecitersTabState extends State<_RecitersTab> {
       }
 
       // Load ayah markers for the surah
-      final ayahMarkersJsonString = await rootBundle.loadString('assets/markers.json');
+      final ayahMarkersJsonString = await rootBundle.loadString('assets/data/markers.json');
       final List<dynamic> ayahMarkersJsonList = json.decode(ayahMarkersJsonString);
       final ayahMarkers = ayahMarkersJsonList.map((json) => AyahMarker.fromJson(json)).toList();
 
@@ -1827,7 +1827,7 @@ class _PlaylistsTabState extends State<_PlaylistsTab> {
 
     try {
       // Load all ayah markers
-      final ayahMarkersJsonString = await rootBundle.loadString('assets/markers.json');
+      final ayahMarkersJsonString = await rootBundle.loadString('assets/data/markers.json');
       final List<dynamic> ayahMarkersJsonList = json.decode(ayahMarkersJsonString);
       final allAyahMarkers = ayahMarkersJsonList.map((json) => AyahMarker.fromJson(json)).toList();
 
@@ -2026,7 +2026,7 @@ class _PlaylistCreationSheetState extends State<_PlaylistCreationSheet> {
 
   Future<void> _loadSurahs() async {
     try {
-      final surahsJsonString = await rootBundle.loadString('assets/surah.json');
+      final surahsJsonString = await rootBundle.loadString('assets/data/surah.json');
       final List<dynamic> surahsJsonList = json.decode(surahsJsonString);
       setState(() {
         _allSurahs = surahsJsonList.map((json) => Surah.fromJson(json)).toList();

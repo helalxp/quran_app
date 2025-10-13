@@ -448,14 +448,17 @@ class _KhatmaCard extends StatelessWidget {
                 const SizedBox(height: 12),
 
                 // Progress bar
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(8),
-                  child: LinearProgressIndicator(
-                    value: progress,
-                    minHeight: 8,
-                    backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,
-                    valueColor: AlwaysStoppedAnimation<Color>(
-                      Theme.of(context).colorScheme.primary,
+                Directionality(
+                  textDirection: TextDirection.rtl,
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(8),
+                    child: LinearProgressIndicator(
+                      value: progress,
+                      minHeight: 8,
+                      backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,
+                      valueColor: AlwaysStoppedAnimation<Color>(
+                        Theme.of(context).colorScheme.primary,
+                      ),
                     ),
                   ),
                 ),
@@ -634,6 +637,7 @@ class _KhatmaCreationSheetState extends State<_KhatmaCreationSheet> {
           ? '${_selectedNotificationTime!.hour.toString().padLeft(2, '0')}:${_selectedNotificationTime!.minute.toString().padLeft(2, '0')}'
           : null,
       dailyProgress: widget.existingKhatma?.dailyProgress ?? {},
+      allPagesRead: widget.existingKhatma?.allPagesRead ?? {}, // ✅ Preserve reading history
     );
 
     widget.onKhatmaCreated(khatma);

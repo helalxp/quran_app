@@ -25,6 +25,7 @@ import 'widgets/jump_to_page_dialog.dart';
 import 'managers/page_cache_manager.dart';
 import 'services/analytics_service.dart';
 import 'services/navigation_service.dart';
+import 'services/khatma_manager.dart';
 
 class ViewerScreen extends StatefulWidget {
   final int? initialPage;
@@ -66,6 +67,7 @@ class _ViewerScreenState extends State<ViewerScreen> with TickerProviderStateMix
     super.initState();
     _initializeAudioManager();
     _initializeReader();
+    _initializeKhatmaTracking(); // Load khatmas for tracking
 
     // Log app opened event
     AnalyticsService.logAppOpened();
@@ -74,6 +76,16 @@ class _ViewerScreenState extends State<ViewerScreen> with TickerProviderStateMix
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _enableWakelock();
     });
+  }
+
+  // Load khatmas so tracking works even if user hasn't opened Khatma screen
+  void _initializeKhatmaTracking() async {
+    try {
+      await KhatmaManager().loadKhatmas();
+      debugPrint('✅ Khatmas loaded for tracking');
+    } catch (e) {
+      debugPrint('⚠️ Failed to load khatmas for tracking: $e');
+    }
   }
 
 
@@ -165,7 +177,7 @@ class _ViewerScreenState extends State<ViewerScreen> with TickerProviderStateMix
     try {
       await _loadAllMarkers();
 
-      final surahsJsonString = await rootBundle.loadString('assets/surah.json');
+      final surahsJsonString = await rootBundle.loadString('assets/data/surah.json');
       final List<dynamic> surahsJsonList = json.decode(surahsJsonString);
       _allSurahs = surahsJsonList.map((json) => Surah.fromJson(json)).toList();
 
@@ -185,7 +197,7 @@ class _ViewerScreenState extends State<ViewerScreen> with TickerProviderStateMix
 
   Future<void> _loadAllMarkers() async {
     try {
-      final markersJsonString = await rootBundle.loadString('assets/markers.json');
+      final markersJsonString = await rootBundle.loadString('assets/data/markers.json');
       final List<dynamic> markersJsonList = json.decode(markersJsonString);
 
       _allMarkers.clear();
@@ -298,6 +310,9 @@ class _ViewerScreenState extends State<ViewerScreen> with TickerProviderStateMix
       // Log page viewed analytics
       final pageInfo = _getInfoForPage(newPage);
       AnalyticsService.logPageViewed(newPage, pageInfo.surahName);
+
+      // Track page view for Khatma progress
+      KhatmaManager().trackPageView(newPage);
 
       // Preload adjacent pages for smoother swiping - only when page actually changes
       _preloadAdjacentPages(newPage);

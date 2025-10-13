@@ -14,6 +14,7 @@ import 'audio_cache_manager.dart';
 import 'audio_download_manager.dart';
 import 'services/audio_service_handler.dart';
 import 'services/analytics_service.dart';
+import 'services/azkar_audio_service.dart';
 
 // Constants for better maintainability
 class AudioConstants {
@@ -856,6 +857,17 @@ class ContinuousAudioManager {
     try {
       await initialize();
 
+      // Stop Azkar audio if it's playing to prevent audio conflicts
+      try {
+        final azkarService = AzkarAudioService();
+        if (azkarService.isPlaying) {
+          debugPrint('🔇 Stopping Azkar audio to play Quran');
+          await azkarService.stop();
+        }
+      } catch (e) {
+        debugPrint('⚠️ Error stopping Azkar audio: $e');
+      }
+
       // Store all ayah markers if provided (for continue-to-next-surah feature)
       if (allAyahMarkers != null && allAyahMarkers.isNotEmpty) {
         _allAyahMarkers = allAyahMarkers;
@@ -1376,6 +1388,17 @@ class ContinuousAudioManager {
   /// Play single ayah (for memorization)
   Future<void> playSingleAyah(AyahMarker ayah, String reciterName) async {
     try {
+      // Stop Azkar audio if it's playing to prevent audio conflicts
+      try {
+        final azkarService = AzkarAudioService();
+        if (azkarService.isPlaying) {
+          debugPrint('🔇 Stopping Azkar audio to play Quran');
+          await azkarService.stop();
+        }
+      } catch (e) {
+        debugPrint('⚠️ Error stopping Azkar audio: $e');
+      }
+
       // Reset timeout counters for new playback
       _currentRetryAttempt = 0;
       _clearTimeouts();

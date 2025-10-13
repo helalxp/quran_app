@@ -9,6 +9,8 @@ import 'prayer_times_screen.dart';
 import 'qibla_screen.dart';
 import 'tasbih_screen.dart';
 import 'playlist_screen.dart';
+import 'azkar_categories_screen.dart';
+import 'khatma_screen.dart';
 
 class FeatureSelectionScreen extends StatefulWidget {
     final MemorizationManager? memorizationManager;
@@ -40,6 +42,80 @@ class _FeatureSelectionScreenState extends State<FeatureSelectionScreen> {
                 transitionType: PageTransitionType.slideUp,
                 transitionDuration: AnimationUtils.normal
             )
+        );
+    }
+
+    void _showFeedbackDialog() {
+        HapticUtils.dialogOpen();
+        showDialog(
+            context: context,
+            builder: (context) => AlertDialog(
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                ),
+                title: const Text(
+                    'الاقتراحات والملاحظات',
+                    textAlign: TextAlign.center,
+                    textDirection: TextDirection.rtl,
+                    style: TextStyle(fontFamily: 'Uthmanic', fontWeight: FontWeight.bold),
+                ),
+                content: const Text(
+                    'هذه الميزة قيد التطوير حالياً. سنوفر قريباً إمكانية إرسال اقتراحاتكم وملاحظاتكم لتحسين التطبيق.',
+                    textDirection: TextDirection.rtl,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(fontFamily: 'Uthmanic', fontSize: 16),
+                ),
+                actions: [
+                    TextButton(
+                        onPressed: () => Navigator.of(context).pop(),
+                        child: Text(
+                            'حسناً',
+                            style: TextStyle(
+                                color: Theme.of(context).colorScheme.primary,
+                                fontFamily: 'Uthmanic',
+                                fontWeight: FontWeight.bold,
+                            ),
+                        ),
+                    ),
+                ],
+            ),
+        );
+    }
+
+    void _showSupportDialog() {
+        HapticUtils.dialogOpen();
+        showDialog(
+            context: context,
+            builder: (context) => AlertDialog(
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                ),
+                title: const Text(
+                    'دعم المطور',
+                    textAlign: TextAlign.center,
+                    textDirection: TextDirection.rtl,
+                    style: TextStyle(fontFamily: 'Uthmanic', fontWeight: FontWeight.bold),
+                ),
+                content: const Text(
+                    'شكراً لرغبتك في دعم التطبيق! هذه الميزة قيد التطوير. قريباً ستتمكن من دعم التطبيق ومساعدتنا في تطويره وتحسينه.',
+                    textDirection: TextDirection.rtl,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(fontFamily: 'Uthmanic', fontSize: 16),
+                ),
+                actions: [
+                    TextButton(
+                        onPressed: () => Navigator.of(context).pop(),
+                        child: Text(
+                            'حسناً',
+                            style: TextStyle(
+                                color: Theme.of(context).colorScheme.primary,
+                                fontFamily: 'Uthmanic',
+                                fontWeight: FontWeight.bold,
+                            ),
+                        ),
+                    ),
+                ],
+            ),
         );
     }
 
@@ -75,6 +151,21 @@ class _FeatureSelectionScreenState extends State<FeatureSelectionScreen> {
                       child: Column(
                         children: [
                           const SizedBox(height: 24),
+                            // 1. Quran - Most important
+                            FeatureIconButton(
+                              icon: Icons.book_outlined,
+                              label: "المصحف",
+                              size: 100,
+                              onPressed: () async {
+                                HapticUtils.selectionClick();
+                                AnalyticsService.logFeatureSelected('mushaf');
+                                await NavigationService.saveLastScreen(NavigationService.routeViewer);
+                                if (!mounted) return;
+                                Navigator.pop(context); // Go back to Mushaf
+                              },
+                            ),
+                            const SizedBox(height: 40),
+                            // 2. Prayer Times - Essential
                             FeatureIconButton(
                               icon: Icons.access_time,
                               label: "أوقات الصلاة",
@@ -92,6 +183,7 @@ class _FeatureSelectionScreenState extends State<FeatureSelectionScreen> {
                               },
                             ),
                             const SizedBox(height: 40),
+                            // 3. Qibla Direction
                             FeatureIconButton(
                               icon: Icons.explore,
                               label: "القبلة",
@@ -109,63 +201,25 @@ class _FeatureSelectionScreenState extends State<FeatureSelectionScreen> {
                               },
                             ),
                             const SizedBox(height: 40),
+                            // 4. Azkar & Supplications
                             FeatureIconButton(
-                              icon: Icons.book_outlined,
-                              label: "المصحف",
+                              icon: Icons.favorite,
+                              label: "الأذكار والأدعية",
                               size: 100,
                               onPressed: () async {
                                 HapticUtils.selectionClick();
-                                AnalyticsService.logFeatureSelected('mushaf');
-                                await NavigationService.saveLastScreen(NavigationService.routeViewer);
+                                AnalyticsService.logFeatureSelected('adhkar');
+                                await NavigationService.saveLastScreen('adhkar');
                                 if (!mounted) return;
-                                Navigator.pop(context); // Go back to Mushaf
-                              },
-                            ),
-                            const SizedBox(height: 40),
-                            FeatureIconButton(
-                              icon: Icons.check_circle_outline,
-                              label: "الختمة",
-                              size: 100,
-                              onPressed: () {
-                                HapticUtils.selectionClick();
-                                AnalyticsService.logFeatureSelected('khatma');
-                                showDialog(
-                                  context: context,
-                                  builder: (context) => AlertDialog(
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(16),
-                                    ),
-                                    icon: Icon(
-                                      Icons.check_circle_outline,
-                                      size: 48,
-                                      color: Theme.of(context).colorScheme.primary,
-                                    ),
-                                    title: const Text(
-                                      "الختمة",
-                                      textAlign: TextAlign.center,
-                                      style: TextStyle(fontWeight: FontWeight.bold),
-                                    ),
-                                    content: const Text(
-                                      "ميزة تتبع ختم القرآن الكريم قريباً.\n\nستتمكن من تسجيل تقدمك في القراءة وتتبع ختماتك.",
-                                      textAlign: TextAlign.center,
-                                      style: TextStyle(height: 1.5),
-                                    ),
-                                    actions: [
-                                      TextButton.icon(
-                                        onPressed: () => Navigator.pop(context),
-                                        icon: const Icon(Icons.check, size: 18),
-                                        label: const Text("حسناً"),
-                                        style: TextButton.styleFrom(
-                                          foregroundColor: Theme.of(context).colorScheme.primary,
-                                        ),
-                                      ),
-                                    ],
-                                    actionsPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                                Navigator.of(context).push(
+                                  MaterialPageRoute(
+                                    builder: (context) => const AzkarCategoriesScreen(),
                                   ),
                                 );
                               },
                             ),
                             const SizedBox(height: 40),
+                            // 5. Tasbih Counter
                             FeatureIconButton(
                               icon: Icons.auto_awesome,
                               label: "التسبيح",
@@ -183,6 +237,7 @@ class _FeatureSelectionScreenState extends State<FeatureSelectionScreen> {
                               },
                             ),
                             const SizedBox(height: 40),
+                            // 6. Audio/Reciters
                             FeatureIconButton(
                               icon: Icons.headphones,
                               label: "السمعيات",
@@ -200,94 +255,47 @@ class _FeatureSelectionScreenState extends State<FeatureSelectionScreen> {
                               },
                             ),
                             const SizedBox(height: 40),
+                            // 7. Khatma
                             FeatureIconButton(
-                              icon: Icons.favorite,
-                              label: "الأذكار",
+                              icon: Icons.check_circle_outline,
+                              label: "الختمة",
                               size: 100,
-                              onPressed: () {
+                              onPressed: () async {
                                 HapticUtils.selectionClick();
-                                AnalyticsService.logFeatureSelected('adhkar');
-                                showDialog(
-                                  context: context,
-                                  builder: (context) => AlertDialog(
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(16),
-                                    ),
-                                    icon: Icon(
-                                      Icons.favorite,
-                                      size: 48,
-                                      color: Theme.of(context).colorScheme.primary,
-                                    ),
-                                    title: const Text(
-                                      "الأذكار",
-                                      textAlign: TextAlign.center,
-                                      style: TextStyle(fontWeight: FontWeight.bold),
-                                    ),
-                                    content: const Text(
-                                      "نعمل حالياً على تطوير مجموعة شاملة من الأذكار اليومية والأدعية المأثورة.\n\nستتمكن قريباً من الوصول إلى أذكار الصباح والمساء، وأذكار ما بعد الصلاة.",
-                                      textAlign: TextAlign.center,
-                                      style: TextStyle(height: 1.5),
-                                    ),
-                                    actions: [
-                                      TextButton.icon(
-                                        onPressed: () => Navigator.pop(context),
-                                        icon: const Icon(Icons.check, size: 18),
-                                        label: const Text("حسناً"),
-                                        style: TextButton.styleFrom(
-                                          foregroundColor: Theme.of(context).colorScheme.primary,
-                                        ),
-                                      ),
-                                    ],
-                                    actionsPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                                AnalyticsService.logFeatureSelected('khatma');
+                                await NavigationService.saveLastScreen('khatma');
+                                if (!mounted) return;
+                                Navigator.of(context).push(
+                                  MaterialPageRoute(
+                                    builder: (context) => const KhatmaScreen(),
                                   ),
                                 );
                               },
                             ),
                             const SizedBox(height: 40),
+                            // 8. Feedback
                             FeatureIconButton(
-                              icon: Icons.book,
-                              label: "الدعاء",
+                              icon: Icons.feedback_outlined,
+                              label: "الاقتراحات والملاحظات",
                               size: 100,
                               onPressed: () {
                                 HapticUtils.selectionClick();
-                                AnalyticsService.logFeatureSelected('duaa');
-                                showDialog(
-                                  context: context,
-                                  builder: (context) => AlertDialog(
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(16),
-                                    ),
-                                    icon: Icon(
-                                      Icons.book,
-                                      size: 48,
-                                      color: Theme.of(context).colorScheme.primary,
-                                    ),
-                                    title: const Text(
-                                      "الأدعية",
-                                      textAlign: TextAlign.center,
-                                      style: TextStyle(fontWeight: FontWeight.bold),
-                                    ),
-                                    content: const Text(
-                                      "جاري العمل على إضافة مجموعة واسعة من الأدعية من القرآن والسنة.\n\nستشمل أدعية متنوعة للحياة اليومية، الاستغفار، والدعاء للوالدين.",
-                                      textAlign: TextAlign.center,
-                                      style: TextStyle(height: 1.5),
-                                    ),
-                                    actions: [
-                                      TextButton.icon(
-                                        onPressed: () => Navigator.pop(context),
-                                        icon: const Icon(Icons.check, size: 18),
-                                        label: const Text("حسناً"),
-                                        style: TextButton.styleFrom(
-                                          foregroundColor: Theme.of(context).colorScheme.primary,
-                                        ),
-                                      ),
-                                    ],
-                                    actionsPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                                  ),
-                                );
+                                _showFeedbackDialog();
                               },
                             ),
                             const SizedBox(height: 40),
+                            // 9. Support Developer
+                            FeatureIconButton(
+                              icon: Icons.volunteer_activism,
+                              label: "دعم المطور",
+                              size: 100,
+                              onPressed: () {
+                                HapticUtils.selectionClick();
+                                _showSupportDialog();
+                              },
+                            ),
+                            const SizedBox(height: 40),
+                            // 10. Settings - Last
                             FeatureIconButton(
                               icon: Icons.settings,
                               label: "الإعدادات",
@@ -319,6 +327,20 @@ class _FeatureSelectionScreenState extends State<FeatureSelectionScreen> {
                           runSpacing: spacing,
                           alignment: WrapAlignment.center,
                           children: [
+                            // 1. Quran - Most important
+                            FeatureIconButton(
+                              icon: Icons.book_outlined,
+                              label: "المصحف",
+                              size: buttonSize,
+                              onPressed: () async {
+                                HapticUtils.selectionClick();
+                                AnalyticsService.logFeatureSelected('mushaf');
+                                await NavigationService.saveLastScreen(NavigationService.routeViewer);
+                                if (!mounted) return;
+                                Navigator.pop(context);
+                              },
+                            ),
+                            // 2. Prayer Times - Essential
                             FeatureIconButton(
                               icon: Icons.access_time,
                               label: "أوقات الصلاة",
@@ -335,6 +357,7 @@ class _FeatureSelectionScreenState extends State<FeatureSelectionScreen> {
                                 );
                               },
                             ),
+                            // 3. Qibla Direction
                             FeatureIconButton(
                               icon: Icons.explore,
                               label: "القبلة",
@@ -351,61 +374,24 @@ class _FeatureSelectionScreenState extends State<FeatureSelectionScreen> {
                                 );
                               },
                             ),
+                            // 4. Azkar & Supplications
                             FeatureIconButton(
-                              icon: Icons.book_outlined,
-                              label: "المصحف",
+                              icon: Icons.favorite,
+                              label: "الأذكار والأدعية",
                               size: buttonSize,
                               onPressed: () async {
                                 HapticUtils.selectionClick();
-                                AnalyticsService.logFeatureSelected('mushaf');
-                                await NavigationService.saveLastScreen(NavigationService.routeViewer);
+                                AnalyticsService.logFeatureSelected('adhkar');
+                                await NavigationService.saveLastScreen('adhkar');
                                 if (!mounted) return;
-                                Navigator.pop(context);
-                              },
-                            ),
-                            FeatureIconButton(
-                              icon: Icons.check_circle_outline,
-                              label: "الختمة",
-                              size: buttonSize,
-                              onPressed: () {
-                                HapticUtils.selectionClick();
-                                AnalyticsService.logFeatureSelected('khatma');
-                                showDialog(
-                                  context: context,
-                                  builder: (context) => AlertDialog(
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(16),
-                                    ),
-                                    icon: Icon(
-                                      Icons.check_circle_outline,
-                                      size: 48,
-                                      color: Theme.of(context).colorScheme.primary,
-                                    ),
-                                    title: const Text(
-                                      "الختمة",
-                                      textAlign: TextAlign.center,
-                                      style: TextStyle(fontWeight: FontWeight.bold),
-                                    ),
-                                    content: const Text(
-                                      "ميزة تتبع ختم القرآن الكريم قريباً.\n\nستتمكن من تسجيل تقدمك في القراءة وتتبع ختماتك.",
-                                      textAlign: TextAlign.center,
-                                      style: TextStyle(height: 1.5),
-                                    ),
-                                    actions: [
-                                      TextButton.icon(
-                                        onPressed: () => Navigator.pop(context),
-                                        icon: const Icon(Icons.check, size: 18),
-                                        label: const Text("حسناً"),
-                                        style: TextButton.styleFrom(
-                                          foregroundColor: Theme.of(context).colorScheme.primary,
-                                        ),
-                                      ),
-                                    ],
-                                    actionsPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                                Navigator.of(context).push(
+                                  MaterialPageRoute(
+                                    builder: (context) => const AzkarCategoriesScreen(),
                                   ),
                                 );
                               },
                             ),
+                            // 5. Tasbih Counter
                             FeatureIconButton(
                               icon: Icons.auto_awesome,
                               label: "التسبيح",
@@ -422,6 +408,7 @@ class _FeatureSelectionScreenState extends State<FeatureSelectionScreen> {
                                 );
                               },
                             ),
+                            // 6. Audio/Reciters
                             FeatureIconButton(
                               icon: Icons.headphones,
                               label: "السمعيات",
@@ -438,92 +425,44 @@ class _FeatureSelectionScreenState extends State<FeatureSelectionScreen> {
                                 );
                               },
                             ),
+                            // 7. Khatma
                             FeatureIconButton(
-                              icon: Icons.favorite,
-                              label: "الأذكار",
+                              icon: Icons.check_circle_outline,
+                              label: "الختمة",
                               size: buttonSize,
-                              onPressed: () {
+                              onPressed: () async {
                                 HapticUtils.selectionClick();
-                                AnalyticsService.logFeatureSelected('adhkar');
-                                showDialog(
-                                  context: context,
-                                  builder: (context) => AlertDialog(
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(16),
-                                    ),
-                                    icon: Icon(
-                                      Icons.favorite,
-                                      size: 48,
-                                      color: Theme.of(context).colorScheme.primary,
-                                    ),
-                                    title: const Text(
-                                      "الأذكار",
-                                      textAlign: TextAlign.center,
-                                      style: TextStyle(fontWeight: FontWeight.bold),
-                                    ),
-                                    content: const Text(
-                                      "نعمل حالياً على تطوير مجموعة شاملة من الأذكار اليومية والأدعية المأثورة.\n\nستتمكن قريباً من الوصول إلى أذكار الصباح والمساء، وأذكار ما بعد الصلاة.",
-                                      textAlign: TextAlign.center,
-                                      style: TextStyle(height: 1.5),
-                                    ),
-                                    actions: [
-                                      TextButton.icon(
-                                        onPressed: () => Navigator.pop(context),
-                                        icon: const Icon(Icons.check, size: 18),
-                                        label: const Text("حسناً"),
-                                        style: TextButton.styleFrom(
-                                          foregroundColor: Theme.of(context).colorScheme.primary,
-                                        ),
-                                      ),
-                                    ],
-                                    actionsPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                                AnalyticsService.logFeatureSelected('khatma');
+                                await NavigationService.saveLastScreen('khatma');
+                                if (!mounted) return;
+                                Navigator.of(context).push(
+                                  MaterialPageRoute(
+                                    builder: (context) => const KhatmaScreen(),
                                   ),
                                 );
                               },
                             ),
+                            // 8. Feedback
                             FeatureIconButton(
-                              icon: Icons.book,
-                              label: "الدعاء",
+                              icon: Icons.feedback_outlined,
+                              label: "الاقتراحات والملاحظات",
                               size: buttonSize,
                               onPressed: () {
                                 HapticUtils.selectionClick();
-                                AnalyticsService.logFeatureSelected('duaa');
-                                showDialog(
-                                  context: context,
-                                  builder: (context) => AlertDialog(
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(16),
-                                    ),
-                                    icon: Icon(
-                                      Icons.book,
-                                      size: 48,
-                                      color: Theme.of(context).colorScheme.primary,
-                                    ),
-                                    title: const Text(
-                                      "الأدعية",
-                                      textAlign: TextAlign.center,
-                                      style: TextStyle(fontWeight: FontWeight.bold),
-                                    ),
-                                    content: const Text(
-                                      "جاري العمل على إضافة مجموعة واسعة من الأدعية من القرآن والسنة.\n\nستشمل أدعية متنوعة للحياة اليومية، الاستغفار، والدعاء للوالدين.",
-                                      textAlign: TextAlign.center,
-                                      style: TextStyle(height: 1.5),
-                                    ),
-                                    actions: [
-                                      TextButton.icon(
-                                        onPressed: () => Navigator.pop(context),
-                                        icon: const Icon(Icons.check, size: 18),
-                                        label: const Text("حسناً"),
-                                        style: TextButton.styleFrom(
-                                          foregroundColor: Theme.of(context).colorScheme.primary,
-                                        ),
-                                      ),
-                                    ],
-                                    actionsPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                                  ),
-                                );
+                                _showFeedbackDialog();
                               },
                             ),
+                            // 9. Support Developer
+                            FeatureIconButton(
+                              icon: Icons.volunteer_activism,
+                              label: "دعم المطور",
+                              size: buttonSize,
+                              onPressed: () {
+                                HapticUtils.selectionClick();
+                                _showSupportDialog();
+                              },
+                            ),
+                            // 10. Settings - Last
                             FeatureIconButton(
                               icon: Icons.settings,
                               label: "الإعدادات",
@@ -564,49 +503,60 @@ class FeatureIconButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        GestureDetector(
-          onTap: onPressed,
-          child: Container(
-            width: size,
-            height: size,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: Theme.of(context).colorScheme.surface,
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.2),
-                  blurRadius: 8,
-                  offset: const Offset(0, 4),
-                ),
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.1),
-                  blurRadius: 16,
-                  offset: const Offset(0, 8),
-                ),
-              ],
-            ),
-            child: Icon(
-              icon,
-              size: size * 0.5,
-              color: iconColor ?? Theme.of(context).colorScheme.primary,
+    return SizedBox(
+      width: size + 16, // Fixed width for alignment
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          GestureDetector(
+            onTap: onPressed,
+            child: Container(
+              width: size,
+              height: size,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: Theme.of(context).colorScheme.surface,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.2),
+                    blurRadius: 8,
+                    offset: const Offset(0, 4),
+                  ),
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.1),
+                    blurRadius: 16,
+                    offset: const Offset(0, 8),
+                  ),
+                ],
+              ),
+              child: Icon(
+                icon,
+                size: size * 0.5,
+                color: iconColor ?? Theme.of(context).colorScheme.primary,
+              ),
             ),
           ),
-        ),
-        const SizedBox(height: 12),
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w500,
-            fontFamily: 'Uthmanic',
-            color: Theme.of(context).colorScheme.onSurface,
+          const SizedBox(height: 12),
+          SizedBox(
+            height: 40, // Fixed height for text alignment
+            child: Center(
+              child: Text(
+                label,
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                  fontFamily: 'Uthmanic',
+                  color: Theme.of(context).colorScheme.onSurface,
+                ),
+                textDirection: TextDirection.rtl,
+                textAlign: TextAlign.center,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
           ),
-          textDirection: TextDirection.rtl,
-        ),
-      ],
+        ],
+      ),
     );
   }
 }

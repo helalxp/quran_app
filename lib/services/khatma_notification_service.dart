@@ -5,6 +5,18 @@ import '../models/khatma.dart';
 class KhatmaNotificationService {
   static const MethodChannel _channel = MethodChannel('com.helal.quran/khatma_alarms');
 
+  /// Generate unique alarm ID from khatma ID string (prevents hash collisions)
+  static int _getAlarmId(String khatmaId, {bool isProgressReminder = false}) {
+    // Use a simple but effective string hash
+    int hash = 0;
+    for (int i = 0; i < khatmaId.length; i++) {
+      hash = ((hash << 5) - hash) + khatmaId.codeUnitAt(i);
+      hash = hash & 0x7FFFFFFF; // Keep it positive and within 32-bit range
+    }
+    // Add large offset for progress reminders to avoid collision
+    return isProgressReminder ? hash + 1000000 : hash;
+  }
+
   /// Schedule a daily notification for a Khatma
   static Future<bool> scheduleKhatmaNotification(Khatma khatma) async {
     if (khatma.notificationTime == null) {
@@ -12,10 +24,26 @@ class KhatmaNotificationService {
     }
 
     try {
-      // Parse notification time (HH:mm format)
+      // Parse notification time (HH:mm format) with validation
       final parts = khatma.notificationTime!.split(':');
-      final hour = int.parse(parts[0]);
-      final minute = int.parse(parts[1]);
+
+      if (parts.length != 2) {
+        debugPrint('⚠️ ERROR: Invalid time format: ${khatma.notificationTime}');
+        return false;
+      }
+
+      final hour = int.tryParse(parts[0]);
+      final minute = int.tryParse(parts[1]);
+
+      if (hour == null || minute == null) {
+        debugPrint('⚠️ ERROR: Failed to parse time: ${khatma.notificationTime}');
+        return false;
+      }
+
+      if (hour < 0 || hour > 23 || minute < 0 || minute > 59) {
+        debugPrint('⚠️ ERROR: Invalid time values: $hour:$minute');
+        return false;
+      }
 
       // Calculate next notification time
       final now = DateTime.now();
@@ -30,7 +58,7 @@ class KhatmaNotificationService {
       final pagesPerDay = khatma.getCurrentPagesPerDay();
 
       final result = await _channel.invokeMethod('scheduleKhatmaAlarm', {
-        'alarmId': khatma.id.hashCode,
+        'alarmId': _getAlarmId(khatma.id),
         'timeInMillis': timeInMillis,
         'khatmaName': khatma.name,
         'khatmaId': khatma.id,
@@ -54,7 +82,7 @@ class KhatmaNotificationService {
   static Future<bool> cancelKhatmaNotification(String khatmaId) async {
     try {
       await _channel.invokeMethod('cancelKhatmaAlarm', {
-        'alarmId': khatmaId.hashCode,
+        'alarmId': _getAlarmId(khatmaId),
       });
 
       if (kDebugMode) {
@@ -97,10 +125,26 @@ class KhatmaNotificationService {
     }
 
     try {
-      // Parse notification time
+      // Parse notification time with validation
       final parts = khatma.notificationTime!.split(':');
-      final hour = int.parse(parts[0]);
-      final minute = int.parse(parts[1]);
+
+      if (parts.length != 2) {
+        debugPrint('⚠️ ERROR: Invalid time format for progress reminder: ${khatma.notificationTime}');
+        return false;
+      }
+
+      final hour = int.tryParse(parts[0]);
+      final minute = int.tryParse(parts[1]);
+
+      if (hour == null || minute == null) {
+        debugPrint('⚠️ ERROR: Failed to parse time for progress reminder: ${khatma.notificationTime}');
+        return false;
+      }
+
+      if (hour < 0 || hour > 23 || minute < 0 || minute > 59) {
+        debugPrint('⚠️ ERROR: Invalid time values for progress reminder: $hour:$minute');
+        return false;
+      }
 
       // Calculate reminder time (hoursAfter hours after the initial notification)
       final now = DateTime.now();
@@ -123,7 +167,7 @@ class KhatmaNotificationService {
       }
 
       final result = await _channel.invokeMethod('scheduleProgressReminder', {
-        'alarmId': khatma.id.hashCode + 1000, // Different ID from main reminder
+        'alarmId': _getAlarmId(khatma.id, isProgressReminder: true),
         'timeInMillis': timeInMillis,
         'khatmaName': khatma.name,
         'khatmaId': khatma.id,

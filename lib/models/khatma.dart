@@ -1,5 +1,6 @@
 // lib/models/khatma.dart
 
+import 'package:flutter/foundation.dart';
 import '../constants/juz_mappings.dart';
 
 enum KhatmaMode {
@@ -39,15 +40,23 @@ class Khatma {
   // Calculate total pages for this Khatma
   int get totalPages {
     final startPage = JuzMappings.getJuzStartPage(startJuz) ?? 1;
-    final endPage = endJuz == 30 ? 604 : (JuzMappings.getJuzStartPage(endJuz + 1)! - 1);
-    return endPage - startPage + 1;
+    final endPageValue = endPage;
+    return endPageValue - startPage + 1;
   }
 
   // Get start page number
   int get startPage => JuzMappings.getJuzStartPage(startJuz) ?? 1;
 
   // Get end page number
-  int get endPage => endJuz == 30 ? 604 : (JuzMappings.getJuzStartPage(endJuz + 1)! - 1);
+  int get endPage {
+    if (endJuz == 30) return 604;
+    final nextJuzStart = JuzMappings.getJuzStartPage(endJuz + 1);
+    if (nextJuzStart == null) {
+      debugPrint('⚠️ ERROR: Invalid endJuz: $endJuz, using page 604 as fallback');
+      return 604; // Fallback to last page
+    }
+    return nextJuzStart - 1;
+  }
 
   // Calculate pages read so far - uses GLOBAL unique pages to prevent double-counting
   int get pagesRead {

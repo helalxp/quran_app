@@ -82,7 +82,7 @@ class NativeAzanPlayer(private val context: Context) {
                 )
 
                 // Load azan audio from Flutter assets (accessible even when app is killed)
-                val afd = context.assets.openFd("flutter_assets/assets/azan.mp3")
+                val afd = context.assets.openFd("flutter_assets/assets/audio/azan.mp3")
                 setDataSource(afd.fileDescriptor, afd.startOffset, afd.length)
                 afd.close()
 

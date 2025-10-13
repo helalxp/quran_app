@@ -41,7 +41,7 @@ class AzanService {
     try {
       if (_audioPlayer != null) {
         await _audioPlayer!.setAudioSource(
-          AudioSource.asset('assets/azan.mp3'),
+          AudioSource.asset('assets/audio/azan.mp3'),
         );
         if (kDebugMode) debugPrint('Azan audio loaded successfully');
       }

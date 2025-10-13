@@ -54,11 +54,14 @@ flutter:
         - asset: assets/fonts/UthmanicHafs.ttf
 
   assets:
+    # Quran pages (SVG files)
     - assets/pages/
-    - assets/surah.json
-    - assets/markers.json
-    - assets/app_icon.png
-    - assets/silhouette.png
-    - assets/azan.mp3
-    - assets/tasbih_sound_effect.mp3
-    - assets/kaaba.png
+
+    # JSON data files
+    - assets/data/
+
+    # Audio files
+    - assets/audio/
+
+    # Image files
+    - assets/images/

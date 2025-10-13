@@ -626,7 +626,7 @@ class _QiblaScreenState extends State<QiblaScreen> {
                           ] : [],
                         ),
                         child: Image.asset(
-                          'assets/kaaba.png',
+                          'assets/images/kaaba.png',
                           width: 40,
                           height: 40,
                         ),
