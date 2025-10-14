@@ -987,6 +987,22 @@ class _ViewerScreenState extends State<ViewerScreen> with TickerProviderStateMix
       return;
     }
 
+    // Find current surah index based on current page
+    final currentPage = _currentPageNotifier.value;
+    int currentSurahIndex = 0;
+    for (int i = 0; i < _allSurahs.length; i++) {
+      if (_allSurahs[i].pageNumber <= currentPage) {
+        currentSurahIndex = i;
+      } else {
+        break;
+      }
+    }
+
+    // Create scroll controller with initial position
+    final scrollController = ScrollController(
+      initialScrollOffset: currentSurahIndex * 72.0, // Approximate item height (card + margin)
+    );
+
     await showGeneralDialog(
       context: context,
       barrierDismissible: true,
@@ -1014,9 +1030,11 @@ class _ViewerScreenState extends State<ViewerScreen> with TickerProviderStateMix
           width: double.maxFinite,
           height: 400,
           child: ListView.builder(
+            controller: scrollController,
             itemCount: _allSurahs.length,
             itemBuilder: (context, index) {
               final surah = _allSurahs[index];
+              final isCurrentSurah = index == currentSurahIndex;
               return AnimatedListItem(
                 index: index,
                 delay: const Duration(milliseconds: 15), // Much faster for dialogs
@@ -1024,15 +1042,32 @@ class _ViewerScreenState extends State<ViewerScreen> with TickerProviderStateMix
                 child: Card(
                 margin: const EdgeInsets.only(bottom: 8),
                 elevation: 2,
+                color: isCurrentSurah
+                    ? Theme.of(context).colorScheme.primaryContainer
+                    : null,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
+                  side: isCurrentSurah
+                      ? BorderSide(
+                          color: Theme.of(context).colorScheme.primary,
+                          width: 2,
+                        )
+                      : BorderSide.none,
                 ),
                 child: ListTile(
                   contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  leading: isCurrentSurah
+                      ? Icon(
+                          Icons.bookmark,
+                          color: Theme.of(context).colorScheme.primary,
+                        )
+                      : null,
                   title: Text(
                     "${surah.number}. ${surah.nameArabic}",
                     style: TextStyle(
-                      color: Theme.of(context).colorScheme.onSurface,
+                      color: isCurrentSurah
+                          ? Theme.of(context).colorScheme.onPrimaryContainer
+                          : Theme.of(context).colorScheme.onSurface,
                       fontWeight: FontWeight.w600,
                       fontFamily: 'Uthmanic',
                       fontSize: 16,
@@ -1042,7 +1077,9 @@ class _ViewerScreenState extends State<ViewerScreen> with TickerProviderStateMix
                   subtitle: Text(
                     surah.nameEnglish,
                     style: TextStyle(
-                      color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
+                      color: isCurrentSurah
+                          ? Theme.of(context).colorScheme.onPrimaryContainer.withValues(alpha: 0.7)
+                          : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
                       fontSize: 14,
                     ),
                   ),
@@ -1058,6 +1095,7 @@ class _ViewerScreenState extends State<ViewerScreen> with TickerProviderStateMix
                     // Log surah opened analytics
                     AnalyticsService.logSurahOpened(surah.nameArabic, surah.number);
                     Navigator.of(context).pop();
+                    scrollController.dispose();
                     _jumpToPage(surah.pageNumber);
                   },
                 ),
