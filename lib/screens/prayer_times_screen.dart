@@ -649,6 +649,8 @@ class _LocationDialogState extends State<_LocationDialog> {
 
         // Update UI every 5 states to show progress and keep it responsive
         if (processedStates % 5 == 0 && mounted) {
+          // Sort current cities before updating UI
+          allCities.sort((a, b) => a.name.compareTo(b.name));
           setState(() {
             _cities = allCities; // Direct assignment, no copy
           });
@@ -656,6 +658,9 @@ class _LocationDialogState extends State<_LocationDialog> {
           await Future.delayed(const Duration(milliseconds: 10));
         }
       }
+
+      // Sort cities alphabetically by name
+      allCities.sort((a, b) => a.name.compareTo(b.name));
 
       // Cache the result for future use
       _citiesCache[country.isoCode] = allCities;

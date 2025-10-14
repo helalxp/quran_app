@@ -83,7 +83,8 @@ class AzkarService {
   DhikrCategory? getCategoryById(int id) {
     try {
       return _allCategories.firstWhere((cat) => cat.id == id);
-    } catch (e) {
+    } on StateError {
+      debugPrint('⚠️ Category not found: $id');
       return null;
     }
   }

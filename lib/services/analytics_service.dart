@@ -341,4 +341,68 @@ class AnalyticsService {
       'mode': mode, // 'none', 'one', 'all'
     });
   }
+
+  // Azkar events
+  static Future<void> logAzkarCategoryOpened(String categoryName, int dhikrCount) async {
+    await _logEvent('azkar_category_opened', {
+      'category_name': categoryName,
+      'dhikr_count': dhikrCount,
+    });
+  }
+
+  static Future<void> logDhikrCompleted(String categoryName, String dhikrText, int count) async {
+    await _logEvent('dhikr_completed', {
+      'category_name': categoryName,
+      'dhikr_preview': dhikrText.length > 50 ? dhikrText.substring(0, 50) : dhikrText,
+      'count': count,
+    });
+  }
+
+  static Future<void> logAzkarCategoryCompleted(String categoryName, int totalDhikrs) async {
+    await _logEvent('azkar_category_completed', {
+      'category_name': categoryName,
+      'total_dhikrs': totalDhikrs,
+    });
+  }
+
+  static Future<void> logDhikrAudioPlayed(String categoryName, String dhikrText) async {
+    await _logEvent('dhikr_audio_played', {
+      'category_name': categoryName,
+      'dhikr_preview': dhikrText.length > 50 ? dhikrText.substring(0, 50) : dhikrText,
+    });
+  }
+
+  static Future<void> logDhikrAudioPaused(String categoryName) async {
+    await _logEvent('dhikr_audio_paused', {
+      'category_name': categoryName,
+    });
+  }
+
+  static Future<void> logDhikrCounterReset(String categoryName, int previousCount) async {
+    await _logEvent('dhikr_counter_reset', {
+      'category_name': categoryName,
+      'previous_count': previousCount,
+    });
+  }
+
+  static Future<void> logDhikrTextCopied(String categoryName, String dhikrText) async {
+    await _logEvent('dhikr_text_copied', {
+      'category_name': categoryName,
+      'dhikr_preview': dhikrText.length > 50 ? dhikrText.substring(0, 50) : dhikrText,
+    });
+  }
+
+  static Future<void> logAzkarAutoPlayToggled(bool enabled) async {
+    await _logEvent('azkar_auto_play_toggled', {
+      'enabled': enabled,
+    });
+  }
+
+  static Future<void> logDhikrIncrement(String categoryName, int currentCount, int totalCount) async {
+    await _logEvent('dhikr_increment', {
+      'category_name': categoryName,
+      'current_count': currentCount,
+      'total_count': totalCount,
+    });
+  }
 }

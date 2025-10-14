@@ -38,15 +38,22 @@ class AzkarAudioService {
   final ValueNotifier<bool> autoPlayNextNotifier = ValueNotifier(false);
 
   bool _initialized = false;
+  bool _isPlaybackChanging = false; // Mutex to prevent race conditions
+  bool _isDisposed = false; // Track if service was disposed
 
   // Callback for when audio completes
   Function()? onAudioComplete;
 
   /// Initialize the audio service
   Future<void> initialize() async {
-    if (_initialized) return;
+    if (_initialized && !_isDisposed) return;
 
     try {
+      if (_isDisposed) {
+        debugPrint('⚠️ Attempting to reinitialize after dispose - service may not work correctly');
+        _isDisposed = false;
+      }
+
       _audioPlayer = AudioPlayer();
       _setupListeners();
       _initialized = true;
@@ -104,6 +111,12 @@ class AzkarAudioService {
 
   /// Convert JSON audio path to full URL
   String getAudioUrl(String audioPath) {
+    // Validate input
+    if (audioPath.isEmpty) {
+      debugPrint('⚠️ Empty audio path provided');
+      throw ArgumentError('Audio path cannot be empty');
+    }
+
     // Remove leading slash if present
     String cleanPath = audioPath.startsWith('/') ? audioPath.substring(1) : audioPath;
 
@@ -112,7 +125,15 @@ class AzkarAudioService {
       cleanPath = cleanPath.substring(6); // Remove 'audio/'
     }
 
-    return '$audioBaseUrl$cleanPath';
+    // Validate final path
+    if (cleanPath.isEmpty) {
+      debugPrint('⚠️ Invalid audio path after cleanup: $audioPath');
+      throw ArgumentError('Invalid audio path: $audioPath');
+    }
+
+    final fullUrl = '$audioBaseUrl$cleanPath';
+    debugPrint('🔗 Audio URL: $fullUrl');
+    return fullUrl;
   }
 
   /// Play dhikr audio

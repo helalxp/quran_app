@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import '../models/dhikr_model.dart';
 import '../utils/haptic_utils.dart';
 import '../services/azkar_audio_service.dart';
+import '../services/analytics_service.dart';
 import '../widgets/azkar_mini_player.dart';
 
 class AzkarViewerScreen extends StatefulWidget {
@@ -33,6 +34,12 @@ class _AzkarViewerScreenState extends State<AzkarViewerScreen> {
 
     // Set up audio completion callback for auto-play next
     _audioService.onAudioComplete = _onAudioComplete;
+
+    // Log azkar category opened
+    AnalyticsService.logAzkarCategoryOpened(
+      widget.category.category,
+      widget.category.dhikrs.length,
+    );
   }
 
   void _onAudioComplete() {
@@ -46,6 +53,7 @@ class _AzkarViewerScreenState extends State<AzkarViewerScreen> {
         duration: const Duration(milliseconds: 400),
         curve: Curves.easeInOut,
       ).then((_) {
+        if (!mounted) return;
         // Auto-play the next dhikr's audio
         final nextDhikr = widget.category.dhikrs[_currentIndex];
         _audioService.playDhikr(nextDhikr, category: widget.category);
@@ -58,6 +66,7 @@ class _AzkarViewerScreenState extends State<AzkarViewerScreen> {
         duration: const Duration(milliseconds: 400),
         curve: Curves.easeInOut,
       ).then((_) {
+        if (!mounted) return;
         // Auto-play the first dhikr's audio
         final firstDhikr = widget.category.dhikrs[0];
         _audioService.playDhikr(firstDhikr, category: widget.category);
@@ -545,6 +554,11 @@ class _AzkarViewerScreenState extends State<AzkarViewerScreen> {
                       await _audioService.pause();
                     } else {
                       await _audioService.playDhikr(dhikr, category: widget.category);
+                      // Log audio played
+                      AnalyticsService.logDhikrAudioPlayed(
+                        widget.category.category,
+                        dhikr.text,
+                      );
                     }
                   } catch (e) {
                     if (!mounted) return;

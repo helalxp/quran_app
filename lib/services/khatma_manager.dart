@@ -30,6 +30,8 @@ class KhatmaManager {
   // Queue for page tracking to prevent race conditions
   final List<int> _pageTrackingQueue = [];
   bool _isProcessingQueue = false;
+  static const _maxQueueSize = 100; // Prevent unbounded queue growth
+  bool _hasTrackedPageInSession = false; // Track if we've saved at least once this session
 
   Future<void> loadKhatmas() async {
     try {
@@ -179,6 +181,12 @@ class KhatmaManager {
 
     debugPrint('📖 Khatma tracking page: $pageNumber (${_khatmas.length} khatmas loaded)');
 
+    // Prevent unbounded queue growth - limit queue size
+    if (_pageTrackingQueue.length >= _maxQueueSize) {
+      debugPrint('⚠️ Page tracking queue full (${_pageTrackingQueue.length}), dropping oldest entry');
+      _pageTrackingQueue.removeAt(0); // Remove oldest to make room
+    }
+
     // Add to queue and process
     _pageTrackingQueue.add(pageNumber);
 
@@ -314,7 +322,15 @@ class KhatmaManager {
     }
 
     if (anyUpdated) {
-      await saveKhatmas();
+      // Save immediately for first page tracked to prevent data loss
+      if (!_hasTrackedPageInSession) {
+        debugPrint('💾 First page tracked - saving immediately to prevent data loss');
+        await saveKhatmas(immediate: true);
+        _hasTrackedPageInSession = true;
+      } else {
+        // Use debounced save for subsequent pages
+        await saveKhatmas();
+      }
     }
   }
 

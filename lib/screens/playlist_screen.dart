@@ -605,7 +605,7 @@ class _RecitersTabState extends State<_RecitersTab> {
   @override
   void initState() {
     super.initState();
-    _reciters = ApiConstants.reciterConfigs.keys.toList();
+    _reciters = ApiConstants.reciterConfigs.keys.toList()..sort();
   }
 
   @override
@@ -2790,7 +2790,7 @@ class _PlaylistCreationSheetState extends State<_PlaylistCreationSheet> {
     // Unfocus text field to dismiss keyboard
     FocusScope.of(context).unfocus();
 
-    final reciters = ApiConstants.reciterConfigs.keys.toList();
+    final reciters = ApiConstants.reciterConfigs.keys.toList()..sort();
 
     showModalBottomSheet(
       context: context,

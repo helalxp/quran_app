@@ -929,7 +929,9 @@ class _SettingsScreenState extends State<SettingsScreen> with TickerProviderStat
                 shrinkWrap: true,
                 itemCount: _reciters.length,
                 itemBuilder: (context, index) {
-                  final reciterName = _reciters.keys.elementAt(index);
+                  // Sort reciters alphabetically by Arabic name
+                  final sortedReciterNames = _reciters.keys.toList()..sort();
+                  final reciterName = sortedReciterNames[index];
                   final reciterInfo = _reciters[reciterName]!;
                   final isSelected = reciterName == _selectedReciter;
 

@@ -64,7 +64,7 @@ class Khatma {
   }
 
   // Calculate remaining pages
-  int get pagesRemaining => totalPages - pagesRead;
+  int get pagesRemaining => (totalPages - pagesRead).clamp(0, totalPages);
 
   // Check if Khatma is completed
   bool get isCompleted => pagesRead >= totalPages;
