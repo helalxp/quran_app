@@ -1132,6 +1132,16 @@ class _ViewerScreenState extends State<ViewerScreen> with TickerProviderStateMix
       return;
     }
 
+    // Find current juz based on current page
+    final currentPage = _currentPageNotifier.value;
+    final currentJuz = JuzMappings.getJuzForPage(currentPage);
+    final currentJuzIndex = currentJuz - 1; // 0-based index
+
+    // Create scroll controller with initial position
+    final scrollController = ScrollController(
+      initialScrollOffset: currentJuzIndex * 72.0, // Approximate item height (card + margin)
+    );
+
     await showGeneralDialog(
       context: context,
       barrierDismissible: true,
@@ -1159,11 +1169,13 @@ class _ViewerScreenState extends State<ViewerScreen> with TickerProviderStateMix
           width: double.maxFinite,
           height: 400,
           child: ListView.builder(
+            controller: scrollController,
             itemCount: 30,
             itemBuilder: (context, index) {
               final juzNumber = index + 1;
               final pageNumber = _juzStartPages[juzNumber];
-              
+              final isCurrentJuz = juzNumber == currentJuz;
+
               return AnimatedListItem(
                 index: index,
                 delay: const Duration(milliseconds: 10), // Much faster for dialogs  
@@ -1171,25 +1183,44 @@ class _ViewerScreenState extends State<ViewerScreen> with TickerProviderStateMix
                 child: Card(
                 margin: const EdgeInsets.only(bottom: 8),
                 elevation: 2,
+                color: isCurrentJuz
+                    ? Theme.of(context).colorScheme.primaryContainer
+                    : null,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
+                  side: isCurrentJuz
+                      ? BorderSide(
+                          color: Theme.of(context).colorScheme.primary,
+                          width: 2,
+                        )
+                      : BorderSide.none,
                 ),
                 child: ListTile(
                   contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                   leading: CircleAvatar(
-                    backgroundColor: Theme.of(context).colorScheme.primaryContainer,
-                    child: Text(
-                      '$juzNumber',
-                      style: TextStyle(
-                        color: Theme.of(context).colorScheme.onPrimaryContainer,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
+                    backgroundColor: isCurrentJuz
+                        ? Theme.of(context).colorScheme.primary
+                        : Theme.of(context).colorScheme.primaryContainer,
+                    child: isCurrentJuz
+                        ? Icon(
+                            Icons.bookmark,
+                            color: Theme.of(context).colorScheme.onPrimary,
+                            size: 20,
+                          )
+                        : Text(
+                            '$juzNumber',
+                            style: TextStyle(
+                              color: Theme.of(context).colorScheme.onPrimaryContainer,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
                   ),
                   title: Text(
                     "الجزء $juzNumber",
                     style: TextStyle(
-                      color: Theme.of(context).colorScheme.onSurface,
+                      color: isCurrentJuz
+                          ? Theme.of(context).colorScheme.onPrimaryContainer
+                          : Theme.of(context).colorScheme.onSurface,
                       fontWeight: FontWeight.w600,
                       fontSize: 16,
                     ),
@@ -1205,6 +1236,7 @@ class _ViewerScreenState extends State<ViewerScreen> with TickerProviderStateMix
                   onTap: () {
                     HapticUtils.selection(); // Haptic feedback for selection
                     Navigator.of(context).pop();
+                    scrollController.dispose();
                     if (pageNumber != null) _jumpToPage(pageNumber);
                   },
                 ),
