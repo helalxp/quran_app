@@ -405,4 +405,21 @@ class AnalyticsService {
       'total_count': totalCount,
     });
   }
+
+  // Suggestions/Feedback events
+  static Future<void> logSuggestionsOpened() async {
+    await _logEvent('suggestions_opened');
+  }
+
+  static Future<void> logSuggestionSubmitted(bool hasScreenshot, int messageLength) async {
+    await _logEvent('suggestion_submitted', {
+      'message_length': messageLength,
+    });
+  }
+
+  static Future<void> logSuggestionFailed(String error) async {
+    await _logEvent('suggestion_failed', {
+      'error': error,
+    });
+  }
 }

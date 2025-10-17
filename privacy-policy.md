@@ -41,6 +41,18 @@ We may collect information about how the App is accessed and used ("Usage Data")
 - Crash reports and performance data
 - Location information (city name and country code only, sent to analytics)
 
+### User Feedback and Suggestions
+We collect feedback and suggestions that you voluntarily submit through our in-app feedback feature:
+- Your feedback message or suggestion text (text only)
+- App version and device information (automatically included for troubleshooting)
+- Submission timestamp
+
+**Important Notes:**
+- All feedback submission is completely voluntary
+- We do NOT collect any personal identifiers (name, email, phone number) with feedback
+- Feedback is stored securely on Firebase Firestore servers
+- You control what information you share with us
+
 ### Local Storage
 The App may store data locally on your device including:
 - Your reading preferences and settings
@@ -55,6 +67,8 @@ We use the collected data for:
 - Improving user experience and App functionality
 - Analyzing usage patterns to enhance features
 - Detecting and preventing technical issues
+- Reviewing user feedback and suggestions to improve the App
+- Understanding user needs and priorities for future updates
 
 ## Data Sharing
 
@@ -62,12 +76,10 @@ We do not sell, trade, or rent your personal information to third parties.
 
 ### What We Share with Third Parties
 
-**Firebase Analytics (Google):**
-- App usage patterns (features used, screen views, session duration)
-- Device information (device type, OS version)
-- City name and country code (for regional analytics)
-- App performance and crash data
-- NO GPS coordinates, NO personal identifiers, NO reading content
+**Firebase (Google):**
+- **Firebase Analytics**: App usage patterns (features used, screen views, session duration), device information, city name and country code, app performance data
+- **Firebase Firestore**: User feedback and suggestions (text messages only, app version, device info, timestamps)
+- NO GPS coordinates, NO personal identifiers, NO reading content, NO screenshots
 
 **Audio Streaming Services:**
 - Quran recitation audio is streamed from public Islamic content providers (everyayah.com, quran.com)
@@ -149,6 +161,8 @@ This privacy policy has been updated to provide more detailed and accurate infor
 - Specific details about what data is shared with Firebase Analytics
 - Complete list of app permissions and their purposes
 - Clearer explanation of data retention practices
+- **NEW**: User feedback and suggestions collection feature (text only)
+- **NEW**: Firebase Firestore usage for feedback management
 
 ---
 
