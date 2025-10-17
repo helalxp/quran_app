@@ -53,6 +53,33 @@ We collect feedback and suggestions that you voluntarily submit through our in-a
 - Feedback is stored securely on Firebase Firestore servers
 - You control what information you share with us
 
+### Advertising
+We use Google AdMob to display optional rewarded ads that help support app development:
+
+**When ads are shown:**
+- ONLY when you explicitly tap "Support the Developer" button
+- You can always cancel before watching
+- Ads are completely voluntary - never forced
+
+**What data Google AdMob may collect:**
+- Device information (device type, OS version)
+- Ad interaction data (views, clicks)
+- IP address (for ad targeting and fraud prevention)
+- Advertising ID (can be reset in device settings)
+
+**What we do NOT share with AdMob:**
+- Your location data
+- Your reading history
+- Bookmarks or personal preferences
+- Any personally identifiable information
+
+**Your control:**
+- You choose when to watch ads (by tapping Support button)
+- You can opt out of personalized ads in device settings
+- You can reset your advertising ID at any time
+
+For more information about Google's use of data, see: [Google Privacy Policy](https://policies.google.com/privacy)
+
 ### Local Storage
 The App may store data locally on your device including:
 - Your reading preferences and settings
@@ -81,6 +108,12 @@ We do not sell, trade, or rent your personal information to third parties.
 - **Firebase Firestore**: User feedback and suggestions (text messages only, app version, device info, timestamps)
 - NO GPS coordinates, NO personal identifiers, NO reading content, NO screenshots
 
+**Google AdMob:**
+- **Rewarded Ads** (voluntary only): Device information, advertising ID, ad interaction data
+- Only shown when you tap "Support the Developer" button
+- You can cancel before watching
+- See "Advertising" section above for full details
+
 **Audio Streaming Services:**
 - Quran recitation audio is streamed from public Islamic content providers (everyayah.com, quran.com)
 - Only audio file requests are sent, no personal data
@@ -95,6 +128,7 @@ We do not sell, trade, or rent your personal information to third parties.
 
 Our App uses third-party services that have their own privacy policies:
 - **Firebase Analytics**: [Google Privacy Policy](https://policies.google.com/privacy)
+- **Google AdMob**: [Google Privacy Policy](https://policies.google.com/privacy) | [AdMob Policy](https://support.google.com/admob/answer/6128543)
 - **Quran Audio Providers**: Public Islamic content services
 
 ## Permissions We Request
@@ -163,6 +197,8 @@ This privacy policy has been updated to provide more detailed and accurate infor
 - Clearer explanation of data retention practices
 - **NEW**: User feedback and suggestions collection feature (text only)
 - **NEW**: Firebase Firestore usage for feedback management
+- **NEW**: Google AdMob rewarded ads for voluntary developer support
+- **NEW**: Detailed disclosure of ad data collection and user control options
 
 ---
 

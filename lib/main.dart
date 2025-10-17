@@ -16,6 +16,7 @@ import 'services/notification_service.dart';
 import 'services/alarm_scheduler_service.dart';
 import 'services/native_azan_service.dart';
 import 'services/suggestions_service.dart';
+import 'services/admob_service.dart';
 import 'package:in_app_update/in_app_update.dart';
 import 'dart:ui';
 
@@ -52,6 +53,15 @@ void main() async {
   } catch (e) {
     if (kDebugMode) debugPrint('❌ Failed to initialize Firebase: $e');
     // Continue without Firebase - app will still work
+  }
+
+  // Initialize AdMob for rewarded ads
+  try {
+    await AdMobService.initialize();
+    if (kDebugMode) debugPrint('✅ AdMob initialized successfully');
+  } catch (e) {
+    if (kDebugMode) debugPrint('❌ Failed to initialize AdMob: $e');
+    // Continue without AdMob - app will still work
   }
 
   // Initialize Hive

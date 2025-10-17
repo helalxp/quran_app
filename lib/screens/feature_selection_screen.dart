@@ -5,6 +5,7 @@ import '../utils/animation_utils.dart';
 import '../memorization_manager.dart';
 import '../services/navigation_service.dart';
 import '../services/analytics_service.dart';
+import '../services/admob_service.dart';
 import '../widgets/suggestions_dialog.dart';
 import 'prayer_times_screen.dart';
 import 'qibla_screen.dart';
@@ -56,37 +57,181 @@ class _FeatureSelectionScreenState extends State<FeatureSelectionScreen> {
 
     void _showSupportDialog() {
         HapticUtils.dialogOpen();
+
+        // Log analytics
+        AnalyticsService.logSupportDialogOpened();
+
+        // Show confirmation dialog
         showDialog(
             context: context,
-            builder: (context) => AlertDialog(
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
-                ),
-                title: const Text(
-                    'دعم المطور',
-                    textAlign: TextAlign.center,
-                    textDirection: TextDirection.rtl,
-                    style: TextStyle(fontFamily: 'Uthmanic', fontWeight: FontWeight.bold),
-                ),
-                content: const Text(
-                    'شكراً لرغبتك في دعم التطبيق! هذه الميزة قيد التطوير. قريباً ستتمكن من دعم التطبيق ومساعدتنا في تطويره وتحسينه.',
-                    textDirection: TextDirection.rtl,
-                    textAlign: TextAlign.center,
-                    style: TextStyle(fontFamily: 'Uthmanic', fontSize: 16),
-                ),
-                actions: [
-                    TextButton(
-                        onPressed: () => Navigator.of(context).pop(),
-                        child: Text(
-                            'حسناً',
-                            style: TextStyle(
-                                color: Theme.of(context).colorScheme.primary,
-                                fontFamily: 'Uthmanic',
-                                fontWeight: FontWeight.bold,
+            builder: (context) => Directionality(
+                textDirection: TextDirection.rtl,
+                child: AlertDialog(
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                    ),
+                    title: const Text(
+                        'دعم المطور',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(fontFamily: 'Uthmanic', fontWeight: FontWeight.bold),
+                    ),
+                    content: const Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                            Icon(
+                                Icons.favorite,
+                                color: Colors.red,
+                                size: 48,
+                            ),
+                            SizedBox(height: 16),
+                            Text(
+                                'شكراً لرغبتك في دعم التطبيق!',
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                    fontFamily: 'Uthmanic',
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
+                                ),
+                            ),
+                            SizedBox(height: 16),
+                            Text(
+                                'سيتم عرض إعلان قصير. مشاهدتك للإعلان تساعدنا في تطوير التطبيق وإضافة المزيد من الميزات.',
+                                textAlign: TextAlign.center,
+                                style: TextStyle(fontFamily: 'Uthmanic', fontSize: 14),
+                            ),
+                        ],
+                    ),
+                    actions: [
+                        TextButton(
+                            onPressed: () {
+                                AnalyticsService.logSupportAdCancelled();
+                                Navigator.of(context).pop();
+                            },
+                            child: Text(
+                                'إلغاء',
+                                style: TextStyle(
+                                    color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
+                                    fontFamily: 'Uthmanic',
+                                ),
                             ),
                         ),
+                        ElevatedButton(
+                            onPressed: () {
+                                Navigator.of(context).pop();
+                                _showRewardedAd();
+                            },
+                            child: const Text(
+                                'مشاهدة الإعلان',
+                                style: TextStyle(fontFamily: 'Uthmanic'),
+                            ),
+                        ),
+                    ],
+                ),
+            ),
+        );
+    }
+
+    void _showRewardedAd() {
+        final adMobService = AdMobService();
+
+        // Log ad attempt
+        AnalyticsService.logSupportAdAttempted();
+
+        // Show loading dialog
+        showDialog(
+            context: context,
+            barrierDismissible: false,
+            builder: (context) => const Center(
+                child: CircularProgressIndicator(),
+            ),
+        );
+
+        adMobService.showRewardedAd(
+            onRewarded: () {
+                // User watched the ad successfully
+                AnalyticsService.logSupportAdCompleted();
+
+                // Close loading dialog
+                if (mounted) Navigator.of(context).pop();
+
+                // Show thank you dialog
+                _showThankYouDialog();
+            },
+            onFailed: (String error) {
+                // Ad failed to show
+                AnalyticsService.logSupportAdFailed(error);
+
+                // Close loading dialog
+                if (mounted) Navigator.of(context).pop();
+
+                // Show error message
+                if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                            content: Text(
+                                error,
+                                textDirection: TextDirection.rtl,
+                                style: const TextStyle(fontFamily: 'Uthmanic'),
+                            ),
+                            duration: const Duration(seconds: 3),
+                        ),
+                    );
+                }
+            },
+        );
+    }
+
+    void _showThankYouDialog() {
+        HapticUtils.success();
+        showDialog(
+            context: context,
+            builder: (context) => Directionality(
+                textDirection: TextDirection.rtl,
+                child: AlertDialog(
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
                     ),
-                ],
+                    title: const Text(
+                        'شكراً جزيلاً!',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(fontFamily: 'Uthmanic', fontWeight: FontWeight.bold),
+                    ),
+                    content: const Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                            Icon(
+                                Icons.check_circle,
+                                color: Colors.green,
+                                size: 64,
+                            ),
+                            SizedBox(height: 16),
+                            Text(
+                                'جزاك الله خيراً على دعمك!',
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                    fontFamily: 'Uthmanic',
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
+                                ),
+                            ),
+                            SizedBox(height: 8),
+                            Text(
+                                'دعمك يساعدنا في تطوير التطبيق وإضافة المزيد من الميزات المفيدة.',
+                                textAlign: TextAlign.center,
+                                style: TextStyle(fontFamily: 'Uthmanic', fontSize: 14),
+                            ),
+                        ],
+                    ),
+                    actions: [
+                        ElevatedButton(
+                            onPressed: () => Navigator.of(context).pop(),
+                            child: const Text(
+                                'حسناً',
+                                style: TextStyle(fontFamily: 'Uthmanic'),
+                            ),
+                        ),
+                    ],
+                ),
             ),
         );
     }
