@@ -422,4 +422,27 @@ class AnalyticsService {
       'error': error,
     });
   }
+
+  // Support Developer / Ads events
+  static Future<void> logSupportDialogOpened() async {
+    await _logEvent('support_dialog_opened');
+  }
+
+  static Future<void> logSupportAdAttempted() async {
+    await _logEvent('support_ad_attempted');
+  }
+
+  static Future<void> logSupportAdCompleted() async {
+    await _logEvent('support_ad_completed');
+  }
+
+  static Future<void> logSupportAdFailed(String error) async {
+    await _logEvent('support_ad_failed', {
+      'error': error,
+    });
+  }
+
+  static Future<void> logSupportAdCancelled() async {
+    await _logEvent('support_ad_cancelled');
+  }
 }
