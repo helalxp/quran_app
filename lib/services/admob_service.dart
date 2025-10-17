@@ -20,8 +20,8 @@ class AdMobService {
   /// YOUR REAL AD UNIT IDs (get these from AdMob console)
   /// Android: ca-app-pub-XXXXXXXXXXXXXXXX/YYYYYYYYYY
   /// iOS: ca-app-pub-XXXXXXXXXXXXXXXX/YYYYYYYYYY
-  static const String _androidRewardedAdUnitId = 'ca-app-pub-4425611562080784/5470334627'; // TODO: Replace with real ID
-  static const String _iosRewardedAdUnitId = 'ca-app-pub-4425611562080784/5470334627'; // TODO: Replace with real ID
+  static const String _androidRewardedAdUnitId = 'ca-app-pub-4425611562080784/5470334627';
+  static const String _iosRewardedAdUnitId = 'ca-app-pub-4425611562080784/5470334627';
 
   /// Get the appropriate Ad Unit ID based on platform
   static String get _rewardedAdUnitId {
