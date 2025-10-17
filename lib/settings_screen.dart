@@ -16,6 +16,7 @@ import 'widgets/loading_states.dart';
 import 'screens/tafsir_sources_screen.dart';
 import 'widgets/download_manager_sheet.dart';
 import 'services/analytics_service.dart';
+import 'widgets/suggestions_dialog.dart';
 
 class SettingsScreen extends StatefulWidget {
   final MemorizationManager? memorizationManager;
@@ -874,6 +875,16 @@ class _SettingsScreenState extends State<SettingsScreen> with TickerProviderStat
           const Divider(height: 1),
           ListTile(
             leading: Icon(
+              Icons.feedback_outlined,
+              color: Theme.of(context).colorScheme.primary,
+            ),
+            title: const Text('اقتراحاتك تهمنا'),
+            subtitle: const Text('شاركنا أفكارك لتحسين التطبيق'),
+            onTap: _showSuggestionsDialog,
+          ),
+          const Divider(height: 1),
+          ListTile(
+            leading: Icon(
               Icons.help_outline,
               color: Theme.of(context).colorScheme.primary,
             ),
@@ -1257,6 +1268,14 @@ class _SettingsScreenState extends State<SettingsScreen> with TickerProviderStat
     );
   }
 
+
+  void _showSuggestionsDialog() {
+    HapticUtils.dialogOpen(); // Haptic feedback for dialog open
+    showDialog(
+      context: context,
+      builder: (context) => const SuggestionsDialog(),
+    );
+  }
 
   void _showHelpDialog() {
     showDialog(

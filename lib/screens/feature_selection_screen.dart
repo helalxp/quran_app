@@ -5,6 +5,7 @@ import '../utils/animation_utils.dart';
 import '../memorization_manager.dart';
 import '../services/navigation_service.dart';
 import '../services/analytics_service.dart';
+import '../widgets/suggestions_dialog.dart';
 import 'prayer_times_screen.dart';
 import 'qibla_screen.dart';
 import 'tasbih_screen.dart';
@@ -49,36 +50,7 @@ class _FeatureSelectionScreenState extends State<FeatureSelectionScreen> {
         HapticUtils.dialogOpen();
         showDialog(
             context: context,
-            builder: (context) => AlertDialog(
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
-                ),
-                title: const Text(
-                    'الاقتراحات والملاحظات',
-                    textAlign: TextAlign.center,
-                    textDirection: TextDirection.rtl,
-                    style: TextStyle(fontFamily: 'Uthmanic', fontWeight: FontWeight.bold),
-                ),
-                content: const Text(
-                    'هذه الميزة قيد التطوير حالياً. سنوفر قريباً إمكانية إرسال اقتراحاتكم وملاحظاتكم لتحسين التطبيق.',
-                    textDirection: TextDirection.rtl,
-                    textAlign: TextAlign.center,
-                    style: TextStyle(fontFamily: 'Uthmanic', fontSize: 16),
-                ),
-                actions: [
-                    TextButton(
-                        onPressed: () => Navigator.of(context).pop(),
-                        child: Text(
-                            'حسناً',
-                            style: TextStyle(
-                                color: Theme.of(context).colorScheme.primary,
-                                fontFamily: 'Uthmanic',
-                                fontWeight: FontWeight.bold,
-                            ),
-                        ),
-                    ),
-                ],
-            ),
+            builder: (context) => const SuggestionsDialog(),
         );
     }
 

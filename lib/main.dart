@@ -15,6 +15,7 @@ import 'services/azan_service.dart';
 import 'services/notification_service.dart';
 import 'services/alarm_scheduler_service.dart';
 import 'services/native_azan_service.dart';
+import 'services/suggestions_service.dart';
 import 'package:in_app_update/in_app_update.dart';
 import 'dart:ui';
 
@@ -46,6 +47,7 @@ void main() async {
   try {
     await Firebase.initializeApp();
     await AnalyticsService.initialize();
+    await SuggestionsService.initialize();
     if (kDebugMode) debugPrint('✅ Firebase initialized successfully');
   } catch (e) {
     if (kDebugMode) debugPrint('❌ Failed to initialize Firebase: $e');
