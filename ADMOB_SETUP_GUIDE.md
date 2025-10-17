@@ -183,11 +183,69 @@ The app will automatically use **test ads** in debug mode. This is safe and prev
 
 ---
 
-## ✅ **Step 9: Final Checklist Before Release**
+## 📄 **Step 9: Set Up app-ads.txt (REQUIRED)**
+
+Google AdMob now **requires** an `app-ads.txt` file to prevent ad fraud and maximize revenue.
+
+### **What is app-ads.txt?**
+- A text file that declares which ad networks can sell your app's ad inventory
+- Helps prevent unauthorized ad selling and fraud
+- **Required by Google AdMob** for optimal ad serving
+- Apps without app-ads.txt may see reduced ad fill rates
+
+### **Quick Setup:**
+
+**Your `app-ads.txt` file has been created for you!**
+
+Location: `D:\my-projects\untitled\app-ads.txt`
+
+Contents:
+```
+google.com, pub-4425611562080784, DIRECT, f08c47fec0942fa0
+```
+
+### **How to Host it:**
+
+You need to host this file on a public website. The easiest free option is **GitHub Pages**.
+
+**📖 See complete step-by-step guide:**
+- Open the file: `GITHUB_PAGES_SETUP.md` in this project
+- Follow the instructions to host on GitHub Pages (takes 10-15 minutes)
+
+**Summary of steps:**
+1. Create a GitHub repository named `YOUR-USERNAME.github.io`
+2. Upload the `app-ads.txt` file to the repository
+3. Enable GitHub Pages in repository settings
+4. Add your website URL to AdMob and Google Play Console
+5. Wait 24-48 hours for verification
+
+**Your file will be accessible at:**
+```
+https://YOUR-USERNAME.github.io/app-ads.txt
+```
+
+### **Why This Matters:**
+
+✅ **Required** - AdMob now requires this for ad serving
+✅ **Prevents fraud** - Ensures only authorized sellers can sell your ads
+✅ **Maximizes revenue** - Better ad fill rates and earnings
+✅ **Builds trust** - Shows advertisers your app is legitimate
+
+**⚠️ Important:** Without app-ads.txt, you may experience:
+- Reduced ad fill rates (fewer ads shown)
+- Lower revenue potential
+- Warning messages in AdMob console
+
+---
+
+## ✅ **Step 10: Final Checklist Before Release**
 
 - [ ] AdMob App ID added to `AndroidManifest.xml`
 - [ ] Real Ad Unit IDs updated in `admob_service.dart`
 - [ ] Test ads work in debug mode
+- [ ] **app-ads.txt file hosted on GitHub Pages** (see Step 9)
+- [ ] Website URL added to AdMob console
+- [ ] Website URL added to Google Play Console
 - [ ] Privacy policy updated (already done ✅)
 - [ ] Google Play Data Safety form updated (see below)
 - [ ] App tested on real device
@@ -195,7 +253,7 @@ The app will automatically use **test ads** in debug mode. This is safe and prev
 
 ---
 
-## 📱 **Step 10: Update Google Play Data Safety**
+## 📱 **Step 11: Update Google Play Data Safety**
 
 When submitting to Google Play Console:
 

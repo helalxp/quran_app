@@ -27,15 +27,19 @@ class AdMobService {
   static String get _rewardedAdUnitId {
     if (kDebugMode) {
       // Always use test ads in debug mode
+      debugPrint('🧪 Using TEST Ad Unit ID');
       return _testRewardedAdUnitId;
     }
 
     // Use real ads in release mode
     if (Platform.isAndroid) {
+      debugPrint('📱 Using REAL Android Ad Unit ID: $_androidRewardedAdUnitId');
       return _androidRewardedAdUnitId;
     } else if (Platform.isIOS) {
+      debugPrint('📱 Using REAL iOS Ad Unit ID: $_iosRewardedAdUnitId');
       return _iosRewardedAdUnitId;
     }
+    debugPrint('⚠️ Platform not recognized, falling back to test ad');
     return _testRewardedAdUnitId;
   }
 
@@ -44,17 +48,22 @@ class AdMobService {
     if (_isInitialized) return;
 
     try {
-      // Set up test devices (add your device's advertising ID here)
-      final configuration = RequestConfiguration(
-        testDeviceIds: [
-          // Add your device's advertising ID here
-          // Example: '33BE2250-1C4C-4826-A00C-XXXXXXXXXX'
-          // You can find this in: Settings > Google > Ads
-          // REPLACE WITH YOUR DEVICE ID:
-          'bc7a3379-43ba-4cc4-bdfe-ce966a737847',
-        ],
-      );
-      await MobileAds.instance.updateRequestConfiguration(configuration);
+      // Set up test devices ONLY in debug mode
+      if (kDebugMode) {
+        final configuration = RequestConfiguration(
+          testDeviceIds: [
+            // Add your device's advertising ID here
+            // Example: '33BE2250-1C4C-4826-A00C-XXXXXXXXXX'
+            // You can find this in: Settings > Google > Ads
+            'bc7a3379-43ba-4cc4-bdfe-ce966a737847',
+          ],
+        );
+        await MobileAds.instance.updateRequestConfiguration(configuration);
+        debugPrint('🧪 Test device configuration enabled for debugging');
+      } else {
+        // In release mode, use production configuration
+        debugPrint('📱 Production mode - using real ads');
+      }
 
       await MobileAds.instance.initialize();
       _isInitialized = true;
@@ -108,7 +117,11 @@ class AdMobService {
           );
         },
         onAdFailedToLoad: (LoadAdError error) {
-          debugPrint('❌ Rewarded ad failed to load: $error');
+          debugPrint('❌ Rewarded ad failed to load:');
+          debugPrint('   Error Code: ${error.code}');
+          debugPrint('   Error Domain: ${error.domain}');
+          debugPrint('   Error Message: ${error.message}');
+          debugPrint('   Response Info: ${error.responseInfo}');
           _isAdLoading = false;
           _rewardedAd = null;
         },
