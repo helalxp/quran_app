@@ -93,11 +93,23 @@ class NativeAzanPlayer(private val context: Context) {
                     Log.d(TAG, "Azan playback completed")
                     stopAzan()
 
-                    // Send broadcast to stop the foreground service
-                    val stopIntent = Intent(AzanService.ACTION_STOP_AZAN).apply {
-                        setPackage(context.packageName)
+                    // Send broadcast to stop the foreground service (with fallback)
+                    try {
+                        val stopIntent = Intent(AzanService.ACTION_STOP_AZAN).apply {
+                            setPackage(context.packageName)
+                        }
+                        context.sendBroadcast(stopIntent)
+                        Log.d(TAG, "📡 Broadcast sent to stop service")
+
+                        // Fallback: Also stop the service directly
+                        val serviceIntent = Intent(context, AzanService::class.java).apply {
+                            action = AzanService.ACTION_STOP_AZAN
+                        }
+                        context.startService(serviceIntent)
+                        Log.d(TAG, "🛑 Service stop command sent directly")
+                    } catch (e: Exception) {
+                        Log.e(TAG, "❌ Error stopping service: ${e.message}", e)
                     }
-                    context.sendBroadcast(stopIntent)
                 }
 
                 // Set error listener
@@ -125,11 +137,21 @@ class NativeAzanPlayer(private val context: Context) {
                         Log.d(TAG, "🕌 Short azan completed, stopping...")
                         stopAzan()
 
-                        // Send broadcast to stop the service
-                        val stopIntent = Intent(AzanService.ACTION_STOP_AZAN).apply {
-                            setPackage(context.packageName)
+                        // Send broadcast to stop the service (with fallback)
+                        try {
+                            val stopIntent = Intent(AzanService.ACTION_STOP_AZAN).apply {
+                                setPackage(context.packageName)
+                            }
+                            context.sendBroadcast(stopIntent)
+
+                            // Fallback: Also stop the service directly
+                            val serviceIntent = Intent(context, AzanService::class.java).apply {
+                                action = AzanService.ACTION_STOP_AZAN
+                            }
+                            context.startService(serviceIntent)
+                        } catch (e: Exception) {
+                            Log.e(TAG, "Error stopping service: ${e.message}", e)
                         }
-                        context.sendBroadcast(stopIntent)
                     }
                 }
                 stopHandler?.postDelayed(stopRunnable!!, 15000) // 15 seconds
@@ -205,6 +227,9 @@ class NativeAzanPlayer(private val context: Context) {
      */
     private fun startVolumeMonitoring() {
         try {
+            // Unregister existing receiver first to prevent duplicates
+            stopVolumeMonitoring()
+
             // Store initial volume
             initialAlarmVolume = audioManager?.getStreamVolume(AudioManager.STREAM_ALARM) ?: 0
 
@@ -275,6 +300,9 @@ class NativeAzanPlayer(private val context: Context) {
      */
     private fun startScreenUnlockMonitoring() {
         try {
+            // Unregister existing receiver first to prevent duplicates
+            stopScreenUnlockMonitoring()
+
             screenUnlockReceiver = object : BroadcastReceiver() {
                 override fun onReceive(context: Context?, intent: Intent?) {
                     if (intent?.action == Intent.ACTION_USER_PRESENT) {
@@ -458,11 +486,21 @@ class NativeAzanPlayer(private val context: Context) {
                             Log.d(TAG, "🔊 Volume button pressed (screen locked, direction=$direction) - stopping azan")
                             stopAzan()
 
-                            // Send broadcast to stop the service
-                            val stopIntent = Intent(AzanService.ACTION_STOP_AZAN).apply {
-                                setPackage(context.packageName)
+                            // Send broadcast to stop the service (with fallback)
+                            try {
+                                val stopIntent = Intent(AzanService.ACTION_STOP_AZAN).apply {
+                                    setPackage(context.packageName)
+                                }
+                                context.sendBroadcast(stopIntent)
+
+                                // Fallback: Also stop the service directly
+                                val serviceIntent = Intent(context, AzanService::class.java).apply {
+                                    action = AzanService.ACTION_STOP_AZAN
+                                }
+                                context.startService(serviceIntent)
+                            } catch (e: Exception) {
+                                Log.e(TAG, "Error stopping service from MediaSession: ${e.message}", e)
                             }
-                            context.sendBroadcast(stopIntent)
                         }
                     }
                 }

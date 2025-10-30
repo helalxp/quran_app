@@ -4,6 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:async';
 import 'analytics_service.dart';
 
+@Deprecated('Use NativeAzanService instead. Azan is now handled by native Android code.')
 class AzanService {
   static AzanService? _instance;
   static AzanService get instance => _instance ??= AzanService._();
@@ -69,7 +70,11 @@ class AzanService {
 
   // Play azan (Fixes #3, #6, #8)
   Future<void> playAzan() async {
-   
+    throw UnsupportedError(
+      'AzanService is deprecated. Azan is now handled by native Android code via NativeAzanService.'
+    );
+
+    // ignore: dead_code
     if (_isInitializing) {
       if (kDebugMode) debugPrint('🕌 Already initializing, skipping duplicate call');
       return;

@@ -128,6 +128,17 @@ class AlarmSchedulerService {
         }
       } else {
         if (kDebugMode) debugPrint('❌ Failed to schedule ${prayer.name} azan alarm');
+
+        // Track failed schedules for user notification
+        try {
+          final prefs = await SharedPreferences.getInstance();
+          final failedSchedules = prefs.getStringList('failed_azan_schedules') ?? [];
+          failedSchedules.add('$prayerName - $formattedTime');
+          await prefs.setStringList('failed_azan_schedules', failedSchedules);
+          if (kDebugMode) debugPrint('📝 Saved failed schedule for user notification');
+        } catch (e) {
+          if (kDebugMode) debugPrint('❌ Could not save failed schedule: $e');
+        }
       }
 
       // Schedule notification alarm (X minutes before prayer time)
@@ -149,6 +160,17 @@ class AlarmSchedulerService {
           }
         } else {
           if (kDebugMode) debugPrint('❌ Failed to schedule ${prayer.name} notification');
+
+          // Track failed notification schedules
+          try {
+            final prefs = await SharedPreferences.getInstance();
+            final failedNotifs = prefs.getStringList('failed_notification_schedules') ?? [];
+            failedNotifs.add('$prayerName notification - $notificationMinutes min before');
+            await prefs.setStringList('failed_notification_schedules', failedNotifs);
+            if (kDebugMode) debugPrint('📝 Saved failed notification schedule');
+          } catch (e) {
+            if (kDebugMode) debugPrint('❌ Could not save failed notification: $e');
+          }
         }
       } else {
         if (kDebugMode) debugPrint('⏭️ ${prayer.name} notification time already passed, skipping');

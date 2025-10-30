@@ -448,11 +448,24 @@ class MainActivity : AudioServiceActivity() {
 
     override fun onDestroy() {
         super.onDestroy()
-        try {
-            unregisterReceiver(stopAzanReceiver)
-        } catch (e: Exception) {
-            // Receiver not registered
+
+        // Unregister receiver safely
+        stopAzanReceiver?.let {
+            try {
+                unregisterReceiver(it)
+                io.flutter.Log.d("MainActivity", "Stop azan receiver unregistered")
+            } catch (e: IllegalArgumentException) {
+                // Already unregistered, ignore
+                io.flutter.Log.d("MainActivity", "Stop receiver already unregistered")
+            }
         }
-        azanPlayer?.stopAzan()
+        stopAzanReceiver = null
+
+        // Clean up azan player
+        azanPlayer?.release()
+        azanPlayer = null
+
+        // Clean up alarm scheduler
+        alarmScheduler = null
     }
 }
