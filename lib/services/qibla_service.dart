@@ -60,8 +60,10 @@ class QiblaService {
         _locationPermissionGranted = true;
 
         final position = await Geolocator.getCurrentPosition(
-          desiredAccuracy: LocationAccuracy.low,
-          timeLimit: const Duration(seconds: 10),
+          locationSettings: const LocationSettings(
+            accuracy: LocationAccuracy.low,
+            timeLimit: Duration(seconds: 10),
+          ),
         );
 
         _coordinates = Coordinates(position.latitude, position.longitude);

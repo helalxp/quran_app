@@ -83,8 +83,10 @@ class LocationService {
       // Get position with timeout
       try {
         final position = await Geolocator.getCurrentPosition(
-          desiredAccuracy: LocationAccuracy.low,
-          timeLimit: const Duration(seconds: 15),
+          locationSettings: const LocationSettings(
+            accuracy: LocationAccuracy.low,
+            timeLimit: Duration(seconds: 15),
+          ),
         );
 
         // Try to get location name from reverse geocoding

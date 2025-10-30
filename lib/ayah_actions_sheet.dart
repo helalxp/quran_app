@@ -406,6 +406,60 @@ class _AyahActionsSheetState extends State<AyahActionsSheet> with TickerProvider
           return null;
         },
       ),
+
+      // Strategy 7: Tafsir Al-Wasit by Tantawi
+      TafsirStrategy(
+        name: 'تفسير الوسيط لطنطاوي',
+        apiCall: () async {
+          try {
+            final url = ApiConstants.getVerseTranslation(widget.ayahMarker.surah, widget.ayahMarker.ayah, ApiConstants.translationIds['تفسير الوسيط لطنطاوي']!);
+            if (kDebugMode) print('Al-Wasit URL: $url');
+            final response = await http.get(
+              Uri.parse(url),
+              headers: {'Accept': 'application/json'},
+            ).timeout(AppConstants.tafsirTimeout);
+
+            if (kDebugMode) print('Al-Wasit Response status: ${response.statusCode}');
+            if (response.statusCode == 200) {
+              final data = json.decode(response.body);
+              if (kDebugMode) print('Al-Wasit Response data: $data');
+              return data['text'] as String?;
+            } else {
+              if (kDebugMode) print('Al-Wasit Response error: ${response.body}');
+            }
+          } catch (e) {
+            if (kDebugMode) print('Al-Wasit Exception: $e');
+          }
+          return null;
+        },
+      ),
+
+      // Strategy 8: Tafsir Al-Baghawi
+      TafsirStrategy(
+        name: 'تفسير البغوي',
+        apiCall: () async {
+          try {
+            final url = ApiConstants.getVerseTranslation(widget.ayahMarker.surah, widget.ayahMarker.ayah, ApiConstants.translationIds['تفسير البغوي']!);
+            if (kDebugMode) print('Al-Baghawi URL: $url');
+            final response = await http.get(
+              Uri.parse(url),
+              headers: {'Accept': 'application/json'},
+            ).timeout(AppConstants.tafsirTimeout);
+
+            if (kDebugMode) print('Al-Baghawi Response status: ${response.statusCode}');
+            if (response.statusCode == 200) {
+              final data = json.decode(response.body);
+              if (kDebugMode) print('Al-Baghawi Response data: $data');
+              return data['text'] as String?;
+            } else {
+              if (kDebugMode) print('Al-Baghawi Response error: ${response.body}');
+            }
+          } catch (e) {
+            if (kDebugMode) print('Al-Baghawi Exception: $e');
+          }
+          return null;
+        },
+      ),
     ];
   }
 

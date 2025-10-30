@@ -639,12 +639,15 @@ class AudioDownloadManager with ChangeNotifier {
   /// Dispose resources
   @override
   Future<void> dispose() async {
-    super.dispose();
+    // Close all stream controllers before calling super.dispose()
     for (final controller in _progressControllers.values) {
       await controller.close();
     }
     _progressControllers.clear();
     await _saveDownloadTasks();
     debugPrint('✅ AudioDownloadManager disposed');
+
+    // Call super.dispose() last to properly dispose ChangeNotifier
+    super.dispose();
   }
 }

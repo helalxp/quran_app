@@ -8,7 +8,7 @@ class ApiConstants {
   
   /// Base URLs for different API services
   static const String alquranCloudBase = 'https://api.alquran.cloud/v1';
-  static const String quranComBase = 'http://api.quran-tafseer.com/tafseer/';
+  static const String quranComBase = 'https://quran-tafsir-proxy.quran-by-helal.workers.dev/';
   static const String everyAyahBase = 'https://everyayah.com/data';
   
   /// Al-Quran Cloud API endpoints

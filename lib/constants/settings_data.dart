@@ -108,6 +108,28 @@ class SettingsData {
       difficulty: 'متوسط إلى متقدم',
       volumes: '20 مجلد',
     ),
+    'تفسير الوسيط لطنطاوي': TafsirInfo(
+      englishName: 'Al-Wasit by Tantawi',
+      fullArabicName: 'التفسير الوسيط للقرآن الكريم',
+      author: 'الدكتور محمد سيد طنطاوي',
+      authorLifespan: '(1347-1431 هـ)',
+      description: 'تفسير معاصر شامل يجمع بين الأصالة والمعاصرة بأسلوب واضح.',
+      methodology: 'منهج معتدل يجمع بين التفسير اللغوي والموضوعي',
+      features: ['اللغة الواضحة', 'الربط بالواقع المعاصر', 'التحليل الموضوعي'],
+      difficulty: 'متوسط',
+      volumes: '14 مجلد',
+    ),
+    'تفسير البغوي': TafsirInfo(
+      englishName: 'Al-Baghawi',
+      fullArabicName: 'معالم التنزيل في تفسير القرآن',
+      author: 'الإمام الحسين بن مسعود البغوي',
+      authorLifespan: '(436-516 هـ)',
+      description: 'تفسير سلفي معتدل يعتمد على المأثور مع الإيجاز والوضوح.',
+      methodology: 'التفسير بالمأثور مع الاختصار وتجنب الإسرائيليات',
+      features: ['الوضوح والاعتدال', 'الصحة والموثوقية', 'تجنب الخلافات'],
+      difficulty: 'متوسط',
+      volumes: '8 مجلدات',
+    ),
   };
 
   /// Get reciter Arabic name from API constants

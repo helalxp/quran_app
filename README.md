@@ -1,12 +1,12 @@
 # 📖 Quran by Helal - Complete Islamic Companion App
 
-**Version:** 1.3.2+13
-**Framework:** Flutter 3.24.0+
+**Version:** 1.5.2+15
+**Framework:** Flutter 3.7.0+ / Dart 3.7.0+
 **Target Platforms:** Android (Primary)
 **Package Name:** com.helal.quran
 **Production Status:** ✅ Ready for Google Play Store Launch
 
-A comprehensive Islamic companion app featuring Quran reading, prayer times, Qibla compass, Khatma tracking, Tasbih counter, and advanced audio recitation with background playback.
+A comprehensive Islamic companion app featuring Quran reading, prayer times with native azan, Qibla compass, Khatma tracking, Azkar & Duas, Tasbih counter, advanced audio recitation with background playback, and integrated developer support via Google AdMob.
 
 ---
 
@@ -99,6 +99,31 @@ A comprehensive Islamic companion app featuring Quran reading, prayer times, Qib
 - **Seamless Integration** - One tap from daily card to start reading
 - **Detailed Statistics** - Track pages read, days active, completion rate
 
+### 📿 **Azkar & Duas (Supplications)** (NEW)
+- **Comprehensive Azkar Library** organized by category
+  - أذكار الصباح (Morning Azkar)
+  - أذكار المساء (Evening Azkar)
+  - أذكار بعد الصلاة (After-Prayer Azkar)
+  - أذكار النوم (Bedtime Azkar)
+  - أدعية متنوعة (Various Duas)
+  - And 10+ more categories
+- **Audio Playback** for each dhikr with authentic recitations
+- **Smart Counter System:**
+  - Tap to increment counter
+  - Auto-advance to next dhikr when complete
+  - Progress indicators for each dhikr
+  - Category completion tracking
+- **Interactive Interface:**
+  - Text copying with haptic feedback
+  - Auto-play mode for continuous listening
+  - Beautiful Arabic typography
+  - Category completion celebrations
+- **Progress Tracking:**
+  - Track completed dhikrs
+  - Category-level progress visualization
+  - Reset counters individually or by category
+- **Comprehensive Analytics** tracking usage patterns
+
 ### 📿 **Tasbih Counter** (NEW)
 - **Digital Counter** with large, easy-to-tap button
 - **After-Prayer Tasbih** mode with auto-word switching
@@ -125,6 +150,50 @@ A comprehensive Islamic companion app featuring Quran reading, prayer times, Qib
 - **Feature Icons** - Visual representation of each feature
 - **Last Used Screen** - Returns to your last location
 - **Settings Access** - Quick access to app settings
+- **Suggestions & Feedback** - Direct feedback channel to developers
+- **Developer Support** - Optional ad viewing to support development
+
+### 💬 **Suggestions & Feedback System** (NEW)
+- **Direct Feedback Channel** integrated with Firebase Firestore
+- **Anonymous Submissions** - No account required
+- **Smart Input Sanitization** for security (XSS prevention)
+- **Device Context Tracking:**
+  - App version and build number
+  - Platform information (Android version)
+  - Timestamp for support tracking
+- **Status Tracking** - Submissions marked as pending/reviewed/implemented
+- **User-Friendly Interface:**
+  - Arabic RTL support
+  - 500-character limit
+  - Real-time validation
+  - Success/error feedback
+- **Firebase Integration** for developer dashboard access
+- **Analytics Tracking** for submission patterns
+
+### 💰 **Developer Support (AdMob Integration)** (NEW)
+- **Optional Rewarded Ads** - Users can voluntarily support development
+- **Transparent Confirmation Dialog:**
+  - Clear explanation before ad display
+  - Cancel option always available
+  - Thank you message after completion
+- **Smart Ad Configuration:**
+  - Test ads in debug mode (safe for development)
+  - Production ads in release builds
+  - Test device configuration for developers
+- **Comprehensive Analytics Funnel:**
+  - Dialog opened tracking
+  - Ad attempted/completed/failed/cancelled events
+  - Full funnel visibility for optimization
+- **Google AdMob Integration:**
+  - Rewarded ad unit setup
+  - Publisher ID: ca-app-pub-4425611562080784
+  - App-ads.txt hosted on GitHub Pages
+  - GDPR-compliant privacy disclosures
+- **Non-intrusive Design:**
+  - Completely optional feature
+  - Accessible via Feature Selection screen
+  - No forced ads or interruptions
+  - User-initiated only
 
 ### 🎯 **Advanced Audio System**
 - **30+ Reciters Available:**
@@ -403,8 +472,30 @@ A comprehensive Islamic companion app featuring Quran reading, prayer times, Qib
     - `tasbih_increment` / `tasbih_reset` - Counter interactions
     - `tasbih_milestone` - Milestone achievements (33, 100)
 
+  - **Azkar & Duas:**
+    - `azkar_category_opened` - Category selection with dhikr count
+    - `dhikr_completed` - Individual dhikr completion
+    - `azkar_category_completed` - Full category completion
+    - `dhikr_audio_played` / `dhikr_audio_paused` - Audio playback
+    - `dhikr_counter_reset` - Counter resets
+    - `dhikr_text_copied` - Text copying actions
+    - `azkar_auto_play_toggled` - Auto-play setting changes
+    - `dhikr_increment` - Individual count tracking
+
   - **Khatma Management:**
     - `khatma_created` / `updated` / `completed` / `deleted` - Khatma lifecycle
+
+  - **Suggestions & Feedback:**
+    - `suggestions_opened` - Feedback dialog opened
+    - `suggestion_submitted` - Successful submission with message length
+    - `suggestion_failed` - Failed submissions with error details
+
+  - **Developer Support / AdMob:**
+    - `support_dialog_opened` - Support dialog displayed
+    - `support_ad_attempted` - Ad loading initiated
+    - `support_ad_completed` - User watched full ad
+    - `support_ad_failed` - Ad loading/display failure with error
+    - `support_ad_cancelled` - User cancelled before watching
 
   - **Settings:**
     - `settings_opened` - Settings accessed
@@ -606,48 +697,51 @@ flutter build apk --analyze-size
 ### Core Flutter Packages
 ```yaml
 # UI & Graphics
-flutter_svg: ^2.2.0              # SVG rendering
+flutter_svg: ^2.2.0              # SVG rendering for Quran pages
 provider: ^6.1.2                 # State management
 
 # Audio System
-just_audio: ^0.9.46              # Audio playback
+just_audio: ^0.9.46              # Audio playback engine
 audio_session: ^0.1.25           # Audio session management
-audio_service: ^0.18.18          # Background audio
+audio_service: ^0.18.18          # Background audio playback
 
 # Storage
-hive: ^2.2.3                     # Local database
+hive: ^2.2.3                     # Local NoSQL database
 hive_flutter: ^1.1.0             # Hive Flutter integration
 shared_preferences: ^2.3.2       # Simple key-value storage
+flutter_secure_storage: ^9.0.0   # Secure storage for sensitive data
 
 # Network
 http: ^1.2.2                     # HTTP client
-dio: ^5.4.0                      # Advanced HTTP with progress
+dio: ^5.4.0                      # Advanced HTTP with progress tracking
 connectivity_plus: ^5.0.2        # Network monitoring
+crypto: ^3.0.3                   # Cryptographic functions
 
-# Location & Sensors
-geolocator: ^13.0.4              # GPS location
-flutter_compass: ^0.9.0          # Compass sensor
-sensors_plus: ^6.0.1             # Device sensors
+# Location & Sensors (Prayer Times & Qibla)
+geolocator: ^13.0.4              # GPS location services
+flutter_qiblah: ^3.1.0+1         # Qibla compass implementation
+adhan: ^2.0.0+1                  # Islamic prayer times calculation
+country_state_city: ^0.1.6       # City/country database
 
 # Notifications & Alarms
 flutter_local_notifications: ^18.0.1  # Local notifications
 
 # Utilities
-wakelock_plus: ^1.2.9            # Screen wake lock
-path_provider: ^2.1.2            # File paths
-url_launcher: ^6.2.5             # External URLs
-package_info_plus: ^8.1.0        # App version info
-intl: ^0.19.0                    # Internationalization
+wakelock_plus: ^1.2.9            # Screen wake lock during playback
+path_provider: ^2.1.2            # File system paths
+url_launcher: ^6.2.5             # External URL handling
+package_info_plus: ^9.0.0        # App version information
 
-# Firebase
-firebase_core: ^2.32.0           # Firebase SDK
-firebase_analytics: ^10.10.7     # Analytics
+# Firebase Services
+firebase_core: ^3.15.0           # Firebase SDK
+firebase_analytics: ^11.5.0      # Usage analytics
+cloud_firestore: ^5.5.0          # Firestore database (for suggestions)
 
-# Haptics & Feedback
-vibration: ^2.1.0                # Haptic feedback
+# Monetization
+google_mobile_ads: ^5.2.0        # Google AdMob integration
 
 # Updates & Maintenance
-in_app_update: ^4.2.3            # Google Play in-app updates
+in_app_update: ^4.2.2            # Google Play in-app updates
 ```
 
 ---
@@ -1029,10 +1123,21 @@ _Screenshots coming soon in next update_
 
 ---
 
-**Last Updated:** December 2024
-**Version:** 1.3.2+13
+**Last Updated:** October 2025
+**Version:** 1.5.2+15
 **Build:** Production Ready
 **Status:** ✅ Ready for Google Play Store Launch
+
+**Latest Features (v1.5.x):**
+- ✅ Azkar & Duas with 15+ categories and audio playback
+- ✅ Comprehensive analytics (47+ tracked events)
+- ✅ Google AdMob rewarded ads for developer support
+- ✅ Suggestions & Feedback system with Firebase Firestore
+- ✅ Enhanced input sanitization for security
+- ✅ Reciters sorted alphabetically in Arabic
+- ✅ Prayer times cities sorted by country
+- ✅ Native azan playback with short/full duration option
+- ✅ Complete privacy policy updates for Play Store compliance
 
 ---
 

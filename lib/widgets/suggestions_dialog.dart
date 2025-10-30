@@ -3,6 +3,8 @@
 import 'package:flutter/material.dart';
 import '../services/suggestions_service.dart';
 import '../services/analytics_service.dart';
+import '../utils/input_sanitizer.dart';
+import '../utils/content_moderator.dart';
 
 class SuggestionsDialog extends StatefulWidget {
   const SuggestionsDialog({super.key});
@@ -49,8 +51,51 @@ class _SuggestionsDialogState extends State<SuggestionsDialog> {
     });
 
     try {
+      // Sanitize input to prevent XSS and injection attacks
+      final sanitizedMessage = InputSanitizer.sanitizeText(message);
+
+      // Validate sanitized message is not empty
+      if (sanitizedMessage.isEmpty) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text(
+                'النص المدخل غير صالح. الرجاء المحاولة مرة أخرى',
+                textDirection: TextDirection.rtl,
+              ),
+              duration: Duration(seconds: 3),
+              backgroundColor: Colors.orange,
+            ),
+          );
+        }
+        return;
+      }
+
+      // Apply content moderation to comply with Google Play UGC policy
+      if (!ContentModerator.isContentAppropriate(sanitizedMessage)) {
+        final reason = ContentModerator.getModerationReason(sanitizedMessage);
+        final rejectionMessage = ContentModerator.getRejectionMessage(reason);
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                rejectionMessage,
+                textDirection: TextDirection.rtl,
+              ),
+              duration: const Duration(seconds: 3),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+
+        // Log analytics for rejected content
+        AnalyticsService.logSuggestionFailed(reason);
+        return;
+      }
+
       final success = await SuggestionsService.submitSuggestion(
-        message: message,
+        message: sanitizedMessage,
       );
 
       if (mounted) {
