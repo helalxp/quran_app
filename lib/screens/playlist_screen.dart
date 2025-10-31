@@ -9,8 +9,58 @@ import '../models/surah.dart';
 import '../models/ayah_marker.dart';
 import '../continuous_audio_manager.dart';
 import '../audio_download_manager.dart' show AudioDownloadManager, DownloadType;
+import '../viewer_screen.dart';
 
 import '../services/analytics_service.dart';
+
+// Cache helper for frequently loaded JSON data
+class _JsonDataCache {
+  static List<Surah>? _cachedSurahs;
+  static List<AyahMarker>? _cachedMarkers;
+
+  // Load and cache surah data
+  static Future<List<Surah>> loadSurahs() async {
+    if (_cachedSurahs != null) {
+      return _cachedSurahs!;
+    }
+
+    final surahsJsonString = await rootBundle.loadString('assets/data/surah.json');
+    final List<dynamic> surahsJsonList = json.decode(surahsJsonString);
+    _cachedSurahs = surahsJsonList.map((json) => Surah.fromJson(json)).toList();
+    
+    return _cachedSurahs!;
+  }
+
+  // Load and cache ayah markers
+  static Future<List<AyahMarker>> loadMarkers() async {
+    if (_cachedMarkers != null) {
+      return _cachedMarkers!;
+    }
+
+    final markersJsonString = await rootBundle.loadString('assets/data/markers.json');
+    final List<dynamic> markersJsonList = json.decode(markersJsonString);
+    _cachedMarkers = markersJsonList.map((json) => AyahMarker.fromJson(json)).toList();
+    
+    return _cachedMarkers!;
+  }
+
+  // Get single surah by number (from cache)
+  static Future<Surah?> getSurahByNumber(int surahNumber) async {
+    final surahs = await loadSurahs();
+    try {
+      return surahs.firstWhere((s) => s.number == surahNumber);
+    } catch (e) {
+      return null;
+    }
+  }
+
+  // Clear cache (useful for testing or memory management)
+  static void clearCache() {
+    _cachedSurahs = null;
+    _cachedMarkers = null;
+  }
+}
+
 class PlaylistScreen extends StatefulWidget {
   const PlaylistScreen({super.key});
 
@@ -33,7 +83,32 @@ class _PlaylistScreenState extends State<PlaylistScreen> with SingleTickerProvid
   @override
   void dispose() {
     _tabController.dispose();
+    // NOTE: Don't dispose _audioManager - it's a singleton shared across the app
+    // Audio should continue playing even after leaving the playlist screen
     super.dispose();
+  }
+
+  /// Navigate to Mushaf screen with playlist listening mode enabled
+  void _navigateToMushaf(BuildContext context) async {
+    HapticUtils.navigation();
+    
+    // Get current ayah to navigate to its page
+    final currentAyah = _audioManager.currentAyahNotifier.value;
+    if (currentAyah == null) return;
+    
+    // Enable playlist listening mode
+    _audioManager.enablePlaylistListeningMode();
+    
+    // Navigate to ViewerScreen starting at the current ayah's page
+    await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => ViewerScreen(initialPage: currentAyah.page),
+      ),
+    );
+    
+    // Disable playlist listening mode when returning from mushaf
+    _audioManager.disablePlaylistListeningMode();
   }
 
   @override
@@ -56,6 +131,21 @@ class _PlaylistScreenState extends State<PlaylistScreen> with SingleTickerProvid
           ),
         ),
         centerTitle: true,
+        actions: [
+          // Go to Mushaf button - only visible when audio is playing
+          ValueListenableBuilder<bool>(
+            valueListenable: _audioManager.isPlayingNotifier,
+            builder: (context, isPlaying, _) {
+              if (!isPlaying) return const SizedBox.shrink();
+              
+              return IconButton(
+                icon: const Icon(Icons.menu_book),
+                tooltip: 'اذهب إلى المصحف',
+                onPressed: () => _navigateToMushaf(context),
+              );
+            },
+          ),
+        ],
         bottom: TabBar(
           controller: _tabController,
           tabs: const [
@@ -78,8 +168,8 @@ class _PlaylistScreenState extends State<PlaylistScreen> with SingleTickerProvid
             child: TabBarView(
               controller: _tabController,
               children: [
-                const _RecitersTab(),
-                _PlaylistsTab(key: _playlistsTabKey),
+                _RecitersTab(audioManager: _audioManager),
+                _PlaylistsTab(key: _playlistsTabKey, audioManager: _audioManager),
               ],
             ),
           ),
@@ -300,112 +390,6 @@ class _MiniMediaPlayer extends StatelessWidget {
                           color: Theme.of(context).colorScheme.primary,
                         ),
 
-                      // Repeat button (cycles: off -> 1 -> 2 -> ∞)
-                      ValueListenableBuilder(
-                        valueListenable: audioManager.repeatModeNotifier,
-                        builder: (context, repeatMode, child) {
-                          IconData icon;
-                          Color color;
-                          Widget? badge;
-
-                          switch (repeatMode) {
-                            case 0: // Off
-                              icon = Icons.repeat;
-                              color = Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.3);
-                              badge = null;
-                              break;
-                            case 1: // Repeat once
-                              icon = Icons.repeat;
-                              color = Theme.of(context).colorScheme.tertiary;
-                              badge = Positioned(
-                                right: 0,
-                                bottom: 0,
-                                child: Container(
-                                  padding: const EdgeInsets.all(2),
-                                  decoration: BoxDecoration(
-                                    color: Theme.of(context).colorScheme.tertiary,
-                                    shape: BoxShape.circle,
-                                  ),
-                                  child: Text(
-                                    '1',
-                                    style: TextStyle(
-                                      fontSize: 10,
-                                      fontWeight: FontWeight.bold,
-                                      color: Theme.of(context).colorScheme.onTertiary,
-                                    ),
-                                  ),
-                                ),
-                              );
-                              break;
-                            case 2: // Repeat twice
-                              icon = Icons.repeat;
-                              color = Theme.of(context).colorScheme.tertiary;
-                              badge = Positioned(
-                                right: 0,
-                                bottom: 0,
-                                child: Container(
-                                  padding: const EdgeInsets.all(2),
-                                  decoration: BoxDecoration(
-                                    color: Theme.of(context).colorScheme.tertiary,
-                                    shape: BoxShape.circle,
-                                  ),
-                                  child: Text(
-                                    '2',
-                                    style: TextStyle(
-                                      fontSize: 10,
-                                      fontWeight: FontWeight.bold,
-                                      color: Theme.of(context).colorScheme.onTertiary,
-                                    ),
-                                  ),
-                                ),
-                              );
-                              break;
-                            case 3: // Infinite
-                              icon = Icons.repeat;
-                              color = Theme.of(context).colorScheme.tertiary;
-                              badge = Positioned(
-                                right: 0,
-                                bottom: 0,
-                                child: Container(
-                                  padding: const EdgeInsets.all(2),
-                                  decoration: BoxDecoration(
-                                    color: Theme.of(context).colorScheme.tertiary,
-                                    shape: BoxShape.circle,
-                                  ),
-                                  child: Text(
-                                    '∞',
-                                    style: TextStyle(
-                                      fontSize: 10,
-                                      fontWeight: FontWeight.bold,
-                                      color: Theme.of(context).colorScheme.onTertiary,
-                                    ),
-                                  ),
-                                ),
-                              );
-                              break;
-                            default:
-                              icon = Icons.repeat;
-                              color = Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.3);
-                              badge = null;
-                          }
-
-                          return Stack(
-                            clipBehavior: Clip.none,
-                            children: [
-                              IconButton(
-                                onPressed: () {
-                                  HapticUtils.selectionClick();
-                                  audioManager.cycleRepeatMode();
-                                },
-                                icon: Icon(icon),
-                                iconSize: 24,
-                                color: color,
-                              ),
-                              if (badge != null) badge,
-                            ],
-                          );
-                        },
-                      ),
 
                       // Speed button
                       ValueListenableBuilder(
@@ -472,10 +456,10 @@ class _MiniMediaPlayer extends StatelessWidget {
 
   Future<String> _getSurahName(int surahNumber) async {
     try {
-      final surahsJsonString = await rootBundle.loadString('assets/data/surah.json');
-      final List<dynamic> surahsJsonList = json.decode(surahsJsonString);
-      final surahs = surahsJsonList.map((json) => Surah.fromJson(json)).toList();
-      final surah = surahs.firstWhere((s) => s.number == surahNumber);
+      final surah = await _JsonDataCache.getSurahByNumber(surahNumber);
+      if (surah == null) {
+        return 'سورة $surahNumber';
+      }
       return surah.nameArabic;
     } catch (e) {
       return 'سورة $surahNumber';
@@ -593,7 +577,9 @@ class _MiniMediaPlayer extends StatelessWidget {
 
 // Tab 1: Reciters List
 class _RecitersTab extends StatefulWidget {
-  const _RecitersTab();
+  final ContinuousAudioManager audioManager;
+  
+  const _RecitersTab({required this.audioManager});
 
   @override
   State<_RecitersTab> createState() => _RecitersTabState();
@@ -733,10 +719,8 @@ class _RecitersTabState extends State<_RecitersTab> {
   void _showSurahSelectionSheet(BuildContext context, String reciterName) async {
     HapticUtils.dialogOpen();
 
-    // Load surahs
-    final surahsJsonString = await rootBundle.loadString('assets/data/surah.json');
-    final List<dynamic> surahsJsonList = json.decode(surahsJsonString);
-    final surahs = surahsJsonList.map((json) => Surah.fromJson(json)).toList();
+    // Load surahs from cache
+    final surahs = await _JsonDataCache.loadSurahs();
 
     if (!context.mounted) return;
 
@@ -981,10 +965,8 @@ class _RecitersTabState extends State<_RecitersTab> {
     HapticUtils.success();
 
     try {
-      // Load ayah markers for the surah
-      final ayahMarkersJsonString = await rootBundle.loadString('assets/data/markers.json');
-      final List<dynamic> ayahMarkersJsonList = json.decode(ayahMarkersJsonString);
-      final ayahMarkers = ayahMarkersJsonList.map((json) => AyahMarker.fromJson(json)).toList();
+      // Load ayah markers from cache
+      final ayahMarkers = await _JsonDataCache.loadMarkers();
 
       // Get all ayahs for this surah
       final surahAyahs = ayahMarkers.where((marker) => marker.surah == surah.number).toList();
@@ -1007,12 +989,16 @@ class _RecitersTabState extends State<_RecitersTab> {
 
       // Start download
       final downloadManager = AudioDownloadManager();
-      await downloadManager.initialize();
+      try {
+        await downloadManager.initialize();
 
-      await downloadManager.downloadSurah(
-        surah.number,
-        reciterName,
-      );
+        await downloadManager.downloadSurah(
+          surah.number,
+          reciterName,
+        );
+      } finally {
+        await downloadManager.dispose();
+      }
 
       if (!context.mounted) return;
 
@@ -1088,10 +1074,8 @@ class _RecitersTabState extends State<_RecitersTab> {
         return;
       }
 
-      // Load ayah markers for the surah
-      final ayahMarkersJsonString = await rootBundle.loadString('assets/data/markers.json');
-      final List<dynamic> ayahMarkersJsonList = json.decode(ayahMarkersJsonString);
-      final ayahMarkers = ayahMarkersJsonList.map((json) => AyahMarker.fromJson(json)).toList();
+      // Load ayah markers from cache
+      final ayahMarkers = await _JsonDataCache.loadMarkers();
 
       // Get all ayahs for this surah
       final surahAyahs = ayahMarkers.where((marker) => marker.surah == surah.number).toList();
@@ -1112,9 +1096,8 @@ class _RecitersTabState extends State<_RecitersTab> {
         return;
       }
 
-      // Initialize audio manager
-      final audioManager = ContinuousAudioManager();
-      await audioManager.initialize();
+      // Reuse existing audio manager from parent
+      final audioManager = widget.audioManager;
 
       // Unregister page controller so playback doesn't affect mushaf screen
       audioManager.registerPageController(null, null, null);
@@ -1348,7 +1331,9 @@ class _RecitersTabState extends State<_RecitersTab> {
 
 // Tab 2: Playlists
 class _PlaylistsTab extends StatefulWidget {
-  const _PlaylistsTab({super.key});
+  final ContinuousAudioManager audioManager;
+  
+  const _PlaylistsTab({super.key, required this.audioManager});
 
   @override
   State<_PlaylistsTab> createState() => _PlaylistsTabState();
@@ -1739,6 +1724,8 @@ class _PlaylistsTabState extends State<_PlaylistsTab> {
                                                   textDirection: TextDirection.rtl,
                                                 ),
                                               ),
+                                              // Show repeat badge if any repeats are configured
+                                              if (_hasRepetition(playlist))
                                               if (playlist['repeatCount'] > 1)
                                                 Container(
                                                   margin: const EdgeInsets.only(right: 8),
@@ -1757,12 +1744,13 @@ class _PlaylistsTabState extends State<_PlaylistsTab> {
                                                       ),
                                                       const SizedBox(width: 4),
                                                       Text(
-                                                        '×${playlist['repeatCount']}',
+                                                        _getRepeatText(playlist),
                                                         style: TextStyle(
                                                           fontSize: 11,
                                                           fontWeight: FontWeight.bold,
                                                           color: Theme.of(context).colorScheme.onPrimaryContainer,
                                                         ),
+                                                        textDirection: TextDirection.rtl,
                                                       ),
                                                     ],
                                                   ),
@@ -1826,10 +1814,8 @@ class _PlaylistsTabState extends State<_PlaylistsTab> {
     });
 
     try {
-      // Load all ayah markers
-      final ayahMarkersJsonString = await rootBundle.loadString('assets/data/markers.json');
-      final List<dynamic> ayahMarkersJsonList = json.decode(ayahMarkersJsonString);
-      final allAyahMarkers = ayahMarkersJsonList.map((json) => AyahMarker.fromJson(json)).toList();
+      // Load all ayah markers from cache
+      final allAyahMarkers = await _JsonDataCache.loadMarkers();
 
       // Extract playlist data
       final fromSurah = playlist['fromSurah'] as int;
@@ -1837,7 +1823,8 @@ class _PlaylistsTabState extends State<_PlaylistsTab> {
       final toSurah = playlist['toSurah'] as int;
       final toAyah = playlist['toAyah'] as int?;
       final reciter = playlist['reciter'] as String;
-      final repeatCount = playlist['repeatCount'] as int;
+      final ayahRepeatCount = playlist['ayahRepeatCount'] ?? playlist['repeatCount'] ?? 1;  // Backwards compatibility
+      final playlistRepeatCount = playlist['playlistRepeatCount'] ?? 1;
 
       // Build the queue of ayahs for the playlist (unique ayahs only for download check)
       List<AyahMarker> uniqueAyahs = [];
@@ -1904,26 +1891,40 @@ class _PlaylistsTabState extends State<_PlaylistsTab> {
           downloadManager.downloadSurah(surahNum, reciter);
         }
       }
+      
+      // Note: Don't dispose here as downloads are running in background
+      // AudioDownloadManager should handle its own lifecycle
 
-      // Build the full playlist queue with repeats
+      // Build the full playlist queue with both ayah and playlist repeats
       List<AyahMarker> playlistQueue = [];
-      for (final ayah in uniqueAyahs) {
-        for (int i = 0; i < repeatCount; i++) {
-          playlistQueue.add(ayah);
+      
+      // Repeat the entire playlist
+      for (int playlistRepeat = 0; playlistRepeat < playlistRepeatCount; playlistRepeat++) {
+        // For each ayah in the playlist
+        for (final ayah in uniqueAyahs) {
+          // Repeat this ayah
+          for (int ayahRepeat = 0; ayahRepeat < ayahRepeatCount; ayahRepeat++) {
+            playlistQueue.add(ayah);
+          }
         }
       }
 
-      // Initialize audio manager
-      final audioManager = ContinuousAudioManager();
-      await audioManager.initialize();
+      // Reuse existing audio manager from parent
+      final audioManager = widget.audioManager;
+
+      // Disable audioManager repeat mode since we handle repetition in the playlist queue
+      // This prevents conflicts where the repeat mode from previous sessions interferes
+      await audioManager.disableRepeatMode();
 
       // Unregister page controller to prevent mushaf navigation
       audioManager.registerPageController(null, null, null);
 
-      // Start playing the playlist
-      // NOTE: Don't pass allAyahMarkers to prevent continuing beyond playlist endpoint
-      await audioManager.startContinuousPlayback(
-        playlistQueue.first,
+      // Enable playlist listening mode
+      audioManager.enablePlaylistListeningMode();
+
+      // Start playing the playlist using dedicated playlist method
+      // This preserves the exact queue order with repetitions intact
+      await audioManager.startPlaylistPlayback(
         reciter,
         playlistQueue,
       );
@@ -1945,6 +1946,29 @@ class _PlaylistsTabState extends State<_PlaylistsTab> {
         ),
       );
     }
+  }
+
+
+  /// Check if playlist has any repetition configured
+  bool _hasRepetition(Map<String, dynamic> playlist) {
+    final ayahRepeat = playlist['ayahRepeatCount'] ?? playlist['repeatCount'] ?? 1;
+    final playlistRepeat = playlist['playlistRepeatCount'] ?? 1;
+    return ayahRepeat > 1 || playlistRepeat > 1;
+  }
+
+  /// Get formatted repeat text for display
+  String _getRepeatText(Map<String, dynamic> playlist) {
+    final ayahRepeat = playlist['ayahRepeatCount'] ?? playlist['repeatCount'] ?? 1;
+    final playlistRepeat = playlist['playlistRepeatCount'] ?? 1;
+    
+    if (ayahRepeat > 1 && playlistRepeat > 1) {
+      return '$ayahRepeat× آية • $playlistRepeat× قائمة';
+    } else if (ayahRepeat > 1) {
+      return '$ayahRepeat× تكرار الآية';
+    } else if (playlistRepeat > 1) {
+      return '$playlistRepeat× تكرار القائمة';
+    }
+    return '×1';
   }
 
   void _playPreviousPlaylist() {
@@ -1995,8 +2019,9 @@ class _PlaylistCreationSheetState extends State<_PlaylistCreationSheet> {
   // Reciter selection
   String? _selectedReciter;
 
-  // Repeat count
-  int _repeatCount = 1;
+  // Repeat counts
+  int _ayahRepeatCount = 1;  // How many times to repeat each ayah
+  int _playlistRepeatCount = 1;  // How many times to repeat the entire playlist
 
   List<Surah> _allSurahs = [];
   String? _playlistId;
@@ -2012,7 +2037,8 @@ class _PlaylistCreationSheetState extends State<_PlaylistCreationSheet> {
       final playlist = widget.existingPlaylist!;
       _playlistId = playlist['id'];
       _nameController.text = playlist['name'];
-      _repeatCount = playlist['repeatCount'] ?? 1;
+      _ayahRepeatCount = playlist['ayahRepeatCount'] ?? playlist['repeatCount'] ?? 1;  // Backwards compatibility
+      _playlistRepeatCount = playlist['playlistRepeatCount'] ?? 1;
       _selectedReciter = playlist['reciter'];
       // Surahs will be loaded after _allSurahs is populated
     }
@@ -2026,10 +2052,9 @@ class _PlaylistCreationSheetState extends State<_PlaylistCreationSheet> {
 
   Future<void> _loadSurahs() async {
     try {
-      final surahsJsonString = await rootBundle.loadString('assets/data/surah.json');
-      final List<dynamic> surahsJsonList = json.decode(surahsJsonString);
+      final loadedSurahs = await _JsonDataCache.loadSurahs();
       setState(() {
-        _allSurahs = surahsJsonList.map((json) => Surah.fromJson(json)).toList();
+        _allSurahs = loadedSurahs;
 
         // Load existing playlist surahs after loading all surahs
         if (widget.existingPlaylist != null) {
@@ -2410,65 +2435,134 @@ class _PlaylistCreationSheetState extends State<_PlaylistCreationSheet> {
   }
 
   Widget _buildRepeatCounter(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceContainerHighest,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Row(
-        textDirection: TextDirection.rtl,
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(
-            'عدد المرات',
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
-              color: Theme.of(context).colorScheme.onSurface,
-            ),
-            textDirection: TextDirection.rtl,
+    return Column(
+      children: [
+        // Ayah repetition counter
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.surfaceContainerHighest,
+            borderRadius: BorderRadius.circular(12),
           ),
-          Row(
-            textDirection: TextDirection.ltr,
+          child: Row(
+            textDirection: TextDirection.rtl,
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              IconButton(
-                onPressed: _repeatCount > 1
-                    ? () {
-                        HapticUtils.selectionClick();
-                        setState(() => _repeatCount--);
-                      }
-                    : null,
-                icon: const Icon(Icons.remove_circle_outline),
-                color: Theme.of(context).colorScheme.primary,
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-                decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.3),
-                  borderRadius: BorderRadius.circular(8),
+              Text(
+                'تكرار الآية',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  color: Theme.of(context).colorScheme.onSurface,
                 ),
-                child: Text(
-                  '$_repeatCount',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
+                textDirection: TextDirection.rtl,
+              ),
+              Row(
+                textDirection: TextDirection.ltr,
+                children: [
+                  IconButton(
+                    onPressed: _ayahRepeatCount > 1
+                        ? () {
+                            HapticUtils.selectionClick();
+                            setState(() => _ayahRepeatCount--);
+                          }
+                        : null,
+                    icon: const Icon(Icons.remove_circle_outline),
                     color: Theme.of(context).colorScheme.primary,
                   ),
-                ),
-              ),
-              IconButton(
-                onPressed: () {
-                  HapticUtils.selectionClick();
-                  setState(() => _repeatCount++);
-                },
-                icon: const Icon(Icons.add_circle_outline),
-                color: Theme.of(context).colorScheme.primary,
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.3),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text(
+                      '$_ayahRepeatCount',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Theme.of(context).colorScheme.primary,
+                      ),
+                    ),
+                  ),
+                  IconButton(
+                    onPressed: () {
+                      HapticUtils.selectionClick();
+                      setState(() => _ayahRepeatCount++);
+                    },
+                    icon: const Icon(Icons.add_circle_outline),
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
+                ],
               ),
             ],
           ),
-        ],
-      ),
+        ),
+        
+        const SizedBox(height: 12),
+        
+        // Playlist repetition counter
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.surfaceContainerHighest,
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Row(
+            textDirection: TextDirection.rtl,
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'تكرار القائمة',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  color: Theme.of(context).colorScheme.onSurface,
+                ),
+                textDirection: TextDirection.rtl,
+              ),
+              Row(
+                textDirection: TextDirection.ltr,
+                children: [
+                  IconButton(
+                    onPressed: _playlistRepeatCount > 1
+                        ? () {
+                            HapticUtils.selectionClick();
+                            setState(() => _playlistRepeatCount--);
+                          }
+                        : null,
+                    icon: const Icon(Icons.remove_circle_outline),
+                    color: Theme.of(context).colorScheme.secondary,
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).colorScheme.secondaryContainer.withValues(alpha: 0.3),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text(
+                      '$_playlistRepeatCount',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Theme.of(context).colorScheme.secondary,
+                      ),
+                    ),
+                  ),
+                  IconButton(
+                    onPressed: () {
+                      HapticUtils.selectionClick();
+                      setState(() => _playlistRepeatCount++);
+                    },
+                    icon: const Icon(Icons.add_circle_outline),
+                    color: Theme.of(context).colorScheme.secondary,
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 
@@ -2914,7 +3008,9 @@ class _PlaylistCreationSheetState extends State<_PlaylistCreationSheet> {
       'toSurah': _toSurah!.number,
       'toAyah': _toAyah,
       'reciter': _selectedReciter!,
-      'repeatCount': _repeatCount,
+      'ayahRepeatCount': _ayahRepeatCount,  // How many times each ayah repeats
+      'playlistRepeatCount': _playlistRepeatCount,  // How many times the playlist repeats
+      'repeatCount': _ayahRepeatCount,  // Backwards compatibility
       'description': '${_fromSurah!.nameArabic}${_fromAyah != null ? ":$_fromAyah" : ""} → ${_toSurah!.nameArabic}${_toAyah != null ? ":$_toAyah" : ""}',
       'created': DateTime.now().toIso8601String(),
     };

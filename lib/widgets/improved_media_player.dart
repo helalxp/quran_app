@@ -25,6 +25,7 @@ class ImprovedMediaPlayer extends StatefulWidget {
   final ValueNotifier<bool>? isMemorizationModeNotifier;
   final VoidCallback? onMemorizationPause;
   final VoidCallback? onMemorizationResume;
+  final ValueNotifier<bool>? isPlaylistListeningModeNotifier;
 
   const ImprovedMediaPlayer({
     super.key,
@@ -45,6 +46,7 @@ class ImprovedMediaPlayer extends StatefulWidget {
     this.isMemorizationModeNotifier,
     this.onMemorizationPause,
     this.onMemorizationResume,
+    this.isPlaylistListeningModeNotifier,
   });
 
   @override
@@ -442,6 +444,48 @@ class _ImprovedMediaPlayerState extends State<ImprovedMediaPlayer>
                                   fontSize: 10,
                                   fontWeight: FontWeight.w500,
                                   color: Theme.of(context).colorScheme.secondary,
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                      },
+                    ),
+                  ],
+                  
+                  // Playlist listening mode indicator
+                  if (widget.isPlaylistListeningModeNotifier != null) ...[
+                    const SizedBox(height: 4),
+                    ValueListenableBuilder<bool>(
+                      valueListenable: widget.isPlaylistListeningModeNotifier!,
+                      builder: (context, isPlaylistMode, _) {
+                        if (!isPlaylistMode) return const SizedBox.shrink();
+                        
+                        return Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.15),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: Theme.of(context).colorScheme.primary,
+                              width: 1,
+                            ),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.playlist_play,
+                                size: 12,
+                                color: Theme.of(context).colorScheme.primary,
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                'السمعيات',
+                                style: TextStyle(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w500,
+                                  color: Theme.of(context).colorScheme.primary,
                                 ),
                               ),
                             ],

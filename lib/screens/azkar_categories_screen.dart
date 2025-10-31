@@ -18,7 +18,7 @@ class _AzkarCategoriesScreenState extends State<AzkarCategoriesScreen> with Sing
   bool _isLoading = true;
   bool _searchInText = false;
   String _searchQuery = '';
-  Map<String, bool> _expandedSections = {};
+  final Map<String, bool> _expandedSections = {};
 
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;

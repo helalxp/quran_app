@@ -850,6 +850,7 @@ class _ViewerScreenState extends State<ViewerScreen> with TickerProviderStateMix
                           : null,
                       onMemorizationPause: () => _memorizationManager?.pauseSession(),
                       onMemorizationResume: () => _memorizationManager?.resumeSession(),
+                      isPlaylistListeningModeNotifier: _audioManager!.isPlaylistListeningModeNotifier,
                     );
                   },
                 ),

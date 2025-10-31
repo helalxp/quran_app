@@ -38,7 +38,7 @@ class AzkarAudioService {
   final ValueNotifier<bool> autoPlayNextNotifier = ValueNotifier(false);
 
   bool _initialized = false;
-  bool _isPlaybackChanging = false; // Mutex to prevent race conditions
+  final bool _isPlaybackChanging = false; // Mutex to prevent race conditions
   bool _isDisposed = false; // Track if service was disposed
 
   // Callback for when audio completes

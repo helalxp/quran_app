@@ -303,7 +303,7 @@ class KhatmaManager {
         _khatmas[i] = updatedKhatma; // Update using index to ensure we modify the correct khatma
         final nowCompleted = updatedKhatma.isCompleted;
 
-        debugPrint('✅ Khatma "${khatma.name}" progress: ${updatedKhatma.pagesRead}/${updatedKhatma.totalPages} pages (${newPagesReadToday} new today)');
+        debugPrint('✅ Khatma "${khatma.name}" progress: ${updatedKhatma.pagesRead}/${updatedKhatma.totalPages} pages ($newPagesReadToday new today)');
 
         // Log analytics for completion
         if (!wasCompleted && nowCompleted) {

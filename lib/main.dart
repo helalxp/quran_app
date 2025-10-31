@@ -11,7 +11,6 @@ import 'theme_manager.dart';
 import 'services/audio_service_handler.dart';
 import 'services/analytics_service.dart';
 import 'services/prayer_times_service.dart';
-import 'services/azan_service.dart';
 import 'services/notification_service.dart';
 import 'services/alarm_scheduler_service.dart';
 import 'services/native_azan_service.dart';

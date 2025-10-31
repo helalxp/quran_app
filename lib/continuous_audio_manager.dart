@@ -127,6 +127,7 @@ class ContinuousAudioManager {
   bool _completionHandled = false; // NEW: Prevent multiple completion events
   Timer? _completionTimer; // NEW: Debounce completion events
   bool _inMemorizationMode = false; // NEW: Flag to skip completion handling during memorization
+  bool _inPlaylistListeningMode = false; // NEW: Flag for playlist listening mode
   
   // Enhanced timeout controls
   Timer? _loadingTimer; // Track loading timeout
@@ -158,6 +159,7 @@ class ContinuousAudioManager {
   final ValueNotifier<Duration> durationNotifier = ValueNotifier(Duration.zero);
   final ValueNotifier<bool> repeatSurahNotifier = ValueNotifier(false);
   final ValueNotifier<int> repeatModeNotifier = ValueNotifier(0); // 0 = off, 1 = once, 2 = twice, 3 = infinite
+  final ValueNotifier<bool> isPlaylistListeningModeNotifier = ValueNotifier(false); // Playlist listening mode indicator
 
   // Available speeds
   final List<double> _availableSpeeds = [0.5, 0.75, 1.0, 1.25, 1.5, 2.0];
@@ -910,6 +912,62 @@ class ContinuousAudioManager {
     }
   }
 
+  /// Start playlist playback with a pre-built queue (preserves exact order)
+  /// This method is specifically for playlist mode where the queue is already
+  /// constructed with the correct repetition structure
+  Future<void> startPlaylistPlayback(String reciterName, List<AyahMarker> playlistQueue) async {
+    try {
+      await initialize();
+
+      // Stop Azkar audio if it's playing to prevent audio conflicts
+      try {
+        final azkarService = AzkarAudioService();
+        if (azkarService.isPlaying) {
+          debugPrint('🔇 Stopping Azkar audio to play Quran');
+          await azkarService.stop();
+        }
+      } catch (e) {
+        debugPrint('⚠️ Error stopping Azkar audio: $e');
+      }
+
+      // Reset timeout counters for new playback session
+      _currentRetryAttempt = 0;
+      _clearTimeouts();
+
+      if (!_reciterConfigs.containsKey(reciterName)) {
+        _currentReciter = _reciterConfigs.keys.first;
+        debugPrint('⚠️ Reciter "$reciterName" not found, using fallback: $_currentReciter');
+      } else {
+        _currentReciter = reciterName;
+      }
+      currentReciterNotifier.value = _currentReciter;
+
+      // Use the playlist queue directly without rebuilding or sorting
+      _playQueue.clear();
+      _playQueue.addAll(playlistQueue);
+      _currentIndex = 0; // Always start from the beginning of the playlist
+
+      if (_playQueue.isNotEmpty) {
+        _consecutiveErrors = 0;
+        _completionHandled = false;
+        _currentRepeatCount = 0;
+        playbackSpeedNotifier.value = _playbackSpeed;
+
+        debugPrint('🎵 Starting playlist playback with ${_playQueue.length} ayahs');
+        debugPrint('🎵 Queue: ${_playQueue.map((a) => '${a.surah}:${a.ayah}').join(', ')}');
+
+        await _playCurrentAyah();
+      } else {
+        debugPrint('❌ Playlist queue is empty');
+        throw Exception(AudioErrorMessages.getNoAyahsError());
+      }
+    } catch (e) {
+      debugPrint('❌ Error starting playlist playback: $e');
+      await stop();
+      rethrow;
+    }
+  }
+
   void _buildPlayQueue(AyahMarker startingAyah, List<AyahMarker> allAyahsInSurah) {
     _playQueue.clear();
     final surahAyahs = allAyahsInSurah
@@ -1136,6 +1194,29 @@ class ContinuousAudioManager {
     await prefs.setInt('repeat_mode', _repeatMode);
 
     debugPrint('🔁 Repeat mode cycled to: $_repeatMode');
+  }
+
+  /// Set repeat mode to a specific value (0=off, 1=once, 2=twice, 3=infinite)
+  Future<void> setRepeatMode(int mode) async {
+    if (mode < 0 || mode > 3) {
+      debugPrint('⚠️ Invalid repeat mode: $mode. Must be 0-3.');
+      return;
+    }
+    
+    _repeatMode = mode;
+    _currentRepeatCount = 0; // Reset repeat counter
+    repeatModeNotifier.value = _repeatMode;
+
+    // Save to preferences
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt('repeat_mode', _repeatMode);
+
+    debugPrint('🔁 Repeat mode set to: $_repeatMode');
+  }
+
+  /// Disable repeat mode (convenience method)
+  Future<void> disableRepeatMode() async {
+    await setRepeatMode(0);
   }
 
   Future<void> updateContinueToNextSurah(bool enabled) async {
@@ -1483,6 +1564,8 @@ class ContinuousAudioManager {
       _completionTimer = null;
       _clearTimeouts(); // Clear all timeout timers
       _inMemorizationMode = false; // Reset memorization flag
+      _inPlaylistListeningMode = false; // Reset playlist listening mode flag
+      isPlaylistListeningModeNotifier.value = false; // Update notifier for UI
       await _audioPlayer?.stop();
       // Notify audio service handler
       try {
@@ -1519,6 +1602,25 @@ class ContinuousAudioManager {
   bool get hasCurrentAyah => currentAyahNotifier.value != null;
   AyahMarker? get currentAyah => _currentAyah;
   String? get currentReciter => _currentReciter;
+
+  // -------- Playlist Listening Mode --------
+  
+  /// Enable playlist listening mode
+  void enablePlaylistListeningMode() {
+    _inPlaylistListeningMode = true;
+    isPlaylistListeningModeNotifier.value = true;
+    debugPrint('🎧 Playlist listening mode enabled');
+  }
+  
+  /// Disable playlist listening mode
+  void disablePlaylistListeningMode() {
+    _inPlaylistListeningMode = false;
+    isPlaylistListeningModeNotifier.value = false;
+    debugPrint('🎧 Playlist listening mode disabled');
+  }
+  
+  /// Check if currently in playlist listening mode
+  bool get isInPlaylistListeningMode => _inPlaylistListeningMode;
 
   // -------- Page Following Functionality --------
 
