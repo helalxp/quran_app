@@ -141,7 +141,7 @@ class SettingsData {
   static Map<String, String> get availableReciters => ApiConstants.apiCodeToArabicName;
 
   /// Playback speed options
-  static const List<double> speedOptions = [0.5, 0.75, 1.0, 1.25, 1.5, 2.0];
+  static const List<double> speedOptions = [0.5, 0.75, 1.0, 1.25, 1.5, 2.0, 2.5, 3.0];
 
   /// Repetition count options
   static const List<int> repetitionOptions = [1, 2, 3, 5, 10];

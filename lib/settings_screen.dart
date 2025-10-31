@@ -1252,7 +1252,9 @@ class _SettingsScreenState extends State<SettingsScreen> with TickerProviderStat
     if (speed < 1.0) return 'أبطأ';
     if (speed == 1.0) return 'طبيعي';
     if (speed <= 1.5) return 'أسرع قليلاً';
-    return 'سريع';
+    if (speed <= 2.0) return 'سريع';
+    if (speed <= 2.5) return 'سريع جداً';
+    return 'سريع للغاية';
   }
 
   void _showDownloadDialog() {

@@ -4,6 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import '../models/ayah_marker.dart';
 import '../constants/surah_names.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import '../constants/api_constants.dart';
+import '../continuous_audio_manager.dart';
 import '../constants/app_constants.dart';
 import '../utils/haptic_utils.dart';
 
@@ -397,17 +400,25 @@ class _ImprovedMediaPlayerState extends State<ImprovedMediaPlayer>
                     textAlign: TextAlign.right,
                   ),
                   const SizedBox(height: 4),
-                  ValueListenableBuilder<String?>(
-                    valueListenable: widget.currentReciterNotifier,
-                    builder: (context, reciter, _) => Text(
-                      widget.currentAyah != null 
-                          ? 'الآية ${widget.currentAyah!.ayah} • ${reciter ?? 'قارئ'}'
-                          : 'متوقف مؤقتًا • ${reciter ?? 'قارئ'}',
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Theme.of(context).colorScheme.onPrimaryContainer.withValues(alpha: 0.8),
+                  GestureDetector(
+                    onTap: () {
+                      HapticUtils.selectionClick();
+                      _showReciterSelectionDialog();
+                    },
+                    child: ValueListenableBuilder<String?>(
+                      valueListenable: widget.currentReciterNotifier,
+                      builder: (context, reciter, _) => Text(
+                        widget.currentAyah != null 
+                            ? 'الآية ${widget.currentAyah!.ayah} • ${reciter ?? 'قارئ'}'
+                            : 'متوقف مؤقتًا • ${reciter ?? 'قارئ'}',
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Theme.of(context).colorScheme.onPrimaryContainer.withValues(alpha: 0.8),
+                          decoration: TextDecoration.underline,
+                          decorationStyle: TextDecorationStyle.dotted,
+                        ),
+                        textAlign: TextAlign.right,
                       ),
-                      textAlign: TextAlign.right,
                     ),
                   ),
                   
@@ -746,5 +757,80 @@ class _ImprovedMediaPlayerState extends State<ImprovedMediaPlayer>
         ),
       ),
     );
+  }
+
+  /// Show reciter selection dialog
+  Future<void> _showReciterSelectionDialog() async {
+    final currentReciter = widget.currentReciterNotifier.value ?? 'مشاري راشد العفاسي';
+
+    // Sort reciters alphabetically
+    final sortedReciters = ApiConstants.reciterConfigs.keys.toList()..sort();
+
+    final selectedReciter = await showDialog<String>(
+      context: context,
+      builder: (BuildContext context) {
+        return Directionality(
+          textDirection: TextDirection.rtl,
+          child: AlertDialog(
+            title: const Text(
+              'اختر القارئ',
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            ),
+            content: SizedBox(
+              width: double.maxFinite,
+              child: ListView.builder(
+                shrinkWrap: true,
+                itemCount: sortedReciters.length,
+                itemBuilder: (context, index) {
+                  final reciterName = sortedReciters[index];
+                  final isSelected = reciterName == currentReciter;
+                  
+                  return ListTile(
+                    title: Text(
+                      reciterName,
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                        color: isSelected 
+                            ? Theme.of(context).colorScheme.primary 
+                            : Theme.of(context).colorScheme.onSurface,
+                      ),
+                    ),
+                    trailing: isSelected 
+                        ? Icon(
+                            Icons.check_circle,
+                            color: Theme.of(context).colorScheme.primary,
+                          )
+                        : null,
+                    onTap: () {
+                      Navigator.of(context).pop(reciterName);
+                    },
+                  );
+                },
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(),
+                child: const Text('إلغاء'),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+
+    if (selectedReciter != null && selectedReciter != currentReciter) {
+      // Update the reciter in audio manager
+      final audioManager = ContinuousAudioManager();
+      await audioManager.updateReciter(selectedReciter);
+      
+      // Save to shared preferences
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('selected_reciter', selectedReciter);
+      
+      debugPrint('✅ Reciter changed to: $selectedReciter');
+    }
+      
   }
 }

@@ -162,7 +162,7 @@ class ContinuousAudioManager {
   final ValueNotifier<bool> isPlaylistListeningModeNotifier = ValueNotifier(false); // Playlist listening mode indicator
 
   // Available speeds
-  final List<double> _availableSpeeds = [0.5, 0.75, 1.0, 1.25, 1.5, 2.0];
+  final List<double> _availableSpeeds = [0.5, 0.75, 1.0, 1.25, 1.5, 2.0, 2.5, 3.0];
   int _currentSpeedIndex = 2; // index of 1.0
 
   // Use centralized reciter configurations from ApiConstants
@@ -1583,11 +1583,20 @@ class ContinuousAudioManager {
     }
   }
 
-  void changeSpeed() {
+  Future<void> changeSpeed() async {
     _currentSpeedIndex = (_currentSpeedIndex + 1) % _availableSpeeds.length;
     _playbackSpeed = _availableSpeeds[_currentSpeedIndex];
     playbackSpeedNotifier.value = _playbackSpeed;
     _audioPlayer?.setSpeed(_playbackSpeed);
+
+    // Save to SharedPreferences so settings screen stays in sync
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setDouble('playback_speed', _playbackSpeed);
+    } catch (e) {
+      debugPrint('⚠️ Error saving playback speed: $e');
+    }
+
     debugPrint('🏃 Speed changed to: ${_playbackSpeed}x');
   }
 
