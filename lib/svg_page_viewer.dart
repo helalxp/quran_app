@@ -17,9 +17,9 @@ class SvgPageViewer extends StatefulWidget {
   final String surahName;
   final String juzName;
   final ValueNotifier<AyahMarker?> currentlyPlayingAyah;
+  final ValueNotifier<AyahMarker?>? highlightedAyahFromSearch;
   final Function(AyahMarker, String) onContinuousPlayRequested;
   final MemorizationManager? memorizationManager;
-
 
   // SVG canvas dimensions - use constants
   double get sourceWidth => AppConstants.svgSourceWidth;
@@ -33,6 +33,7 @@ class SvgPageViewer extends StatefulWidget {
     required this.surahName,
     required this.juzName,
     required this.currentlyPlayingAyah,
+    this.highlightedAyahFromSearch,
     required this.onContinuousPlayRequested,
     this.memorizationManager,
   });
@@ -41,12 +42,12 @@ class SvgPageViewer extends StatefulWidget {
   State<SvgPageViewer> createState() => _SvgPageViewerState();
 }
 
-class _SvgPageViewerState extends State<SvgPageViewer> with TickerProviderStateMixin {
+class _SvgPageViewerState extends State<SvgPageViewer>
+    with TickerProviderStateMixin {
   AyahMarker? _highlightedAyah;
   late AnimationController _pulseController;
   late Animation<double> _pulseAnimation;
   Timer? _highlightRemovalTimer;
-
 
   // SVG measurement key for direct measurement
   final GlobalKey _svgKey = GlobalKey();
@@ -55,7 +56,6 @@ class _SvgPageViewerState extends State<SvgPageViewer> with TickerProviderStateM
   late TransformationController _transformationController;
   late AnimationController _zoomResetController;
   late Animation<Matrix4> _zoomResetAnimation;
-
 
   @override
   void initState() {
@@ -67,13 +67,9 @@ class _SvgPageViewerState extends State<SvgPageViewer> with TickerProviderStateM
       vsync: this,
     );
 
-    _pulseAnimation = Tween<double>(
-      begin: 0.3,
-      end: 0.6,
-    ).animate(CurvedAnimation(
-      parent: _pulseController,
-      curve: Curves.easeInOut,
-    ));
+    _pulseAnimation = Tween<double>(begin: 0.3, end: 0.6).animate(
+      CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
+    );
 
     _pulseController.repeat(reverse: true);
 
@@ -87,18 +83,46 @@ class _SvgPageViewerState extends State<SvgPageViewer> with TickerProviderStateM
     _zoomResetAnimation = Matrix4Tween(
       begin: Matrix4.identity(),
       end: Matrix4.identity(),
-    ).animate(CurvedAnimation(
-      parent: _zoomResetController,
-      curve: Curves.easeInOut,
-    ));
+    ).animate(
+      CurvedAnimation(parent: _zoomResetController, curve: Curves.easeInOut),
+    );
 
     _zoomResetAnimation.addListener(() {
       _transformationController.value = _zoomResetAnimation.value;
     });
+
+    // Listen to highlighted ayah from search
+    widget.highlightedAyahFromSearch?.addListener(_onHighlightedAyahChanged);
+  }
+
+  void _onHighlightedAyahChanged() {
+    final ayahToHighlight = widget.highlightedAyahFromSearch?.value;
+    if (ayahToHighlight != null &&
+        widget.markers.any(
+          (m) =>
+              m.surah == ayahToHighlight.surah &&
+              m.ayah == ayahToHighlight.ayah,
+        )) {
+      // This ayah is on the current page, highlight it
+      setState(() {
+        _highlightedAyah = ayahToHighlight;
+      });
+
+      // Schedule removal after 2 seconds with fade animation
+      _highlightRemovalTimer?.cancel();
+      _highlightRemovalTimer = Timer(const Duration(seconds: 2), () {
+        if (mounted && _highlightedAyah == ayahToHighlight) {
+          setState(() {
+            _highlightedAyah = null;
+          });
+        }
+      });
+    }
   }
 
   @override
   void dispose() {
+    widget.highlightedAyahFromSearch?.removeListener(_onHighlightedAyahChanged);
     _pulseController.dispose();
     _zoomResetController.dispose();
     _transformationController.dispose();
@@ -113,10 +137,9 @@ class _SvgPageViewerState extends State<SvgPageViewer> with TickerProviderStateM
       _zoomResetAnimation = Matrix4Tween(
         begin: currentTransform,
         end: Matrix4.identity(),
-      ).animate(CurvedAnimation(
-        parent: _zoomResetController,
-        curve: Curves.easeInOut,
-      ));
+      ).animate(
+        CurvedAnimation(parent: _zoomResetController, curve: Curves.easeInOut),
+      );
 
       _zoomResetController.reset();
       _zoomResetController.forward();
@@ -131,7 +154,9 @@ class _SvgPageViewerState extends State<SvgPageViewer> with TickerProviderStateM
       // Use scaffold background color to match app background instead of surface
       return Theme.of(context).scaffoldBackgroundColor;
     } else {
-      return const Color(AppConstants.warmPaperColorValue); // Warm paper-like background
+      return const Color(
+        AppConstants.warmPaperColorValue,
+      ); // Warm paper-like background
     }
   }
 
@@ -143,20 +168,11 @@ class _SvgPageViewerState extends State<SvgPageViewer> with TickerProviderStateM
     if (isDark) {
       switch (theme) {
         case AppTheme.brown:
-          return ColorFilter.mode(
-            const Color(0xFFE0E0E0),
-            BlendMode.srcIn,
-          );
+          return ColorFilter.mode(const Color(0xFFE0E0E0), BlendMode.srcIn);
         case AppTheme.green:
-          return ColorFilter.mode(
-            const Color(0xFFE8F5E8),
-            BlendMode.srcIn,
-          );
+          return ColorFilter.mode(const Color(0xFFE8F5E8), BlendMode.srcIn);
         case AppTheme.blue:
-          return ColorFilter.mode(
-            const Color(0xFFE3F2FD),
-            BlendMode.srcIn,
-          );
+          return ColorFilter.mode(const Color(0xFFE3F2FD), BlendMode.srcIn);
         case AppTheme.islamic:
           return ColorFilter.mode(
             const Color(0xFFF8F6F0), // Warm Islamic paper tone
@@ -204,7 +220,6 @@ class _SvgPageViewerState extends State<SvgPageViewer> with TickerProviderStateM
                       Positioned.fill(
                         child: _buildInteractiveOverlay(constraints),
                       ),
-
                     ],
                   ),
                 ),
@@ -225,23 +240,21 @@ class _SvgPageViewerState extends State<SvgPageViewer> with TickerProviderStateM
       width: constraints.maxWidth,
       height: constraints.maxHeight,
       fit: BoxFit.contain,
-      placeholderBuilder: (context) => Container(
-        color: _getSvgBackgroundColor(context),
-        child: Center(
-          child: CircularProgressIndicator(
-            valueColor: AlwaysStoppedAnimation<Color>(
-              Theme.of(context).colorScheme.primary.withValues(alpha: 0.7),
+      placeholderBuilder:
+          (context) => Container(
+            color: _getSvgBackgroundColor(context),
+            child: Center(
+              child: CircularProgressIndicator(
+                valueColor: AlwaysStoppedAnimation<Color>(
+                  Theme.of(context).colorScheme.primary.withValues(alpha: 0.7),
+                ),
+              ),
             ),
           ),
-        ),
-      ),
     );
 
     if (colorFilter != null) {
-      return ColorFiltered(
-        colorFilter: colorFilter,
-        child: svgWidget,
-      );
+      return ColorFiltered(colorFilter: colorFilter, child: svgWidget);
     }
 
     return svgWidget;
@@ -258,21 +271,26 @@ class _SvgPageViewerState extends State<SvgPageViewer> with TickerProviderStateM
           builder: (context, currentlyPlayingAyah, _) {
             if (currentlyPlayingAyah != null) {
               final playingAyahOnThisPage = widget.markers.any(
-                      (marker) => marker.surah == currentlyPlayingAyah.surah &&
-                      marker.ayah == currentlyPlayingAyah.ayah
+                (marker) =>
+                    marker.surah == currentlyPlayingAyah.surah &&
+                    marker.ayah == currentlyPlayingAyah.ayah,
               );
 
               if (playingAyahOnThisPage) {
                 final playingMarker = widget.markers.firstWhere(
-                        (marker) => marker.surah == currentlyPlayingAyah.surah &&
-                        marker.ayah == currentlyPlayingAyah.ayah
+                  (marker) =>
+                      marker.surah == currentlyPlayingAyah.surah &&
+                      marker.ayah == currentlyPlayingAyah.ayah,
                 );
 
                 return AnimatedBuilder(
                   animation: _pulseAnimation,
                   builder: (context, child) {
                     return Stack(
-                      children: _buildPlayingAyahHighlight(playingMarker, overlayData),
+                      children: _buildPlayingAyahHighlight(
+                        playingMarker,
+                        overlayData,
+                      ),
                     );
                   },
                 );
@@ -292,7 +310,10 @@ class _SvgPageViewerState extends State<SvgPageViewer> with TickerProviderStateM
     );
   }
 
-  List<Widget> _buildPlayingAyahHighlight(AyahMarker ayah, OverlayTransform transform) {
+  List<Widget> _buildPlayingAyahHighlight(
+    AyahMarker ayah,
+    OverlayTransform transform,
+  ) {
     if (ayah.bboxes.isEmpty) return [];
 
     return ayah.bboxes.map((bbox) {
@@ -305,7 +326,9 @@ class _SvgPageViewerState extends State<SvgPageViewer> with TickerProviderStateM
         height: rect.height,
         child: Container(
           decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.primary.withValues(alpha: _pulseAnimation.value),
+            color: Theme.of(
+              context,
+            ).colorScheme.primary.withValues(alpha: _pulseAnimation.value),
             borderRadius: BorderRadius.circular(8),
             border: Border.all(
               color: Theme.of(context).colorScheme.primary,
@@ -313,7 +336,9 @@ class _SvgPageViewerState extends State<SvgPageViewer> with TickerProviderStateM
             ),
             boxShadow: [
               BoxShadow(
-                color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.3),
+                color: Theme.of(
+                  context,
+                ).colorScheme.primary.withValues(alpha: 0.3),
                 blurRadius: 8,
                 offset: const Offset(0, 2),
               ),
@@ -328,7 +353,7 @@ class _SvgPageViewerState extends State<SvgPageViewer> with TickerProviderStateM
     // MATHEMATICAL BOXFIT.CONTAIN CALCULATION
 
     // SVG coordinate space and viewBox dimensions
-    const double bboxCoordinateWidth = AppConstants.svgSourceWidth;   // 395
+    const double bboxCoordinateWidth = AppConstants.svgSourceWidth; // 395
     const double bboxCoordinateHeight = AppConstants.svgSourceHeight; // 551
 
     // Page-specific SVG viewBox dimensions
@@ -373,9 +398,10 @@ class _SvgPageViewerState extends State<SvgPageViewer> with TickerProviderStateM
 
     // Convert from SVG viewBox scale to bounding box coordinate scale
     // The bounding boxes are in 395x551 space, but SVG viewBox is 345x550
-    final scaleX = contentScale * (svgViewBoxWidth / bboxCoordinateWidth);   // 345/395
-    final scaleY = contentScale * (svgViewBoxHeight / bboxCoordinateHeight); // 550/551
-
+    final scaleX =
+        contentScale * (svgViewBoxWidth / bboxCoordinateWidth); // 345/395
+    final scaleY =
+        contentScale * (svgViewBoxHeight / bboxCoordinateHeight); // 550/551
 
     return OverlayTransform(
       scale: scaleX, // For backward compatibility
@@ -387,8 +413,10 @@ class _SvgPageViewerState extends State<SvgPageViewer> with TickerProviderStateM
     );
   }
 
-
-  List<Widget> _buildHighlightOverlay(AyahMarker ayah, OverlayTransform transform) {
+  List<Widget> _buildHighlightOverlay(
+    AyahMarker ayah,
+    OverlayTransform transform,
+  ) {
     if (ayah.bboxes.isEmpty) return [];
 
     return ayah.bboxes.map((bbox) {
@@ -401,10 +429,14 @@ class _SvgPageViewerState extends State<SvgPageViewer> with TickerProviderStateM
         height: rect.height,
         child: Container(
           decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.secondary.withValues(alpha: 0.15),
+            color: Theme.of(
+              context,
+            ).colorScheme.secondary.withValues(alpha: 0.15),
             borderRadius: BorderRadius.circular(6),
             border: Border.all(
-              color: Theme.of(context).colorScheme.secondary.withValues(alpha: 0.4),
+              color: Theme.of(
+                context,
+              ).colorScheme.secondary.withValues(alpha: 0.4),
               width: 1.5,
             ),
           ),
@@ -490,28 +522,31 @@ class _SvgPageViewerState extends State<SvgPageViewer> with TickerProviderStateM
       isDismissible: true,
       enableDrag: true,
       barrierColor: Colors.black54,
-      builder: (context) => GestureDetector(
-        // This detects taps on the barrier (outside the sheet)
-        onTap: () => Navigator.of(context).pop(),
-        behavior: HitTestBehavior.opaque,
-        child: DraggableScrollableSheet(
-          initialChildSize: 0.6,
-          minChildSize: 0.3,
-          maxChildSize: 0.9,
-          builder: (context, scrollController) => GestureDetector(
-            // Prevent taps on the sheet content from closing it
-            onTap: () {},
-            child: AyahActionsSheet(
-              ayahMarker: marker,
-              surahName: widget.surahName,
-              juzName: widget.juzName,
-              currentPage: widget.currentPage,
-              onContinuousPlayRequested: widget.onContinuousPlayRequested,
-              memorizationManager: widget.memorizationManager,
+      builder:
+          (context) => GestureDetector(
+            // This detects taps on the barrier (outside the sheet)
+            onTap: () => Navigator.of(context).pop(),
+            behavior: HitTestBehavior.opaque,
+            child: DraggableScrollableSheet(
+              initialChildSize: 0.6,
+              minChildSize: 0.3,
+              maxChildSize: 0.9,
+              builder:
+                  (context, scrollController) => GestureDetector(
+                    // Prevent taps on the sheet content from closing it
+                    onTap: () {},
+                    child: AyahActionsSheet(
+                      ayahMarker: marker,
+                      surahName: widget.surahName,
+                      juzName: widget.juzName,
+                      currentPage: widget.currentPage,
+                      onContinuousPlayRequested:
+                          widget.onContinuousPlayRequested,
+                      memorizationManager: widget.memorizationManager,
+                    ),
+                  ),
             ),
           ),
-        ),
-      ),
     );
   }
 
@@ -524,7 +559,6 @@ class _SvgPageViewerState extends State<SvgPageViewer> with TickerProviderStateM
       }
     });
   }
-
 }
 
 // Helper classes for better code organization
@@ -546,4 +580,3 @@ class OverlayTransform {
   }) : scaleX = scaleX ?? scale,
        scaleY = scaleY ?? scale;
 }
-
