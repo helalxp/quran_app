@@ -67,12 +67,56 @@ class JuzMappings {
     return List.generate(30, (index) => juzToPage[index + 1]!);
   }
   
-  /// Get juz name in Arabic
+
+  /// Traditional Arabic names for each Juz based on their starting verses
+  static const Map<int, String> juzNames = {
+    1: 'الم',
+    2: 'سيقول',
+    3: 'تلك الرسل',
+    4: 'لن تنالوا',
+    5: 'والمحصنات',
+    6: 'لا يحب الله',
+    7: 'وإذا سمعوا',
+    8: 'ولو أننا',
+    9: 'قال الملأ',
+    10: 'واعلموا',
+    11: 'يعتذرون',
+    12: 'وما من دابة',
+    13: 'وما أبرئ',
+    14: 'ربما',
+    15: 'سبحان',
+    16: 'قال ألم',
+    17: 'اقترب',
+    18: 'قد أفلح',
+    19: 'وقال الذين',
+    20: 'أمّن خلق',
+    21: 'اتل ما أوحي',
+    22: 'ومن يقنت',
+    23: 'ومالي',
+    24: 'فمن أظلم',
+    25: 'إليه يرد',
+    26: 'حم',
+    27: 'قال فما خطبكم',
+    28: 'قد سمع',
+    29: 'تبارك',
+    30: 'عم',
+  };
+
+  /// Get juz name in Arabic with traditional name
   static String getJuzName(int juzNumber) {
     if (juzNumber < 1 || juzNumber > 30) {
       return 'الجزء غير صحيح';
     }
-    return 'الجزء $juzNumber';
+    return juzNames[juzNumber] ?? 'الجزء $juzNumber';
+  }
+
+  /// Get full juz name with number (e.g., "الجزء 1 - الم")
+  static String getJuzFullName(int juzNumber) {
+    if (juzNumber < 1 || juzNumber > 30) {
+      return 'الجزء غير صحيح';
+    }
+    final name = juzNames[juzNumber];
+    return name != null ? 'الجزء $juzNumber - $name' : 'الجزء $juzNumber';
   }
   
   /// Validate if a juz number is valid

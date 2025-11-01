@@ -20,6 +20,7 @@ import 'constants/juz_mappings.dart';
 import 'constants/app_strings.dart';
 import 'utils/animation_utils.dart';
 import 'utils/haptic_utils.dart';
+import 'utils/arabic_search_utils.dart';
 import 'widgets/loading_states.dart';
 import 'widgets/jump_to_page_dialog.dart';
 import 'managers/page_cache_manager.dart';
@@ -999,11 +1000,6 @@ class _ViewerScreenState extends State<ViewerScreen> with TickerProviderStateMix
       }
     }
 
-    // Create scroll controller with initial position
-    final scrollController = ScrollController(
-      initialScrollOffset: currentSurahIndex * 72.0, // Approximate item height (card + margin)
-    );
-
     await showGeneralDialog(
       context: context,
       barrierDismissible: true,
@@ -1014,113 +1010,25 @@ class _ViewerScreenState extends State<ViewerScreen> with TickerProviderStateMix
       transitionBuilder: (context, animation1, animation2, child) {
         return AnimationUtils.scaleTransition(
           animation: animation1,
-          child: AlertDialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
-        title: Text(
-          "اختر السورة",
-          style: TextStyle(
-            color: Theme.of(context).colorScheme.onSurface,
-            fontWeight: FontWeight.bold,
-            fontSize: 20,
-          ),
-          textAlign: TextAlign.center,
-        ),
-        content: SizedBox(
-          width: double.maxFinite,
-          height: 400,
-          child: ListView.builder(
-            controller: scrollController,
-            itemCount: _allSurahs.length,
-            itemBuilder: (context, index) {
-              final surah = _allSurahs[index];
-              final isCurrentSurah = index == currentSurahIndex;
-              return AnimatedListItem(
-                index: index,
-                delay: const Duration(milliseconds: 15), // Much faster for dialogs
-                duration: AnimationUtils.ultraFast,
-                child: Card(
-                margin: const EdgeInsets.only(bottom: 8),
-                elevation: 2,
-                color: isCurrentSurah
-                    ? Theme.of(context).colorScheme.primaryContainer
-                    : null,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  side: isCurrentSurah
-                      ? BorderSide(
-                          color: Theme.of(context).colorScheme.primary,
-                          width: 2,
-                        )
-                      : BorderSide.none,
-                ),
-                child: ListTile(
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  leading: isCurrentSurah
-                      ? Icon(
-                          Icons.bookmark,
-                          color: Theme.of(context).colorScheme.primary,
-                        )
-                      : null,
-                  title: Text(
-                    "${surah.number}. ${surah.nameArabic}",
-                    style: TextStyle(
-                      color: isCurrentSurah
-                          ? Theme.of(context).colorScheme.onPrimaryContainer
-                          : Theme.of(context).colorScheme.onSurface,
-                      fontWeight: FontWeight.w600,
-                      fontFamily: 'Uthmanic',
-                      fontSize: 16,
-                    ),
-                    textDirection: TextDirection.rtl,
-                  ),
-                  subtitle: Text(
-                    surah.nameEnglish,
-                    style: TextStyle(
-                      color: isCurrentSurah
-                          ? Theme.of(context).colorScheme.onPrimaryContainer.withValues(alpha: 0.7)
-                          : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
-                      fontSize: 14,
-                    ),
-                  ),
-                  trailing: Text(
-                    "ص ${surah.pageNumber}",
-                    style: TextStyle(
-                      color: Theme.of(context).colorScheme.primary,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                  onTap: () {
-                    HapticUtils.selection(); // Haptic feedback for selection
-                    // Log surah opened analytics
-                    AnalyticsService.logSurahOpened(surah.nameArabic, surah.number);
-                    Navigator.of(context).pop();
-                    scrollController.dispose();
-                    _jumpToPage(surah.pageNumber);
-                  },
-                ),
-                ),
-              );
+          child: _SurahSearchDialog(
+            allSurahs: _allSurahs,
+            currentSurahIndex: currentSurahIndex,
+            onSurahSelected: (surah) {
+              HapticUtils.selection();
+              AnalyticsService.logSurahOpened(surah.nameArabic, surah.number);
+              Navigator.of(context).pop();
+              _jumpToPage(surah.pageNumber);
+            },
+            onCancel: () {
+              Navigator.of(context).pop();
             },
           ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: Text(
-              "إلغاء",
-              style: TextStyle(color: Theme.of(context).colorScheme.primary),
-            ),
-          ),
-        ],
-        ),
         );
       },
     );
   }
 
-  /// Proper dismissible Juz dialog with smooth animations
+  /// Proper dismissible Juz dialog with smooth animations and search
   Future<void> _showJuzSelectionDialog(BuildContext context) async {
     if (!mounted) return;
 
@@ -1136,12 +1044,6 @@ class _ViewerScreenState extends State<ViewerScreen> with TickerProviderStateMix
     // Find current juz based on current page
     final currentPage = _currentPageNotifier.value;
     final currentJuz = JuzMappings.getJuzForPage(currentPage);
-    final currentJuzIndex = currentJuz - 1; // 0-based index
-
-    // Create scroll controller with initial position
-    final scrollController = ScrollController(
-      initialScrollOffset: currentJuzIndex * 72.0, // Approximate item height (card + margin)
-    );
 
     await showGeneralDialog(
       context: context,
@@ -1153,109 +1055,18 @@ class _ViewerScreenState extends State<ViewerScreen> with TickerProviderStateMix
       transitionBuilder: (context, animation1, animation2, child) {
         return AnimationUtils.scaleTransition(
           animation: animation1,
-          child: AlertDialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
-        title: Text(
-          "اختر الجزء",
-          style: TextStyle(
-            color: Theme.of(context).colorScheme.onSurface,
-            fontWeight: FontWeight.bold,
-            fontSize: 20,
-          ),
-          textAlign: TextAlign.center,
-        ),
-        content: SizedBox(
-          width: double.maxFinite,
-          height: 400,
-          child: ListView.builder(
-            controller: scrollController,
-            itemCount: 30,
-            itemBuilder: (context, index) {
-              final juzNumber = index + 1;
-              final pageNumber = _juzStartPages[juzNumber];
-              final isCurrentJuz = juzNumber == currentJuz;
-
-              return AnimatedListItem(
-                index: index,
-                delay: const Duration(milliseconds: 10), // Much faster for dialogs  
-                duration: AnimationUtils.ultraFast,
-                child: Card(
-                margin: const EdgeInsets.only(bottom: 8),
-                elevation: 2,
-                color: isCurrentJuz
-                    ? Theme.of(context).colorScheme.primaryContainer
-                    : null,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  side: isCurrentJuz
-                      ? BorderSide(
-                          color: Theme.of(context).colorScheme.primary,
-                          width: 2,
-                        )
-                      : BorderSide.none,
-                ),
-                child: ListTile(
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  leading: CircleAvatar(
-                    backgroundColor: isCurrentJuz
-                        ? Theme.of(context).colorScheme.primary
-                        : Theme.of(context).colorScheme.primaryContainer,
-                    child: isCurrentJuz
-                        ? Icon(
-                            Icons.bookmark,
-                            color: Theme.of(context).colorScheme.onPrimary,
-                            size: 20,
-                          )
-                        : Text(
-                            '$juzNumber',
-                            style: TextStyle(
-                              color: Theme.of(context).colorScheme.onPrimaryContainer,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                  ),
-                  title: Text(
-                    "الجزء $juzNumber",
-                    style: TextStyle(
-                      color: isCurrentJuz
-                          ? Theme.of(context).colorScheme.onPrimaryContainer
-                          : Theme.of(context).colorScheme.onSurface,
-                      fontWeight: FontWeight.w600,
-                      fontSize: 16,
-                    ),
-                    textDirection: TextDirection.rtl,
-                  ),
-                  trailing: pageNumber != null ? Text(
-                    "ص $pageNumber",
-                    style: TextStyle(
-                      color: Theme.of(context).colorScheme.primary,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ) : null,
-                  onTap: () {
-                    HapticUtils.selection(); // Haptic feedback for selection
-                    Navigator.of(context).pop();
-                    scrollController.dispose();
-                    if (pageNumber != null) _jumpToPage(pageNumber);
-                  },
-                ),
-                ),
-              );
+          child: _JuzSearchDialog(
+            juzStartPages: _juzStartPages,
+            currentJuz: currentJuz,
+            onJuzSelected: (pageNumber) {
+              HapticUtils.selection();
+              Navigator.of(context).pop();
+              _jumpToPage(pageNumber);
+            },
+            onCancel: () {
+              Navigator.of(context).pop();
             },
           ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: Text(
-              "إلغاء",
-              style: TextStyle(color: Theme.of(context).colorScheme.primary),
-            ),
-          ),
-        ],
-        ),
         );
       },
     );
@@ -1273,4 +1084,476 @@ class _ViewerScreenState extends State<ViewerScreen> with TickerProviderStateMix
     );
   }
 
+}
+
+class _SurahSearchDialog extends StatefulWidget {
+  final List<Surah> allSurahs;
+  final int currentSurahIndex;
+  final Function(Surah) onSurahSelected;
+  final VoidCallback onCancel;
+
+  const _SurahSearchDialog({
+    required this.allSurahs,
+    required this.currentSurahIndex,
+    required this.onSurahSelected,
+    required this.onCancel,
+  });
+
+  @override
+  State<_SurahSearchDialog> createState() => _SurahSearchDialogState();
+}
+
+class _SurahSearchDialogState extends State<_SurahSearchDialog> {
+  final TextEditingController _textController = TextEditingController();
+  String _searchQuery = '';
+
+  @override
+  void dispose() {
+    _textController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    // Filter surahs based on search query (maintains original order)
+    final filteredSurahs = _searchQuery.isEmpty
+        ? widget.allSurahs
+        : ArabicSearchUtils.filter(
+            widget.allSurahs,
+            _searchQuery,
+            (surah) => '${surah.nameArabic} ${surah.nameEnglish} ${surah.number}',
+          );
+
+    // Find current surah index in filtered list
+    int filteredCurrentIndex = filteredSurahs.indexWhere(
+      (surah) => surah.number == widget.allSurahs[widget.currentSurahIndex].number,
+    );
+
+    // Create scroll controller with initial position
+    final scrollController = ScrollController(
+      initialScrollOffset: filteredCurrentIndex >= 0 ? filteredCurrentIndex * 72.0 : 0,
+    );
+
+    return AlertDialog(
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+      ),
+      title: Text(
+        "اختر السورة",
+        style: TextStyle(
+          color: Theme.of(context).colorScheme.onSurface,
+          fontWeight: FontWeight.bold,
+          fontSize: 20,
+        ),
+        textAlign: TextAlign.center,
+      ),
+      content: SizedBox(
+        width: double.maxFinite,
+        height: 400,
+        child: Column(
+          children: [
+            // Persistent search bar at the top
+            Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: TextField(
+                controller: _textController,
+                textDirection: TextDirection.rtl,
+                textAlign: TextAlign.right,
+                decoration: InputDecoration(
+                  hintText: 'ابحث عن سورة...',
+                  hintTextDirection: TextDirection.rtl,
+                  hintStyle: TextStyle(
+                    color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
+                  ),
+                  suffixIcon: Icon(
+                    Icons.search,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
+                  prefixIcon: _searchQuery.isNotEmpty
+                      ? IconButton(
+                          icon: const Icon(Icons.clear),
+                          onPressed: () {
+                            _textController.clear();
+                            setState(() {
+                              _searchQuery = '';
+                            });
+                          },
+                        )
+                      : null,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(
+                      color: Theme.of(context).colorScheme.outline,
+                    ),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(
+                      color: Theme.of(context).colorScheme.primary,
+                      width: 2,
+                    ),
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 12,
+                  ),
+                ),
+                onChanged: (value) {
+                  setState(() {
+                    _searchQuery = value;
+                  });
+                },
+              ),
+            ),
+
+            // Scrollable list of surahs
+            Expanded(
+              child: filteredSurahs.isEmpty
+                  ? Center(
+                      child: Text(
+                        'لا توجد نتائج',
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
+                          fontSize: 16,
+                        ),
+                      ),
+                    )
+                  : ListView.builder(
+                      controller: scrollController,
+                      itemCount: filteredSurahs.length,
+                      itemBuilder: (context, index) {
+                        final surah = filteredSurahs[index];
+                        final isCurrentSurah = surah.number == widget.allSurahs[widget.currentSurahIndex].number;
+
+                        return AnimatedListItem(
+                          index: index,
+                          delay: const Duration(milliseconds: 15),
+                          duration: AnimationUtils.ultraFast,
+                          child: Card(
+                            margin: const EdgeInsets.only(bottom: 8),
+                            elevation: 2,
+                            color: isCurrentSurah
+                                ? Theme.of(context).colorScheme.primaryContainer
+                                : null,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              side: isCurrentSurah
+                                  ? BorderSide(
+                                      color: Theme.of(context).colorScheme.primary,
+                                      width: 2,
+                                    )
+                                  : BorderSide.none,
+                            ),
+                            child: ListTile(
+                              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                              leading: isCurrentSurah
+                                  ? Icon(
+                                      Icons.bookmark,
+                                      color: Theme.of(context).colorScheme.primary,
+                                    )
+                                  : null,
+                              title: Text(
+                                "${surah.number}. ${surah.nameArabic}",
+                                style: TextStyle(
+                                  color: isCurrentSurah
+                                      ? Theme.of(context).colorScheme.onPrimaryContainer
+                                      : Theme.of(context).colorScheme.onSurface,
+                                  fontWeight: FontWeight.w600,
+                                  fontFamily: 'Uthmanic',
+                                  fontSize: 16,
+                                ),
+                                textDirection: TextDirection.rtl,
+                              ),
+                              subtitle: Text(
+                                surah.nameEnglish,
+                                style: TextStyle(
+                                  color: isCurrentSurah
+                                      ? Theme.of(context).colorScheme.onPrimaryContainer.withValues(alpha: 0.7)
+                                      : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
+                                  fontSize: 14,
+                                ),
+                              ),
+                              trailing: Text(
+                                "ص ${surah.pageNumber}",
+                                style: TextStyle(
+                                  color: Theme.of(context).colorScheme.primary,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                              onTap: () {
+                                scrollController.dispose();
+                                widget.onSurahSelected(surah);
+                              },
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+            ),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: widget.onCancel,
+          child: Text(
+            "إلغاء",
+            style: TextStyle(color: Theme.of(context).colorScheme.primary),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _JuzSearchDialog extends StatefulWidget {
+  final Map<int, int> juzStartPages;
+  final int currentJuz;
+  final Function(int) onJuzSelected;
+  final VoidCallback onCancel;
+
+  const _JuzSearchDialog({
+    required this.juzStartPages,
+    required this.currentJuz,
+    required this.onJuzSelected,
+    required this.onCancel,
+  });
+
+  @override
+  State<_JuzSearchDialog> createState() => _JuzSearchDialogState();
+}
+
+class _JuzSearchDialogState extends State<_JuzSearchDialog> {
+  final TextEditingController _textController = TextEditingController();
+  String _searchQuery = '';
+
+  @override
+  void dispose() {
+    _textController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    // Create list of juz data for filtering
+    final allJuzData = List.generate(30, (index) {
+      final juzNumber = index + 1;
+      return {
+        'number': juzNumber,
+        'name': JuzMappings.getJuzName(juzNumber),
+        'fullName': JuzMappings.getJuzFullName(juzNumber),
+        'page': widget.juzStartPages[juzNumber],
+      };
+    });
+
+    // Filter juz based on search query (maintains original order)
+    final filteredJuzData = _searchQuery.isEmpty
+        ? allJuzData
+        : ArabicSearchUtils.filter(
+            allJuzData,
+            _searchQuery,
+            (juz) => '${juz['number']} ${juz['name']} ${juz['fullName']}',
+          );
+
+    // Find current juz index in filtered list
+    int filteredCurrentIndex = filteredJuzData.indexWhere(
+      (juz) => juz['number'] == widget.currentJuz,
+    );
+
+    // Create scroll controller with initial position
+    final scrollController = ScrollController(
+      initialScrollOffset: filteredCurrentIndex >= 0 ? filteredCurrentIndex * 72.0 : 0,
+    );
+
+    return AlertDialog(
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+      ),
+      title: Text(
+        "اختر الجزء",
+        style: TextStyle(
+          color: Theme.of(context).colorScheme.onSurface,
+          fontWeight: FontWeight.bold,
+          fontSize: 20,
+        ),
+        textAlign: TextAlign.center,
+      ),
+      content: SizedBox(
+        width: double.maxFinite,
+        height: 400,
+        child: Column(
+          children: [
+            // Persistent search bar at the top
+            Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: TextField(
+                controller: _textController,
+                textDirection: TextDirection.rtl,
+                textAlign: TextAlign.right,
+                keyboardType: TextInputType.text,
+                decoration: InputDecoration(
+                  hintText: 'ابحث برقم أو اسم الجزء...',
+                  hintTextDirection: TextDirection.rtl,
+                  hintStyle: TextStyle(
+                    color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
+                  ),
+                  suffixIcon: Icon(
+                    Icons.search,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
+                  prefixIcon: _searchQuery.isNotEmpty
+                      ? IconButton(
+                          icon: const Icon(Icons.clear),
+                          onPressed: () {
+                            _textController.clear();
+                            setState(() {
+                              _searchQuery = '';
+                            });
+                          },
+                        )
+                      : null,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(
+                      color: Theme.of(context).colorScheme.outline,
+                    ),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(
+                      color: Theme.of(context).colorScheme.primary,
+                      width: 2,
+                    ),
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 12,
+                  ),
+                ),
+                onChanged: (value) {
+                  setState(() {
+                    _searchQuery = value;
+                  });
+                },
+              ),
+            ),
+
+            // Scrollable list of juz
+            Expanded(
+              child: filteredJuzData.isEmpty
+                  ? Center(
+                      child: Text(
+                        'لا توجد نتائج',
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
+                          fontSize: 16,
+                        ),
+                      ),
+                    )
+                  : ListView.builder(
+                      controller: scrollController,
+                      itemCount: filteredJuzData.length,
+                      itemBuilder: (context, index) {
+                        final juz = filteredJuzData[index];
+                        final juzNumber = juz['number'] as int;
+                        final juzName = juz['name'] as String;
+                        final pageNumber = juz['page'] as int?;
+                        final isCurrentJuz = juzNumber == widget.currentJuz;
+
+                        return AnimatedListItem(
+                          index: index,
+                          delay: const Duration(milliseconds: 10),
+                          duration: AnimationUtils.ultraFast,
+                          child: Card(
+                            margin: const EdgeInsets.only(bottom: 8),
+                            elevation: 2,
+                            color: isCurrentJuz
+                                ? Theme.of(context).colorScheme.primaryContainer
+                                : null,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              side: isCurrentJuz
+                                  ? BorderSide(
+                                      color: Theme.of(context).colorScheme.primary,
+                                      width: 2,
+                                    )
+                                  : BorderSide.none,
+                            ),
+                            child: ListTile(
+                              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                              leading: CircleAvatar(
+                                backgroundColor: isCurrentJuz
+                                    ? Theme.of(context).colorScheme.primary
+                                    : Theme.of(context).colorScheme.primaryContainer,
+                                child: isCurrentJuz
+                                    ? Icon(
+                                        Icons.bookmark,
+                                        color: Theme.of(context).colorScheme.onPrimary,
+                                        size: 20,
+                                      )
+                                    : Text(
+                                        '$juzNumber',
+                                        style: TextStyle(
+                                          color: Theme.of(context).colorScheme.onPrimaryContainer,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                              ),
+                              title: Text(
+                                "الجزء $juzNumber",
+                                style: TextStyle(
+                                  color: isCurrentJuz
+                                      ? Theme.of(context).colorScheme.onPrimaryContainer
+                                      : Theme.of(context).colorScheme.onSurface,
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 16,
+                                ),
+                                textDirection: TextDirection.rtl,
+                              ),
+                              subtitle: Text(
+                                juzName,
+                                style: TextStyle(
+                                  color: isCurrentJuz
+                                      ? Theme.of(context).colorScheme.onPrimaryContainer.withValues(alpha: 0.7)
+                                      : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
+                                  fontSize: 14,
+                                  fontFamily: 'Uthmanic',
+                                ),
+                                textDirection: TextDirection.rtl,
+                              ),
+                              trailing: pageNumber != null
+                                  ? Text(
+                                      "ص $pageNumber",
+                                      style: TextStyle(
+                                        color: Theme.of(context).colorScheme.primary,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    )
+                                  : null,
+                              onTap: () {
+                                scrollController.dispose();
+                                if (pageNumber != null) {
+                                  widget.onJuzSelected(pageNumber);
+                                }
+                              },
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+            ),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: widget.onCancel,
+          child: Text(
+            "إلغاء",
+            style: TextStyle(color: Theme.of(context).colorScheme.primary),
+          ),
+        ),
+      ],
+    );
+  }
 }
