@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:just_audio/just_audio.dart';
 import 'theme_manager.dart';
 import 'continuous_audio_manager.dart';
 import 'memorization_manager.dart';
@@ -16,21 +17,20 @@ import 'widgets/loading_states.dart';
 import 'screens/tafsir_sources_screen.dart';
 import 'widgets/download_manager_sheet.dart';
 import 'services/analytics_service.dart';
+import 'services/alarm_scheduler_service.dart';
 import 'widgets/suggestions_dialog.dart';
 
 class SettingsScreen extends StatefulWidget {
   final MemorizationManager? memorizationManager;
-  
-  const SettingsScreen({
-    super.key,
-    this.memorizationManager,
-  });
+
+  const SettingsScreen({super.key, this.memorizationManager});
 
   @override
   State<SettingsScreen> createState() => _SettingsScreenState();
 }
 
-class _SettingsScreenState extends State<SettingsScreen> with TickerProviderStateMixin {
+class _SettingsScreenState extends State<SettingsScreen>
+    with TickerProviderStateMixin {
   late AnimationController _fadeController;
   late List<AnimationController> _sectionControllers;
   String _selectedReciter = 'عبد الباسط عبد الصمد';
@@ -48,31 +48,69 @@ class _SettingsScreenState extends State<SettingsScreen> with TickerProviderStat
   int _pauseDurationSeconds = 2;
   MemorizationMode _memorationMode = MemorizationMode.singleAyah;
 
+  // Azan settings
+  int _notificationMinutesBefore = 10;
+  bool _silentAzanMode = false;
+  String _azanLength = 'short'; // 'short' or 'full'
+  String _azanSound = 'azan_1'; // 'azan_1', 'azan_2', or 'azan_3'
+
   // Download manager
   late AudioDownloadManager _downloadManager;
 
-
   // SYNCHRONIZED: This is now the single source of truth for reciters.
   final Map<String, ReciterInfo> _reciters = {
-    'عبد الباسط عبد الصمد': ReciterInfo('Abdul Basit', 'Abdul_Basit_Murattal_192kbps'),
+    'عبد الباسط عبد الصمد': ReciterInfo(
+      'Abdul Basit',
+      'Abdul_Basit_Murattal_192kbps',
+    ),
     'مشاري راشد العفاسي': ReciterInfo('Mishary Alafasy', 'Alafasy_128kbps'),
-    'عبد الرحمن السديس': ReciterInfo('Abdur-Rahman as-Sudais', 'Sudais_128kbps'),
+    'عبد الرحمن السديس': ReciterInfo(
+      'Abdur-Rahman as-Sudais',
+      'Sudais_128kbps',
+    ),
     'ماهر المعيقلي': ReciterInfo('Maher Al Muaiqly', 'MaherAlMuaiqly128kbps'),
     'محمد صديق المنشاوي': ReciterInfo('Minshawi', 'Minshawi_Murattal_128kbps'),
     'سعود الشريم': ReciterInfo('Saud Al-Shuraim', 'Shatri_128kbps'),
-    'أحمد العجمي': ReciterInfo('Ahmad Al-Ajmi', 'Ahmed_ibn_Ali_al-Ajamy_128kbps_ketaballah.net'),
+    'أحمد العجمي': ReciterInfo(
+      'Ahmad Al-Ajmi',
+      'Ahmed_ibn_Ali_al-Ajamy_128kbps_ketaballah.net',
+    ),
     'سعد الغامدي': ReciterInfo('Saad Al-Ghamdi', 'Ghamadi_40kbps'),
-    'ياسر الدوسري': ReciterInfo('Yasser Al Dosari', 'Yasser_Ad-Dussary_128kbps'),
-    'محمود خليل الحصري': ReciterInfo('Mahmoud Khalil Al-Hussary', 'Husary_128kbps'),
+    'ياسر الدوسري': ReciterInfo(
+      'Yasser Al Dosari',
+      'Yasser_Ad-Dussary_128kbps',
+    ),
+    'محمود خليل الحصري': ReciterInfo(
+      'Mahmoud Khalil Al-Hussary',
+      'Husary_128kbps',
+    ),
     'ناصر القطامي': ReciterInfo('Nasser Al-Qatami', 'Nasser_Alqatami_128kbps'),
-    'خالد القحطاني': ReciterInfo('Khalid Al-Qahtani', 'Khalid_Al-Qahtani_192kbps'),
+    'خالد القحطاني': ReciterInfo(
+      'Khalid Al-Qahtani',
+      'Khalid_Al-Qahtani_192kbps',
+    ),
     'محمد أيوب': ReciterInfo('Muhammad Ayyub', 'Muhammad_Ayyoub_128kbps'),
-    'عبد الله المطرود': ReciterInfo('Abdullah Al-Matroud', 'Abdullah_Matroud_128kbps'),
-    'أبو بكر الشاطري': ReciterInfo('Abu Bakr Al-Shatri', 'Abu Bakr Ash-Shaatree_128kbps'),
-    'عبد الله عوض الجهني': ReciterInfo('Abdullaah 3awwaad Al-Juhaynee', 'Abdullaah_3awwaad_Al-Juhaynee_128kbps'),
-    'عبد الله بن علي بصفر': ReciterInfo('Abdullah Basfar', 'Abdullah_Basfar_192kbps'),
+    'عبد الله المطرود': ReciterInfo(
+      'Abdullah Al-Matroud',
+      'Abdullah_Matroud_128kbps',
+    ),
+    'أبو بكر الشاطري': ReciterInfo(
+      'Abu Bakr Al-Shatri',
+      'Abu Bakr Ash-Shaatree_128kbps',
+    ),
+    'عبد الله عوض الجهني': ReciterInfo(
+      'Abdullaah 3awwaad Al-Juhaynee',
+      'Abdullaah_3awwaad_Al-Juhaynee_128kbps',
+    ),
+    'عبد الله بن علي بصفر': ReciterInfo(
+      'Abdullah Basfar',
+      'Abdullah_Basfar_192kbps',
+    ),
     'أكرم العلاقمي': ReciterInfo('Akram AlAlaqimy', 'Akram_AlAlaqimy_128kbps'),
-    'على حجاج السويسى': ReciterInfo('Ali Hajjaj AlSuesy', 'Ali_Hajjaj_AlSuesy_128kbps'),
+    'على حجاج السويسى': ReciterInfo(
+      'Ali Hajjaj AlSuesy',
+      'Ali_Hajjaj_AlSuesy_128kbps',
+    ),
     'على جابر': ReciterInfo('Ali Jaber', 'Ali_Jaber_64kbps'),
     'أيمن سويد': ReciterInfo('Ayman Sowaid', 'Ayman_Sowaid_64kbps'),
     'عبد العزيز عليلي': ReciterInfo('aziz alili', 'aziz_alili_128kbps'),
@@ -80,11 +118,23 @@ class _SettingsScreenState extends State<SettingsScreen> with TickerProviderStat
     'هاني رفاعي': ReciterInfo('Hani Rifai', 'Hani_Rifai_192kbps'),
     'علي الحذيفي': ReciterInfo('Hudhaify', 'Hudhaify_128kbps'),
     'ابراهيم الاخضر': ReciterInfo('Ibrahim Akhdar', 'Ibrahim_Akhdar_32kbps'),
-    'محمد الطبلاوي': ReciterInfo('Mohammad al Tablaway', 'Mohammad_al_Tablaway_128kbps'),
-    'محمد عبد الكريم': ReciterInfo('Muhammad AbdulKareem', 'Muhammad_AbdulKareem_128kbps'),
+    'محمد الطبلاوي': ReciterInfo(
+      'Mohammad al Tablaway',
+      'Mohammad_al_Tablaway_128kbps',
+    ),
+    'محمد عبد الكريم': ReciterInfo(
+      'Muhammad AbdulKareem',
+      'Muhammad_AbdulKareem_128kbps',
+    ),
     'محمد جبريل': ReciterInfo('Muhammad Jibreel', 'Muhammad_Jibreel_128kbps'),
-    'عبد المحسن القاسم': ReciterInfo('Muhsin Al Qasim', 'Muhsin_Al_Qasim_192kbps'),
-    'محمود على البنا': ReciterInfo('mahmoud ali al banna', 'mahmoud_ali_al_banna_32kbps'),
+    'عبد المحسن القاسم': ReciterInfo(
+      'Muhsin Al Qasim',
+      'Muhsin_Al_Qasim_192kbps',
+    ),
+    'محمود على البنا': ReciterInfo(
+      'mahmoud ali al banna',
+      'mahmoud_ali_al_banna_32kbps',
+    ),
   };
 
   // Use tafsir sources from SettingsData
@@ -110,7 +160,7 @@ class _SettingsScreenState extends State<SettingsScreen> with TickerProviderStat
 
     _sectionControllers = AnimationUtils.createStaggeredControllers(
       vsync: this,
-      count: 5, // Number of sections (added memorization section)
+      count: 6, // Number of sections (added azan section)
       duration: AnimationUtils.normal,
     );
 
@@ -118,7 +168,7 @@ class _SettingsScreenState extends State<SettingsScreen> with TickerProviderStat
     _downloadManager = AudioDownloadManager();
 
     _loadSettings();
-    
+
     // Start animations after loading
     _fadeController.forward();
     AnimationUtils.startStaggeredAnimations(
@@ -126,7 +176,7 @@ class _SettingsScreenState extends State<SettingsScreen> with TickerProviderStat
       staggerDelay: const Duration(milliseconds: 150),
     );
   }
-  
+
   @override
   void dispose() {
     _fadeController.dispose();
@@ -151,7 +201,8 @@ class _SettingsScreenState extends State<SettingsScreen> with TickerProviderStat
   Future<void> _openAppRating() async {
     try {
       // My app's Google Play Store URL
-      const String playStoreUrl = 'https://play.google.com/store/apps/details?id=com.helal.quran';
+      const String playStoreUrl =
+          'https://play.google.com/store/apps/details?id=com.helal.quran';
 
       // Try to launch the Play Store app first, then fallback to browser
       const String playStoreAppUrl = 'market://details?id=com.helal.quran';
@@ -159,7 +210,10 @@ class _SettingsScreenState extends State<SettingsScreen> with TickerProviderStat
       if (await canLaunchUrl(Uri.parse(playStoreAppUrl))) {
         await launchUrl(Uri.parse(playStoreAppUrl));
       } else if (await canLaunchUrl(Uri.parse(playStoreUrl))) {
-        await launchUrl(Uri.parse(playStoreUrl), mode: LaunchMode.externalApplication);
+        await launchUrl(
+          Uri.parse(playStoreUrl),
+          mode: LaunchMode.externalApplication,
+        );
       } else {
         // Show error message if can't open either
         if (mounted) {
@@ -188,8 +242,10 @@ class _SettingsScreenState extends State<SettingsScreen> with TickerProviderStat
     try {
       final prefs = await SharedPreferences.getInstance();
       setState(() {
-        _selectedReciter = prefs.getString('selected_reciter') ?? _reciters.keys.first;
-        _selectedTafsir = prefs.getString('default_tafsir') ?? _tafsirSources.keys.first;
+        _selectedReciter =
+            prefs.getString('selected_reciter') ?? _reciters.keys.first;
+        _selectedTafsir =
+            prefs.getString('default_tafsir') ?? _tafsirSources.keys.first;
         _playbackSpeed = prefs.getDouble('playback_speed') ?? 1.0;
         _autoPlayNext = prefs.getBool('auto_play_next') ?? true;
         _repeatSurah = prefs.getBool('repeat_surah') ?? false;
@@ -197,14 +253,22 @@ class _SettingsScreenState extends State<SettingsScreen> with TickerProviderStat
 
         // Load memorization settings
         _memorationRepetitions = prefs.getInt('memorization_repetitions') ?? 3;
-        _pauseBetweenRepetitions = prefs.getBool('pause_between_repetitions') ?? true;
+        _pauseBetweenRepetitions =
+            prefs.getBool('pause_between_repetitions') ?? true;
         _pauseDurationSeconds = prefs.getInt('pause_duration_seconds') ?? 2;
         final modeIndex = prefs.getInt('memorization_mode') ?? 0;
         _memorationMode = MemorizationMode.values[modeIndex];
-        
+
+        // Load azan settings
+        _notificationMinutesBefore =
+            prefs.getInt('notification_time_minutes') ?? 10;
+        _silentAzanMode = prefs.getBool('silent_azan_mode') ?? false;
+        _azanLength = prefs.getString('azan_length') ?? 'short';
+        _azanSound = prefs.getString('azan_sound') ?? 'azan_1';
+
         _isLoading = false;
       });
-      
+
       // Load current settings from memorization manager if available
       if (widget.memorizationManager != null) {
         final currentSettings = widget.memorizationManager!.settings;
@@ -240,7 +304,6 @@ class _SettingsScreenState extends State<SettingsScreen> with TickerProviderStat
 
       // Log analytics for reciter change
       AnalyticsService.logReciterChanged(oldReciter, reciter);
-
     } catch (e) {
       debugPrint('Error saving reciter: $e');
     }
@@ -253,7 +316,6 @@ class _SettingsScreenState extends State<SettingsScreen> with TickerProviderStat
       setState(() {
         _selectedTafsir = tafsir;
       });
-
     } catch (e) {
       debugPrint('Error saving tafsir: $e');
     }
@@ -266,7 +328,7 @@ class _SettingsScreenState extends State<SettingsScreen> with TickerProviderStat
       setState(() {
         _playbackSpeed = speed;
       });
-      
+
       // Update audio manager with new speed
       final audioManager = ContinuousAudioManager();
       await audioManager.updatePlaybackSpeed(speed);
@@ -283,7 +345,7 @@ class _SettingsScreenState extends State<SettingsScreen> with TickerProviderStat
       setState(() {
         _autoPlayNext = value;
       });
-      
+
       // Update audio manager with new auto-play setting
       final audioManager = ContinuousAudioManager();
       await audioManager.updateAutoPlayNext(value);
@@ -351,15 +413,20 @@ class _SettingsScreenState extends State<SettingsScreen> with TickerProviderStat
   Future<void> _saveMemorizationSettings() async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      
+
       // Save to SharedPreferences
       await prefs.setInt('memorization_repetitions', _memorationRepetitions);
-      await prefs.setBool('pause_between_repetitions', _pauseBetweenRepetitions);
+      await prefs.setBool(
+        'pause_between_repetitions',
+        _pauseBetweenRepetitions,
+      );
       await prefs.setInt('pause_duration_seconds', _pauseDurationSeconds);
       await prefs.setInt('memorization_mode', _memorationMode.index);
-      
-      debugPrint('💾 Memorization settings saved: repetitions=$_memorationRepetitions, speed=$_playbackSpeed (universal), pause=$_pauseBetweenRepetitions, duration=$_pauseDurationSeconds, mode=$_memorationMode');
-      
+
+      debugPrint(
+        '💾 Memorization settings saved: repetitions=$_memorationRepetitions, speed=$_playbackSpeed (universal), pause=$_pauseBetweenRepetitions, duration=$_pauseDurationSeconds, mode=$_memorationMode',
+      );
+
       // Update memorization manager if available
       if (widget.memorizationManager != null) {
         final newSettings = MemorizationSettings(
@@ -372,10 +439,122 @@ class _SettingsScreenState extends State<SettingsScreen> with TickerProviderStat
         await widget.memorizationManager!.updateSettings(newSettings);
         debugPrint('🧠 Memorization manager updated with new settings');
       }
-      
     } catch (e) {
       debugPrint('Error saving memorization settings: $e');
     }
+  }
+
+  // Azan settings methods
+  Future<void> _updateNotificationTiming(int minutes) async {
+    setState(() => _notificationMinutesBefore = minutes);
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setInt('notification_time_minutes', minutes);
+      debugPrint('💾 Notification timing saved: $minutes minutes');
+
+      // Re-schedule alarms with new timing
+      await AlarmSchedulerService.instance.scheduleAllPrayerAlarms();
+    } catch (e) {
+      debugPrint('Error saving notification timing: $e');
+    }
+  }
+
+  Future<void> _saveSilentAzanMode(bool value) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool('silent_azan_mode', value);
+      debugPrint('💾 Silent azan mode saved: $value');
+    } catch (e) {
+      debugPrint('Error saving silent azan mode: $e');
+    }
+  }
+
+  Future<void> _saveAzanLength(String length) async {
+    setState(() => _azanLength = length);
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('azan_length', length);
+      debugPrint('💾 Azan length saved: $length');
+    } catch (e) {
+      debugPrint('Error saving azan length: $e');
+    }
+  }
+
+  Future<void> _saveAzanSound(String sound) async {
+    setState(() => _azanSound = sound);
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('azan_sound', sound);
+      debugPrint('💾 Azan sound saved: $sound');
+    } catch (e) {
+      debugPrint('Error saving azan sound: $e');
+    }
+  }
+
+  String _getAzanSoundName(String sound) {
+    switch (sound) {
+      case 'azan_1':
+        return 'أذان 1';
+      case 'azan_2':
+        return 'أذان 2';
+      case 'azan_3':
+        return 'أذان 3';
+      default:
+        return 'أذان 1';
+    }
+  }
+
+  void _showAzanLengthSelection() {
+    HapticUtils.selection();
+    showDialog(
+      context: context,
+      builder:
+          (context) => Directionality(
+            textDirection: TextDirection.rtl,
+            child: AlertDialog(
+              title: const Text('اختر طول الأذان'),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  RadioListTile<String>(
+                    title: const Text('أذان قصير'),
+                    subtitle: const Text('التكبيرة الأولى فقط'),
+                    value: 'short',
+                    groupValue: _azanLength,
+                    onChanged: (value) {
+                      Navigator.pop(context);
+                      _saveAzanLength(value!);
+                    },
+                  ),
+                  RadioListTile<String>(
+                    title: const Text('أذان كامل'),
+                    subtitle: const Text('الأذان بالكامل'),
+                    value: 'full',
+                    groupValue: _azanLength,
+                    onChanged: (value) {
+                      Navigator.pop(context);
+                      _saveAzanLength(value!);
+                    },
+                  ),
+                ],
+              ),
+            ),
+          ),
+    );
+  }
+
+  void _showAzanSoundSelection() {
+    HapticUtils.selection();
+    showDialog(
+      context: context,
+      builder:
+          (context) => AzanSoundSelectionDialog(
+            currentSound: _azanSound,
+            onSoundSelected: (value) {
+              _saveAzanSound(value);
+            },
+          ),
+    );
   }
 
   @override
@@ -406,10 +585,7 @@ class _SettingsScreenState extends State<SettingsScreen> with TickerProviderStat
               ],
               title: const Text(
                 'الإعدادات',
-                style: TextStyle(
-                  fontSize: 22,
-                  fontWeight: FontWeight.bold,
-                ),
+                style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
               ),
               centerTitle: true,
             ),
@@ -447,11 +623,15 @@ class _SettingsScreenState extends State<SettingsScreen> with TickerProviderStat
                       ),
                     ),
 
-                  if (widget.memorizationManager != null) const SizedBox(height: 32),
+                  if (widget.memorizationManager != null)
+                    const SizedBox(height: 32),
 
                   // Tafsir Section - Animated
                   AnimationUtils.fadeSlideTransition(
-                    animation: _sectionControllers[widget.memorizationManager != null ? 2 : 1],
+                    animation:
+                        _sectionControllers[widget.memorizationManager != null
+                            ? 2
+                            : 1],
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -464,9 +644,30 @@ class _SettingsScreenState extends State<SettingsScreen> with TickerProviderStat
 
                   const SizedBox(height: 32),
 
+                  // Azan Section - Animated
+                  AnimationUtils.fadeSlideTransition(
+                    animation:
+                        _sectionControllers[widget.memorizationManager != null
+                            ? 3
+                            : 2],
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _buildSectionHeader('إعدادات الأذان'),
+                        const SizedBox(height: 12),
+                        _buildAzanSettings(),
+                      ],
+                    ),
+                  ),
+
+                  const SizedBox(height: 32),
+
                   // Theme Section - Animated
                   AnimationUtils.fadeSlideTransition(
-                    animation: _sectionControllers[widget.memorizationManager != null ? 3 : 2],
+                    animation:
+                        _sectionControllers[widget.memorizationManager != null
+                            ? 4
+                            : 3],
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -483,7 +684,10 @@ class _SettingsScreenState extends State<SettingsScreen> with TickerProviderStat
 
                   // About Section - Animated
                   AnimationUtils.fadeSlideTransition(
-                    animation: _sectionControllers[widget.memorizationManager != null ? 4 : 3],
+                    animation:
+                        _sectionControllers[widget.memorizationManager != null
+                            ? 5
+                            : 4],
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -562,16 +766,22 @@ class _SettingsScreenState extends State<SettingsScreen> with TickerProviderStat
           AnimatedContainer(
             duration: const Duration(milliseconds: 300),
             decoration: BoxDecoration(
-              color: _repeatSurah
-                  ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.1)
-                  : null,
+              color:
+                  _repeatSurah
+                      ? Theme.of(
+                        context,
+                      ).colorScheme.primary.withValues(alpha: 0.1)
+                      : null,
             ),
             child: SwitchListTile(
               secondary: Icon(
                 Icons.repeat,
-                color: _repeatSurah
-                    ? Theme.of(context).colorScheme.primary
-                    : Theme.of(context).colorScheme.primary.withValues(alpha: 0.6),
+                color:
+                    _repeatSurah
+                        ? Theme.of(context).colorScheme.primary
+                        : Theme.of(
+                          context,
+                        ).colorScheme.primary.withValues(alpha: 0.6),
               ),
               title: const Text('تكرار السورة'),
               subtitle: const Text('إعادة تشغيل السورة عند انتهائها'),
@@ -585,16 +795,22 @@ class _SettingsScreenState extends State<SettingsScreen> with TickerProviderStat
           AnimatedContainer(
             duration: const Duration(milliseconds: 300),
             decoration: BoxDecoration(
-              color: _continueToNextSurah
-                  ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.1)
-                  : null,
+              color:
+                  _continueToNextSurah
+                      ? Theme.of(
+                        context,
+                      ).colorScheme.primary.withValues(alpha: 0.1)
+                      : null,
             ),
             child: SwitchListTile(
               secondary: Icon(
                 Icons.fast_forward,
-                color: _continueToNextSurah
-                    ? Theme.of(context).colorScheme.primary
-                    : Theme.of(context).colorScheme.primary.withValues(alpha: 0.6),
+                color:
+                    _continueToNextSurah
+                        ? Theme.of(context).colorScheme.primary
+                        : Theme.of(
+                          context,
+                        ).colorScheme.primary.withValues(alpha: 0.6),
               ),
               title: const Text('الانتقال للسورة التالية'),
               subtitle: const Text('متابعة التشغيل بالسور التالية تلقائياً'),
@@ -606,16 +822,20 @@ class _SettingsScreenState extends State<SettingsScreen> with TickerProviderStat
 
           // Follow the Ayah on Playback
           Consumer<ThemeManager>(
-            builder: (context, themeManager, child) => SwitchListTile(
-              secondary: Icon(
-                Icons.my_location_rounded,
-                color: Theme.of(context).colorScheme.primary,
-              ),
-              title: const Text('متابعة الآية أثناء التشغيل'),
-              subtitle: const Text('الانتقال تلقائياً للصفحة التي تحتوي على الآية المُشغلة'),
-              value: themeManager.followAyahOnPlayback,
-              onChanged: (value) => themeManager.toggleFollowAyahOnPlayback(),
-            ),
+            builder:
+                (context, themeManager, child) => SwitchListTile(
+                  secondary: Icon(
+                    Icons.my_location_rounded,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
+                  title: const Text('متابعة الآية أثناء التشغيل'),
+                  subtitle: const Text(
+                    'الانتقال تلقائياً للصفحة التي تحتوي على الآية المُشغلة',
+                  ),
+                  value: themeManager.followAyahOnPlayback,
+                  onChanged:
+                      (value) => themeManager.toggleFollowAyahOnPlayback(),
+                ),
           ),
           const Divider(height: 1),
 
@@ -631,7 +851,6 @@ class _SettingsScreenState extends State<SettingsScreen> with TickerProviderStat
             onTap: _showDownloadDialog,
           ),
           const Divider(height: 1),
-
         ],
       ),
     );
@@ -663,7 +882,9 @@ class _SettingsScreenState extends State<SettingsScreen> with TickerProviderStat
               color: Theme.of(context).colorScheme.primary,
             ),
             title: const Text('معلومات التفسير المختار'),
-            subtitle: Text(_tafsirSources[_selectedTafsir]?.author ?? 'غير محدد'),
+            subtitle: Text(
+              _tafsirSources[_selectedTafsir]?.author ?? 'غير محدد',
+            ),
             onTap: () => _showDetailedTafsirInfo(_selectedTafsir),
           ),
           const Divider(height: 1),
@@ -678,6 +899,98 @@ class _SettingsScreenState extends State<SettingsScreen> with TickerProviderStat
             subtitle: const Text('معلومات مفصلة عن كل مصدر تفسير'),
             trailing: const Icon(Icons.keyboard_arrow_left),
             onTap: _showAllTafsirSources,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAzanSettings() {
+    return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: Column(
+        children: [
+          // Notification timing (minutes before prayer)
+          ListTile(
+            leading: Icon(
+              Icons.alarm,
+              color: Theme.of(context).colorScheme.primary,
+            ),
+            title: const Text('وقت التنبيه قبل الصلاة'),
+            subtitle: Text('$_notificationMinutesBefore دقيقة قبل الأذان'),
+            trailing: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                IconButton(
+                  icon: const Icon(Icons.remove_circle_outline),
+                  onPressed:
+                      _notificationMinutesBefore > 1
+                          ? () => _updateNotificationTiming(
+                            _notificationMinutesBefore - 1,
+                          )
+                          : null,
+                ),
+                Text(
+                  '$_notificationMinutesBefore',
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.add_circle_outline),
+                  onPressed:
+                      _notificationMinutesBefore < 60
+                          ? () => _updateNotificationTiming(
+                            _notificationMinutesBefore + 1,
+                          )
+                          : null,
+                ),
+              ],
+            ),
+          ),
+          const Divider(height: 1),
+
+          // Silent azan mode
+          SwitchListTile(
+            secondary: Icon(
+              Icons.notifications_off,
+              color: Theme.of(context).colorScheme.primary,
+            ),
+            title: const Text('أذان صامت'),
+            subtitle: const Text('تنبيه فقط بدون صوت'),
+            value: _silentAzanMode,
+            onChanged: (value) {
+              setState(() => _silentAzanMode = value);
+              _saveSilentAzanMode(value);
+            },
+          ),
+          const Divider(height: 1),
+
+          // Azan length selection
+          ListTile(
+            leading: Icon(
+              Icons.timelapse,
+              color: Theme.of(context).colorScheme.primary,
+            ),
+            title: const Text('طول الأذان'),
+            subtitle: Text(_azanLength == 'full' ? 'أذان كامل' : 'أذان قصير'),
+            trailing: const Icon(Icons.keyboard_arrow_down),
+            onTap: _showAzanLengthSelection,
+          ),
+          const Divider(height: 1),
+
+          // Azan sound selection
+          ListTile(
+            leading: Icon(
+              Icons.music_note,
+              color: Theme.of(context).colorScheme.primary,
+            ),
+            title: const Text('صوت الأذان'),
+            subtitle: Text(_getAzanSoundName(_azanSound)),
+            trailing: const Icon(Icons.keyboard_arrow_down),
+            onTap: _showAzanSoundSelection,
           ),
         ],
       ),
@@ -703,7 +1016,6 @@ class _SettingsScreenState extends State<SettingsScreen> with TickerProviderStat
           ),
           const Divider(height: 1),
 
-
           // Pause Between Repetitions
           SwitchListTile(
             secondary: Icon(
@@ -711,9 +1023,11 @@ class _SettingsScreenState extends State<SettingsScreen> with TickerProviderStat
               color: Theme.of(context).colorScheme.primary,
             ),
             title: const Text('توقف بين التكرارات'),
-            subtitle: Text(_pauseBetweenRepetitions 
-                ? 'توقف لمدة $_pauseDurationSeconds ثانية' 
-                : 'تشغيل متواصل'),
+            subtitle: Text(
+              _pauseBetweenRepetitions
+                  ? 'توقف لمدة $_pauseDurationSeconds ثانية'
+                  : 'تشغيل متواصل',
+            ),
             value: _pauseBetweenRepetitions,
             onChanged: (value) {
               setState(() {
@@ -776,21 +1090,23 @@ class _SettingsScreenState extends State<SettingsScreen> with TickerProviderStat
               ),
             ),
           ),
-          ...AppTheme.values.map((theme) => ListTile(
-            title: Text(themeManager.getThemeName(theme)),
-            leading: Radio<AppTheme>(
-              value: theme,
-              // ignore: deprecated_member_use
-              groupValue: themeManager.currentTheme,
-              // ignore: deprecated_member_use
-              onChanged: (value) => themeManager.setTheme(value!),
+          ...AppTheme.values.map(
+            (theme) => ListTile(
+              title: Text(themeManager.getThemeName(theme)),
+              leading: Radio<AppTheme>(
+                value: theme,
+                // ignore: deprecated_member_use
+                groupValue: themeManager.currentTheme,
+                // ignore: deprecated_member_use
+                onChanged: (value) => themeManager.setTheme(value!),
+              ),
+              trailing: CircleAvatar(
+                backgroundColor: _getThemeColor(theme),
+                radius: 12,
+              ),
+              onTap: () => themeManager.setTheme(theme),
             ),
-            trailing: CircleAvatar(
-              backgroundColor: _getThemeColor(theme),
-              radius: 12,
-            ),
-            onTap: () => themeManager.setTheme(theme),
-          )),
+          ),
         ],
       ),
     );
@@ -918,54 +1234,57 @@ class _SettingsScreenState extends State<SettingsScreen> with TickerProviderStat
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      builder: (context) => Directionality(
-        textDirection: TextDirection.rtl,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(16),
-              child: Text(
-                'اختر القارئ',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: Theme.of(context).colorScheme.onSurface,
+      builder:
+          (context) => Directionality(
+            textDirection: TextDirection.rtl,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  child: Text(
+                    'اختر القارئ',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Theme.of(context).colorScheme.onSurface,
+                    ),
+                  ),
                 ),
-              ),
-            ),
-            const Divider(height: 1),
-            Flexible(
-              child: ListView.builder(
-                shrinkWrap: true,
-                itemCount: _reciters.length,
-                itemBuilder: (context, index) {
-                  // Sort reciters alphabetically by Arabic name
-                  final sortedReciterNames = _reciters.keys.toList()..sort();
-                  final reciterName = sortedReciterNames[index];
-                  final reciterInfo = _reciters[reciterName]!;
-                  final isSelected = reciterName == _selectedReciter;
+                const Divider(height: 1),
+                Flexible(
+                  child: ListView.builder(
+                    shrinkWrap: true,
+                    itemCount: _reciters.length,
+                    itemBuilder: (context, index) {
+                      // Sort reciters alphabetically by Arabic name
+                      final sortedReciterNames =
+                          _reciters.keys.toList()..sort();
+                      final reciterName = sortedReciterNames[index];
+                      final reciterInfo = _reciters[reciterName]!;
+                      final isSelected = reciterName == _selectedReciter;
 
-                  return ListTile(
-                    title: Text(reciterName),
-                    subtitle: Text(reciterInfo.englishName),
-                    trailing: isSelected
-                        ? Icon(
-                      Icons.check,
-                      color: Theme.of(context).colorScheme.primary,
-                    )
-                        : null,
-                    onTap: () {
-                      Navigator.pop(context);
-                      _saveReciter(reciterName);
+                      return ListTile(
+                        title: Text(reciterName),
+                        subtitle: Text(reciterInfo.englishName),
+                        trailing:
+                            isSelected
+                                ? Icon(
+                                  Icons.check,
+                                  color: Theme.of(context).colorScheme.primary,
+                                )
+                                : null,
+                        onTap: () {
+                          Navigator.pop(context);
+                          _saveReciter(reciterName);
+                        },
+                      );
                     },
-                  );
-                },
-              ),
+                  ),
+                ),
+              ],
             ),
-          ],
-        ),
-      ),
+          ),
     );
   }
 
@@ -976,75 +1295,78 @@ class _SettingsScreenState extends State<SettingsScreen> with TickerProviderStat
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      builder: (context) => Directionality(
-        textDirection: TextDirection.rtl,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(16),
-              child: Text(
-                'اختر مصدر التفسير',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: Theme.of(context).colorScheme.onSurface,
+      builder:
+          (context) => Directionality(
+            textDirection: TextDirection.rtl,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  child: Text(
+                    'اختر مصدر التفسير',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Theme.of(context).colorScheme.onSurface,
+                    ),
+                  ),
                 ),
-              ),
-            ),
-            const Divider(height: 1),
-            Flexible(
-              child: ListView.builder(
-                shrinkWrap: true,
-                itemCount: _tafsirSources.length,
-                itemBuilder: (context, index) {
-                  final tafsirName = _tafsirSources.keys.elementAt(index);
-                  final tafsirInfo = _tafsirSources[tafsirName]!;
-                  final isSelected = tafsirName == _selectedTafsir;
+                const Divider(height: 1),
+                Flexible(
+                  child: ListView.builder(
+                    shrinkWrap: true,
+                    itemCount: _tafsirSources.length,
+                    itemBuilder: (context, index) {
+                      final tafsirName = _tafsirSources.keys.elementAt(index);
+                      final tafsirInfo = _tafsirSources[tafsirName]!;
+                      final isSelected = tafsirName == _selectedTafsir;
 
-                  return ListTile(
-                    title: Text(tafsirName),
-                    subtitle: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(tafsirInfo.author),
-                        Text(
-                          'الصعوبة: ${tafsirInfo.difficulty}',
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
-                          ),
+                      return ListTile(
+                        title: Text(tafsirName),
+                        subtitle: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(tafsirInfo.author),
+                            Text(
+                              'الصعوبة: ${tafsirInfo.difficulty}',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.onSurface.withValues(alpha: 0.6),
+                              ),
+                            ),
+                          ],
                         ),
-                      ],
-                    ),
-                    trailing: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        IconButton(
-                          icon: const Icon(Icons.info_outline, size: 20),
-                          onPressed: () {
-                            Navigator.pop(context);
-                            _showDetailedTafsirInfo(tafsirName);
-                          },
+                        trailing: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            IconButton(
+                              icon: const Icon(Icons.info_outline, size: 20),
+                              onPressed: () {
+                                Navigator.pop(context);
+                                _showDetailedTafsirInfo(tafsirName);
+                              },
+                            ),
+                            if (isSelected)
+                              Icon(
+                                Icons.check,
+                                color: Theme.of(context).colorScheme.primary,
+                              ),
+                          ],
                         ),
-                        if (isSelected)
-                          Icon(
-                            Icons.check,
-                            color: Theme.of(context).colorScheme.primary,
-                          ),
-                      ],
-                    ),
-                    onTap: () {
-                      Navigator.pop(context);
-                      _saveTafsir(tafsirName);
+                        onTap: () {
+                          Navigator.pop(context);
+                          _saveTafsir(tafsirName);
+                        },
+                      );
                     },
-                  );
-                },
-              ),
+                  ),
+                ),
+              ],
             ),
-          ],
-        ),
-      ),
+          ),
     );
   }
 
@@ -1056,116 +1378,132 @@ class _SettingsScreenState extends State<SettingsScreen> with TickerProviderStat
       context: context,
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
-      builder: (context) => Directionality(
-        textDirection: TextDirection.rtl,
-        child: Container(
-          margin: const EdgeInsets.all(16),
-          constraints: BoxConstraints(
-            maxHeight: MediaQuery.of(context).size.height * 0.7,
-          ),
-          decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.surface,
-            borderRadius: BorderRadius.circular(16),
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // Handle bar
-              Container(
-                width: 40,
-                height: 4,
-                margin: const EdgeInsets.only(top: 12, bottom: 20),
-                decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.3),
-                  borderRadius: BorderRadius.circular(2),
-                ),
+      builder:
+          (context) => Directionality(
+            textDirection: TextDirection.rtl,
+            child: Container(
+              margin: const EdgeInsets.all(16),
+              constraints: BoxConstraints(
+                maxHeight: MediaQuery.of(context).size.height * 0.7,
               ),
-
-              // Title
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24),
-                child: Text(
-                  tafsirName,
-                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                    fontWeight: FontWeight.bold,
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.surface,
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Handle bar
+                  Container(
+                    width: 40,
+                    height: 4,
+                    margin: const EdgeInsets.only(top: 12, bottom: 20),
+                    decoration: BoxDecoration(
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.onSurface.withValues(alpha: 0.3),
+                      borderRadius: BorderRadius.circular(2),
+                    ),
                   ),
-                ),
-              ),
 
-              const SizedBox(height: 16),
-
-              // Content
-              Expanded(
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.symmetric(horizontal: 24),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      _buildInfoRow('الاسم الكامل:', tafsirInfo.fullArabicName),
-                      const SizedBox(height: 8),
-                      _buildInfoRow('المؤلف:', tafsirInfo.author),
-                      const SizedBox(height: 8),
-                      _buildInfoRow('فترة الحياة:', tafsirInfo.authorLifespan),
-                      const SizedBox(height: 8),
-                      _buildInfoRow('الوصف:', tafsirInfo.description),
-                      const SizedBox(height: 8),
-                      _buildInfoRow('المنهج:', tafsirInfo.methodology),
-                      const SizedBox(height: 8),
-                      _buildInfoRow('مستوى الصعوبة:', tafsirInfo.difficulty),
-                      const SizedBox(height: 8),
-                      _buildInfoRow('عدد المجلدات:', tafsirInfo.volumes),
-                      const SizedBox(height: 12),
-
-                      const Text(
-                        'الميزات الرئيسية:',
-                        style: TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                      const SizedBox(height: 4),
-                      ...tafsirInfo.features.map((feature) => Padding(
-                        padding: const EdgeInsets.only(right: 16, bottom: 2),
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text('• '),
-                            Expanded(child: Text(feature)),
-                          ],
-                        ),
-                      )),
-                    ],
+                  // Title
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 24),
+                    child: Text(
+                      tafsirName,
+                      style: Theme.of(context).textTheme.headlineSmall
+                          ?.copyWith(fontWeight: FontWeight.bold),
+                    ),
                   ),
-                ),
-              ),
 
-              // Actions
-              Padding(
-                padding: const EdgeInsets.all(24),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: OutlinedButton(
-                        onPressed: () => Navigator.pop(context),
-                        child: const Text('حسناً'),
+                  const SizedBox(height: 16),
+
+                  // Content
+                  Expanded(
+                    child: SingleChildScrollView(
+                      padding: const EdgeInsets.symmetric(horizontal: 24),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          _buildInfoRow(
+                            'الاسم الكامل:',
+                            tafsirInfo.fullArabicName,
+                          ),
+                          const SizedBox(height: 8),
+                          _buildInfoRow('المؤلف:', tafsirInfo.author),
+                          const SizedBox(height: 8),
+                          _buildInfoRow(
+                            'فترة الحياة:',
+                            tafsirInfo.authorLifespan,
+                          ),
+                          const SizedBox(height: 8),
+                          _buildInfoRow('الوصف:', tafsirInfo.description),
+                          const SizedBox(height: 8),
+                          _buildInfoRow('المنهج:', tafsirInfo.methodology),
+                          const SizedBox(height: 8),
+                          _buildInfoRow(
+                            'مستوى الصعوبة:',
+                            tafsirInfo.difficulty,
+                          ),
+                          const SizedBox(height: 8),
+                          _buildInfoRow('عدد المجلدات:', tafsirInfo.volumes),
+                          const SizedBox(height: 12),
+
+                          const Text(
+                            'الميزات الرئيسية:',
+                            style: TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          const SizedBox(height: 4),
+                          ...tafsirInfo.features.map(
+                            (feature) => Padding(
+                              padding: const EdgeInsets.only(
+                                right: 16,
+                                bottom: 2,
+                              ),
+                              child: Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const Text('• '),
+                                  Expanded(child: Text(feature)),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                    if (tafsirName != _selectedTafsir) ...[
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: ElevatedButton(
-                          onPressed: () {
-                            Navigator.pop(context);
-                            _saveTafsir(tafsirName);
-                          },
-                          child: const Text('اختيار هذا التفسير'),
+                  ),
+
+                  // Actions
+                  Padding(
+                    padding: const EdgeInsets.all(24),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: OutlinedButton(
+                            onPressed: () => Navigator.pop(context),
+                            child: const Text('حسناً'),
+                          ),
                         ),
-                      ),
-                    ],
-                  ],
-                ),
+                        if (tafsirName != _selectedTafsir) ...[
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: ElevatedButton(
+                              onPressed: () {
+                                Navigator.pop(context);
+                                _saveTafsir(tafsirName);
+                              },
+                              child: const Text('اختيار هذا التفسير'),
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                ],
               ),
-            ],
+            ),
           ),
-        ),
-      ),
     );
   }
 
@@ -1173,14 +1511,9 @@ class _SettingsScreenState extends State<SettingsScreen> with TickerProviderStat
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          label,
-          style: const TextStyle(fontWeight: FontWeight.w600),
-        ),
+        Text(label, style: const TextStyle(fontWeight: FontWeight.w600)),
         const SizedBox(width: 8),
-        Expanded(
-          child: Text(value),
-        ),
+        Expanded(child: Text(value)),
       ],
     );
   }
@@ -1189,11 +1522,12 @@ class _SettingsScreenState extends State<SettingsScreen> with TickerProviderStat
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => TafsirSourcesScreen(
-          tafsirSources: _tafsirSources,
-          currentSelection: _selectedTafsir,
-          onTafsirSelected: _saveTafsir,
-        ),
+        builder:
+            (context) => TafsirSourcesScreen(
+              tafsirSources: _tafsirSources,
+              currentSelection: _selectedTafsir,
+              onTafsirSelected: _saveTafsir,
+            ),
       ),
     );
   }
@@ -1206,45 +1540,47 @@ class _SettingsScreenState extends State<SettingsScreen> with TickerProviderStat
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      builder: (context) => Directionality(
-        textDirection: TextDirection.rtl,
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                padding: const EdgeInsets.all(16),
-                child: Text(
-                  'اختر سرعة التشغيل',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: Theme.of(context).colorScheme.onSurface,
+      builder:
+          (context) => Directionality(
+            textDirection: TextDirection.rtl,
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    child: Text(
+                      'اختر سرعة التشغيل',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Theme.of(context).colorScheme.onSurface,
+                      ),
+                    ),
                   ),
-                ),
+                  const Divider(height: 1),
+                  ...SettingsData.speedOptions.map((speed) {
+                    final isSelected = speed == _playbackSpeed;
+                    return ListTile(
+                      title: Text('${speed}x'),
+                      subtitle: Text(_getSpeedDescription(speed)),
+                      trailing:
+                          isSelected
+                              ? Icon(
+                                Icons.check,
+                                color: Theme.of(context).colorScheme.primary,
+                              )
+                              : null,
+                      onTap: () {
+                        Navigator.pop(context);
+                        _savePlaybackSpeed(speed);
+                      },
+                    );
+                  }),
+                ],
               ),
-              const Divider(height: 1),
-              ...SettingsData.speedOptions.map((speed) {
-                final isSelected = speed == _playbackSpeed;
-                return ListTile(
-                  title: Text('${speed}x'),
-                  subtitle: Text(_getSpeedDescription(speed)),
-                  trailing: isSelected
-                      ? Icon(
-                    Icons.check,
-                    color: Theme.of(context).colorScheme.primary,
-                  )
-                      : null,
-                  onTap: () {
-                    Navigator.pop(context);
-                    _savePlaybackSpeed(speed);
-                  },
-                );
-              }),
-            ],
+            ),
           ),
-        ),
-      ),
     );
   }
 
@@ -1262,14 +1598,14 @@ class _SettingsScreenState extends State<SettingsScreen> with TickerProviderStat
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (context) => DownloadManagerBottomSheet(
-        downloadManager: _downloadManager,
-        selectedReciter: _selectedReciter,
-        reciters: _reciters,
-      ),
+      builder:
+          (context) => DownloadManagerBottomSheet(
+            downloadManager: _downloadManager,
+            selectedReciter: _selectedReciter,
+            reciters: _reciters,
+          ),
     );
   }
-
 
   void _showSuggestionsDialog() {
     HapticUtils.dialogOpen(); // Haptic feedback for dialog open
@@ -1282,35 +1618,41 @@ class _SettingsScreenState extends State<SettingsScreen> with TickerProviderStat
   void _showHelpDialog() {
     showDialog(
       context: context,
-      builder: (context) => Directionality(
-        textDirection: TextDirection.rtl,
-        child: AlertDialog(
-          title: const Text('المساعدة والدعم'),
-          content: const SingleChildScrollView(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text('طريقة استخدام التطبيق:', style: TextStyle(fontWeight: FontWeight.bold)),
-                SizedBox(height: 8),
-                Text('1. اضغط على أي آية لعرض خيارات الآية'),
-                Text('2. اختر "تشغيل الآية" لبدء التشغيل المتواصل'),
-                Text('3. استخدم مشغل الصوت في الأسفل للتحكم في التشغيل'),
-                Text('4. يمكنك تغيير القارئ من الإعدادات'),
-                Text('5. اضغط طويلاً على زر الإشارة المرجعية لعرض جميع الإشارات'),
-                SizedBox(height: 16),
-                Text('للدعم الفني أو الاستفسارات، يرجى التواصل معنا.'),
+      builder:
+          (context) => Directionality(
+            textDirection: TextDirection.rtl,
+            child: AlertDialog(
+              title: const Text('المساعدة والدعم'),
+              content: const SingleChildScrollView(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      'طريقة استخدام التطبيق:',
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                    SizedBox(height: 8),
+                    Text('1. اضغط على أي آية لعرض خيارات الآية'),
+                    Text('2. اختر "تشغيل الآية" لبدء التشغيل المتواصل'),
+                    Text('3. استخدم مشغل الصوت في الأسفل للتحكم في التشغيل'),
+                    Text('4. يمكنك تغيير القارئ من الإعدادات'),
+                    Text(
+                      '5. اضغط طويلاً على زر الإشارة المرجعية لعرض جميع الإشارات',
+                    ),
+                    SizedBox(height: 16),
+                    Text('للدعم الفني أو الاستفسارات، يرجى التواصل معنا.'),
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text('حسناً'),
+                ),
               ],
             ),
           ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('حسناً'),
-            ),
-          ],
-        ),
-      ),
     );
   }
 
@@ -1331,44 +1673,48 @@ class _SettingsScreenState extends State<SettingsScreen> with TickerProviderStat
     showModalBottomSheet(
       context: context,
       backgroundColor: Theme.of(context).colorScheme.surface,
-      builder: (context) => Container(
-        padding: const EdgeInsets.all(16),
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                'اختر عدد التكرارات',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: Theme.of(context).colorScheme.onSurface,
-                ),
+      builder:
+          (context) => Container(
+            padding: const EdgeInsets.all(16),
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    'اختر عدد التكرارات',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Theme.of(context).colorScheme.onSurface,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  ...List.generate(10, (index) {
+                    final count = index + 1;
+                    return ListTile(
+                      title: Text('$count ${count == 1 ? 'مرة' : 'مرات'}'),
+                      trailing:
+                          _memorationRepetitions == count
+                              ? Icon(
+                                Icons.check,
+                                color: Theme.of(context).colorScheme.primary,
+                              )
+                              : null,
+                      onTap: () {
+                        setState(() {
+                          _memorationRepetitions = count;
+                        });
+                        _saveMemorizationSettings();
+                        Navigator.pop(context);
+                      },
+                    );
+                  }),
+                ],
               ),
-              const SizedBox(height: 16),
-              ...List.generate(10, (index) {
-                final count = index + 1;
-                return ListTile(
-                  title: Text('$count ${count == 1 ? 'مرة' : 'مرات'}'),
-                  trailing: _memorationRepetitions == count 
-                      ? Icon(Icons.check, color: Theme.of(context).colorScheme.primary)
-                      : null,
-                  onTap: () {
-                    setState(() {
-                      _memorationRepetitions = count;
-                    });
-                    _saveMemorizationSettings();
-                    Navigator.pop(context);
-                  },
-                );
-              }),
-            ],
+            ),
           ),
-        ),
-      ),
     );
   }
-
 
   void _showPauseDurationSelection() {
     HapticUtils.dialogOpen();
@@ -1376,36 +1722,45 @@ class _SettingsScreenState extends State<SettingsScreen> with TickerProviderStat
     showModalBottomSheet(
       context: context,
       backgroundColor: Theme.of(context).colorScheme.surface,
-      builder: (context) => Container(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              'اختر مدة التوقف',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: Theme.of(context).colorScheme.onSurface,
-              ),
+      builder:
+          (context) => Container(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  'اختر مدة التوقف',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Theme.of(context).colorScheme.onSurface,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                ...durations.map(
+                  (duration) => ListTile(
+                    title: Text(
+                      '$duration ${duration == 1 ? 'ثانية' : 'ثوانِ'}',
+                    ),
+                    trailing:
+                        _pauseDurationSeconds == duration
+                            ? Icon(
+                              Icons.check,
+                              color: Theme.of(context).colorScheme.primary,
+                            )
+                            : null,
+                    onTap: () {
+                      setState(() {
+                        _pauseDurationSeconds = duration;
+                      });
+                      _saveMemorizationSettings();
+                      Navigator.pop(context);
+                    },
+                  ),
+                ),
+              ],
             ),
-            const SizedBox(height: 16),
-            ...durations.map((duration) => ListTile(
-              title: Text('$duration ${duration == 1 ? 'ثانية' : 'ثوانِ'}'),
-              trailing: _pauseDurationSeconds == duration 
-                  ? Icon(Icons.check, color: Theme.of(context).colorScheme.primary)
-                  : null,
-              onTap: () {
-                setState(() {
-                  _pauseDurationSeconds = duration;
-                });
-                _saveMemorizationSettings();
-                Navigator.pop(context);
-              },
-            )),
-          ],
-        ),
-      ),
+          ),
     );
   }
 
@@ -1414,38 +1769,45 @@ class _SettingsScreenState extends State<SettingsScreen> with TickerProviderStat
     showModalBottomSheet(
       context: context,
       backgroundColor: Theme.of(context).colorScheme.surface,
-      builder: (context) => Container(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              'اختر نوع الحفظ',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: Theme.of(context).colorScheme.onSurface,
-              ),
+      builder:
+          (context) => Container(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  'اختر نوع الحفظ',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Theme.of(context).colorScheme.onSurface,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                ...MemorizationMode.values.map(
+                  (mode) => ListTile(
+                    leading: Icon(_getMemorizationModeIcon(mode)),
+                    title: Text(_getMemorizationModeDescription(mode)),
+                    subtitle: Text(_getMemorizationModeDetails(mode)),
+                    trailing:
+                        _memorationMode == mode
+                            ? Icon(
+                              Icons.check,
+                              color: Theme.of(context).colorScheme.primary,
+                            )
+                            : null,
+                    onTap: () {
+                      setState(() {
+                        _memorationMode = mode;
+                      });
+                      _saveMemorizationSettings();
+                      Navigator.pop(context);
+                    },
+                  ),
+                ),
+              ],
             ),
-            const SizedBox(height: 16),
-            ...MemorizationMode.values.map((mode) => ListTile(
-              leading: Icon(_getMemorizationModeIcon(mode)),
-              title: Text(_getMemorizationModeDescription(mode)),
-              subtitle: Text(_getMemorizationModeDetails(mode)),
-              trailing: _memorationMode == mode 
-                  ? Icon(Icons.check, color: Theme.of(context).colorScheme.primary)
-                  : null,
-              onTap: () {
-                setState(() {
-                  _memorationMode = mode;
-                });
-                _saveMemorizationSettings();
-                Navigator.pop(context);
-              },
-            )),
-          ],
-        ),
-      ),
+          ),
     );
   }
 
@@ -1474,3 +1836,142 @@ class _SettingsScreenState extends State<SettingsScreen> with TickerProviderStat
 
 // Helper classes for better organization
 
+/// Dialog for selecting azan sound with preview functionality
+class AzanSoundSelectionDialog extends StatefulWidget {
+  final String currentSound;
+  final Function(String) onSoundSelected;
+
+  const AzanSoundSelectionDialog({
+    super.key,
+    required this.currentSound,
+    required this.onSoundSelected,
+  });
+
+  @override
+  State<AzanSoundSelectionDialog> createState() =>
+      _AzanSoundSelectionDialogState();
+}
+
+class _AzanSoundSelectionDialogState extends State<AzanSoundSelectionDialog> {
+  late AudioPlayer _audioPlayer;
+  String? _playingSound;
+  String _selectedSound = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _audioPlayer = AudioPlayer();
+    _selectedSound = widget.currentSound;
+  }
+
+  @override
+  void dispose() {
+    _audioPlayer.dispose();
+    super.dispose();
+  }
+
+  Future<void> _togglePreview(String soundName) async {
+    if (_playingSound == soundName) {
+      // Stop playing
+      await _audioPlayer.stop();
+      setState(() => _playingSound = null);
+    } else {
+      // Start playing
+      try {
+        // Determine file extension (full file, we'll stop it after X seconds)
+        final fileName =
+            soundName == 'azan_3' ? 'azan_3.mp4' : '$soundName.mp3';
+
+        // Determine preview duration (play first X seconds)
+        final previewDuration = Duration(
+          seconds:
+              soundName == 'azan_1'
+                  ? 15
+                  : soundName == 'azan_2'
+                  ? 10
+                  : 14,
+        );
+
+        await _audioPlayer.setAsset('assets/audio/$fileName');
+        await _audioPlayer.play();
+        setState(() => _playingSound = soundName);
+
+        // Auto-stop after preview duration
+        Future.delayed(previewDuration, () {
+          if (_playingSound == soundName) {
+            _audioPlayer.stop();
+            setState(() => _playingSound = null);
+          }
+        });
+
+        // Also stop when playback completes naturally
+        _audioPlayer.playerStateStream.listen((state) {
+          if (state.processingState == ProcessingState.completed) {
+            if (_playingSound == soundName) {
+              setState(() => _playingSound = null);
+            }
+          }
+        });
+      } catch (e) {
+        debugPrint('Error playing preview: $e');
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('لا يمكن تشغيل هذا الأذان')),
+        );
+      }
+    }
+  }
+
+  Widget _buildAzanOption(String soundName, String displayName) {
+    final isPlaying = _playingSound == soundName;
+
+    return RadioListTile<String>(
+      title: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(displayName),
+          IconButton(
+            icon: Icon(
+              isPlaying ? Icons.stop_circle : Icons.play_circle_outline,
+              color: Theme.of(context).colorScheme.primary,
+            ),
+            onPressed: () => _togglePreview(soundName),
+          ),
+        ],
+      ),
+      value: soundName,
+      groupValue: _selectedSound,
+      onChanged: (value) {
+        setState(() => _selectedSound = value!);
+        Navigator.pop(context);
+        widget.onSoundSelected(value!);
+      },
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Directionality(
+      textDirection: TextDirection.rtl,
+      child: AlertDialog(
+        title: const Text('اختر صوت الأذان'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            _buildAzanOption('azan_1', 'أذان 1'),
+            _buildAzanOption('azan_2', 'أذان 2'),
+            _buildAzanOption('azan_3', 'أذان 3'),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              _audioPlayer.stop();
+              Navigator.pop(context);
+            },
+            child: const Text('إلغاء'),
+          ),
+        ],
+      ),
+    );
+  }
+}

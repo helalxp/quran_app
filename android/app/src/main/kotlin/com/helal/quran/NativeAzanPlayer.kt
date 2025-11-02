@@ -61,6 +61,20 @@ class NativeAzanPlayer(private val context: Context) {
                 return
             }
 
+            // Read azan settings from SharedPreferences
+            val prefs = context.getSharedPreferences("FlutterSharedPreferences", Context.MODE_PRIVATE)
+            val isSilentMode = prefs.getBoolean("flutter.silent_azan_mode", false)
+            val azanLength = prefs.getString("flutter.azan_length", "short") ?: "short"
+            val azanSound = prefs.getString("flutter.azan_sound", "azan_1") ?: "azan_1"
+
+            Log.d(TAG, "Azan settings - Silent: $isSilentMode, Length: $azanLength, Sound: $azanSound")
+
+            // If silent mode is enabled, skip audio playback
+            if (isSilentMode) {
+                Log.d(TAG, "Silent azan mode enabled, skipping audio playback")
+                return
+            }
+
             Log.d(TAG, "Starting azan for $prayerName at $prayerTime")
 
             // Acquire wake lock to turn on screen
@@ -72,6 +86,27 @@ class NativeAzanPlayer(private val context: Context) {
             // Set up MediaSession to capture volume buttons on lockscreen
             setupMediaSession()
 
+            // Determine the correct azan file and duration based on settings
+            val azanFileName = when (azanSound) {
+                "azan_3" -> "azan_3.mp4"
+                "azan_2" -> "azan_2.mp3"
+                else -> "azan_1.mp3"
+            }
+
+            // Determine stop duration for short version
+            val stopAfterMillis = if (azanLength == "short") {
+                when (azanSound) {
+                    "azan_1" -> 15000L // 15 seconds
+                    "azan_2" -> 10000L // 10 seconds
+                    "azan_3" -> 14000L // 14 seconds
+                    else -> 15000L
+                }
+            } else {
+                null // Play full azan
+            }
+
+            Log.d(TAG, "Loading azan file: $azanFileName, stopAfter: ${stopAfterMillis ?: "full"} ms")
+
             // Initialize MediaPlayer with alarm stream
             mediaPlayer = MediaPlayer().apply {
                 setAudioAttributes(
@@ -82,7 +117,7 @@ class NativeAzanPlayer(private val context: Context) {
                 )
 
                 // Load azan audio from Flutter assets (accessible even when app is killed)
-                val afd = context.assets.openFd("flutter_assets/assets/audio/azan.mp3")
+                val afd = context.assets.openFd("flutter_assets/assets/audio/$azanFileName")
                 setDataSource(afd.fileDescriptor, afd.startOffset, afd.length)
                 afd.close()
 
@@ -124,20 +159,16 @@ class NativeAzanPlayer(private val context: Context) {
 
             isPlaying = true
 
-            // Check azan duration setting
-            val prefs = context.getSharedPreferences("FlutterSharedPreferences", Context.MODE_PRIVATE)
-            val azanDuration = prefs.getString("flutter.azan_duration", "long")
-
-            // If short version, stop after 15 seconds
-            if (azanDuration == "short") {
-                Log.d(TAG, "🕌 Playing short azan (15 seconds)")
+            // If short version, schedule stop after specified duration
+            stopAfterMillis?.let { duration ->
+                Log.d(TAG, "🕌 Scheduling azan stop after $duration ms")
                 stopHandler = Handler(Looper.getMainLooper())
                 stopRunnable = Runnable {
                     if (isPlaying) {
-                        Log.d(TAG, "🕌 Short azan completed, stopping...")
+                        Log.d(TAG, "🕌 Short azan duration reached, stopping...")
                         stopAzan()
 
-                        // Send broadcast to stop the service (with fallback)
+                        // Send broadcast to stop the service
                         try {
                             val stopIntent = Intent(AzanService.ACTION_STOP_AZAN).apply {
                                 setPackage(context.packageName)
@@ -154,7 +185,7 @@ class NativeAzanPlayer(private val context: Context) {
                         }
                     }
                 }
-                stopHandler?.postDelayed(stopRunnable!!, 15000) // 15 seconds
+                stopHandler?.postDelayed(stopRunnable!!, duration)
             }
 
             // Start monitoring volume changes for stop functionality
