@@ -9,12 +9,14 @@ import 'utils/arabic_search_utils.dart';
 import 'constants/juz_mappings.dart';
 import 'utils/animation_utils.dart';
 
-enum UniversalSearchTab { juz, surah, ayah }
+enum UniversalSearchTab { juz, surah, ayah, hizbRub }
 
 class UniversalSearchOverlay extends StatefulWidget {
   final List<Surah> allSurahs;
   final List<AyahMarker> allMarkers;
   final Map<int, int> juzStartPages;
+  final Map<String, dynamic> hizbToPages;
+  final Map<String, dynamic> rubToPages;
   final int currentPage;
   final Function(Surah) onSurahSelected;
   final Function(int pageNumber) onJuzSelected;
@@ -25,6 +27,8 @@ class UniversalSearchOverlay extends StatefulWidget {
     required this.allSurahs,
     required this.allMarkers,
     required this.juzStartPages,
+    required this.hizbToPages,
+    required this.rubToPages,
     required this.currentPage,
     required this.onSurahSelected,
     required this.onJuzSelected,
@@ -186,6 +190,11 @@ class _UniversalSearchOverlayState extends State<UniversalSearchOverlay>
                         'أجزاء',
                         _getResultCount(UniversalSearchTab.juz),
                       ),
+                      _buildTab(
+                        UniversalSearchTab.hizbRub,
+                        'أحزاب',
+                        _getResultCount(UniversalSearchTab.hizbRub),
+                      ),
                     ],
                   ),
                 ),
@@ -216,6 +225,8 @@ class _UniversalSearchOverlayState extends State<UniversalSearchOverlay>
         return _buildJuzResults();
       case UniversalSearchTab.ayah:
         return _buildAyahResults();
+      case UniversalSearchTab.hizbRub:
+        return _buildHizbRubResults();
     }
   }
 
@@ -613,6 +624,20 @@ class _UniversalSearchOverlayState extends State<UniversalSearchOverlay>
           _searchQuery,
           (ayah) => ayah.text,
         ).length;
+
+      case UniversalSearchTab.hizbRub:
+        final allHizbData = List.generate(60, (index) {
+          final hizbNumber = index + 1;
+          return {
+            'number': hizbNumber,
+            'name': 'الحزب $hizbNumber',
+          };
+        });
+        return ArabicSearchUtils.filter(
+          allHizbData,
+          _searchQuery,
+          (hizb) => '${hizb['number']} ${hizb['name']}',
+        ).length;
     }
   }
 
@@ -682,6 +707,94 @@ class _UniversalSearchOverlayState extends State<UniversalSearchOverlay>
         return 'ابحث عن سورة...';
       case UniversalSearchTab.ayah:
         return 'ابحث في الآيات...';
+      case UniversalSearchTab.hizbRub:
+        return 'ابحث عن حزب أو ربع...';
     }
+  }
+
+  Widget _buildHizbRubResults() {
+    final allHizbData = List.generate(60, (index) {
+      final hizbNumber = index + 1;
+      final pageKey = hizbNumber.toString();
+      final pageData = widget.hizbToPages[pageKey];
+
+      // pageData is a List of page numbers, get the first page
+      int? startPage;
+      if (pageData != null && pageData is List && pageData.isNotEmpty) {
+        startPage = pageData[0] as int?;
+      }
+
+      return {
+        'number': hizbNumber,
+        'name': 'الحزب $hizbNumber',
+        'page': startPage,
+      };
+    });
+
+    final filtered = _searchQuery.isEmpty
+        ? allHizbData
+        : ArabicSearchUtils.filter(
+            allHizbData,
+            _searchQuery,
+            (hizb) => '${hizb['number']} ${hizb['name']}',
+          );
+
+    if (filtered.isEmpty) {
+      return Center(
+        child: Text(
+          'لا توجد نتائج',
+          style: TextStyle(
+            color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
+            fontSize: 16,
+          ),
+          textDirection: TextDirection.rtl,
+        ),
+      );
+    }
+
+    return ListView.builder(
+      itemCount: filtered.length,
+      itemBuilder: (context, index) {
+        final hizb = filtered[index];
+        final hizbNumber = hizb['number'] as int;
+        final hizbName = hizb['name'] as String;
+        final pageNumber = hizb['page'] as int?;
+
+        // Calculate which Juz this Hizb is in
+        final juzNumber = ((hizbNumber - 1) ~/ 2) + 1;
+
+        // Calculate Rub within this Hizb (1-4)
+        final startRub = ((hizbNumber - 1) * 4) + 1;
+
+        return Card(
+          margin: const EdgeInsets.only(bottom: 8),
+          child: ListTile(
+            title: Text(
+              hizbName,
+              style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
+              textDirection: TextDirection.rtl,
+            ),
+            subtitle: Text(
+              'الجزء $juzNumber • أرباع $startRub-${startRub + 3}',
+              textDirection: TextDirection.rtl,
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
+              ),
+            ),
+            trailing: pageNumber != null
+                ? Text(
+                    "ص $pageNumber",
+                    style: TextStyle(color: Theme.of(context).colorScheme.primary),
+                  )
+                : null,
+            onTap: () {
+              if (pageNumber != null) {
+                widget.onJuzSelected(pageNumber);
+              }
+            },
+          ),
+        );
+      },
+    );
   }
 }

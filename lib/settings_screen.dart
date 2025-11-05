@@ -54,6 +54,9 @@ class _SettingsScreenState extends State<SettingsScreen>
   String _azanLength = 'short'; // 'short' or 'full'
   String _azanSound = 'azan_1'; // 'azan_1', 'azan_2', or 'azan_3'
 
+  // Display settings
+  String _hizbRubDisplayMode = 'always'; // 'always', 'change', or 'never'
+
   // Download manager
   late AudioDownloadManager _downloadManager;
 
@@ -160,7 +163,7 @@ class _SettingsScreenState extends State<SettingsScreen>
 
     _sectionControllers = AnimationUtils.createStaggeredControllers(
       vsync: this,
-      count: 6, // Number of sections (added azan section)
+      count: 7, // Number of sections (added display section)
       duration: AnimationUtils.normal,
     );
 
@@ -265,6 +268,9 @@ class _SettingsScreenState extends State<SettingsScreen>
         _silentAzanMode = prefs.getBool('silent_azan_mode') ?? false;
         _azanLength = prefs.getString('azan_length') ?? 'short';
         _azanSound = prefs.getString('azan_sound') ?? 'azan_1';
+
+        // Load display settings
+        _hizbRubDisplayMode = prefs.getString('hizb_rub_display_mode') ?? 'always';
 
         _isLoading = false;
       });
@@ -491,6 +497,17 @@ class _SettingsScreenState extends State<SettingsScreen>
     }
   }
 
+  Future<void> _saveHizbRubDisplayMode(String mode) async {
+    setState(() => _hizbRubDisplayMode = mode);
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('hizb_rub_display_mode', mode);
+      debugPrint('💾 Hizb/Rub display mode saved: $mode');
+    } catch (e) {
+      debugPrint('Error saving Hizb/Rub display mode: $e');
+    }
+  }
+
   String _getAzanSoundName(String sound) {
     switch (sound) {
       case 'azan_1':
@@ -662,12 +679,30 @@ class _SettingsScreenState extends State<SettingsScreen>
 
                   const SizedBox(height: 32),
 
-                  // Theme Section - Animated
+                  // Display Settings Section - Animated
                   AnimationUtils.fadeSlideTransition(
                     animation:
                         _sectionControllers[widget.memorizationManager != null
                             ? 4
                             : 3],
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _buildSectionHeader('إعدادات العرض'),
+                        const SizedBox(height: 12),
+                        _buildDisplaySettings(),
+                      ],
+                    ),
+                  ),
+
+                  const SizedBox(height: 32),
+
+                  // Theme Section - Animated
+                  AnimationUtils.fadeSlideTransition(
+                    animation:
+                        _sectionControllers[widget.memorizationManager != null
+                            ? 5
+                            : 4],
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -686,8 +721,8 @@ class _SettingsScreenState extends State<SettingsScreen>
                   AnimationUtils.fadeSlideTransition(
                     animation:
                         _sectionControllers[widget.memorizationManager != null
-                            ? 5
-                            : 4],
+                            ? 6
+                            : 5],
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -992,6 +1027,116 @@ class _SettingsScreenState extends State<SettingsScreen>
             trailing: const Icon(Icons.keyboard_arrow_down),
             onTap: _showAzanSoundSelection,
           ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDisplaySettings() {
+    return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: Column(
+        children: [
+          // Hizb/Rub Display Mode
+          ListTile(
+            leading: Icon(
+              Icons.visibility,
+              color: Theme.of(context).colorScheme.primary,
+            ),
+            title: const Text('عرض الحزب والربع'),
+            subtitle: Text(_getHizbRubDisplayLabel(_hizbRubDisplayMode)),
+            trailing: const Icon(Icons.keyboard_arrow_down),
+            onTap: _showHizbRubDisplayModeSelection,
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _getHizbRubDisplayLabel(String mode) {
+    switch (mode) {
+      case 'always':
+        return 'دائماً';
+      case 'change':
+        return 'عند التغيير فقط';
+      case 'never':
+        return 'أبداً';
+      default:
+        return 'دائماً';
+    }
+  }
+
+  void _showHizbRubDisplayModeSelection() {
+    HapticUtils.selection();
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) => Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            margin: const EdgeInsets.symmetric(vertical: 12),
+            width: 40,
+            height: 4,
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.3),
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: Text(
+              'اختر متى تريد عرض الحزب والربع',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Theme.of(context).colorScheme.primary,
+              ),
+            ),
+          ),
+          ListTile(
+            leading: Icon(
+              _hizbRubDisplayMode == 'always' ? Icons.check_circle : Icons.circle_outlined,
+              color: Theme.of(context).colorScheme.primary,
+            ),
+            title: const Text('دائماً'),
+            subtitle: const Text('إظهار الحزب والربع في كل الصفحات'),
+            onTap: () {
+              _saveHizbRubDisplayMode('always');
+              Navigator.pop(context);
+            },
+          ),
+          const Divider(height: 1),
+          ListTile(
+            leading: Icon(
+              _hizbRubDisplayMode == 'change' ? Icons.check_circle : Icons.circle_outlined,
+              color: Theme.of(context).colorScheme.primary,
+            ),
+            title: const Text('عند التغيير فقط'),
+            subtitle: const Text('إظهار الحزب والربع عندما يتغير رقمهما'),
+            onTap: () {
+              _saveHizbRubDisplayMode('change');
+              Navigator.pop(context);
+            },
+          ),
+          const Divider(height: 1),
+          ListTile(
+            leading: Icon(
+              _hizbRubDisplayMode == 'never' ? Icons.check_circle : Icons.circle_outlined,
+              color: Theme.of(context).colorScheme.primary,
+            ),
+            title: const Text('أبداً'),
+            subtitle: const Text('عدم إظهار الحزب والربع'),
+            onTap: () {
+              _saveHizbRubDisplayMode('never');
+              Navigator.pop(context);
+            },
+          ),
+          const SizedBox(height: 16),
         ],
       ),
     );

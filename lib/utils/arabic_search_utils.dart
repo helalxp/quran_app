@@ -12,6 +12,7 @@ class ArabicSearchUtils {
   ///   - ا أ إ آ ٱ → ا
   ///   - ة ه → ه
   ///   - ى ي → ي
+  /// - Converts Arabic-Indic numerals to Latin numerals
   /// - Removes extra spaces
   /// - Converts to lowercase (for English parts)
   static String normalize(String text) {
@@ -43,6 +44,13 @@ class ArabicSearchUtils {
 
     // Normalize Alef Maksura (ى) to Ya (ي)
     normalized = normalized.replaceAll('ى', 'ي');
+
+    // Convert Arabic-Indic numerals (Eastern Arabic numerals) to Latin numerals
+    // ٠١٢٣٤٥٦٧٨٩ → 0123456789
+    const arabicNumerals = ['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'];
+    for (int i = 0; i < arabicNumerals.length; i++) {
+      normalized = normalized.replaceAll(arabicNumerals[i], i.toString());
+    }
 
     // Normalize all whitespace to single space and trim
     normalized = normalized.replaceAll(RegExp(r'\s+'), ' ').trim();

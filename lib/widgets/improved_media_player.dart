@@ -9,6 +9,7 @@ import '../constants/api_constants.dart';
 import '../continuous_audio_manager.dart';
 import '../constants/app_constants.dart';
 import '../utils/haptic_utils.dart';
+import '../memorization_manager.dart';
 
 class ImprovedMediaPlayer extends StatefulWidget {
   final AyahMarker? currentAyah;
@@ -29,6 +30,7 @@ class ImprovedMediaPlayer extends StatefulWidget {
   final VoidCallback? onMemorizationPause;
   final VoidCallback? onMemorizationResume;
   final ValueNotifier<bool>? isPlaylistListeningModeNotifier;
+  final MemorizationManager? memorizationManager;
 
   const ImprovedMediaPlayer({
     super.key,
@@ -50,6 +52,7 @@ class ImprovedMediaPlayer extends StatefulWidget {
     this.onMemorizationPause,
     this.onMemorizationResume,
     this.isPlaylistListeningModeNotifier,
+    this.memorizationManager,
   });
 
   @override
@@ -761,7 +764,7 @@ class _ImprovedMediaPlayerState extends State<ImprovedMediaPlayer>
 
   /// Show reciter selection dialog
   Future<void> _showReciterSelectionDialog() async {
-    final currentReciter = widget.currentReciterNotifier.value ?? 'مشاري راشد العفاسي';
+    final currentReciter = widget.currentReciterNotifier.value ?? 'محمود خليل الحصري';
 
     // Sort reciters alphabetically
     final sortedReciters = ApiConstants.reciterConfigs.keys.toList()..sort();

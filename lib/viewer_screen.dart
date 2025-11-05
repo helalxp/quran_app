@@ -38,7 +38,7 @@ class ViewerScreen extends StatefulWidget {
 }
 
 class _ViewerScreenState extends State<ViewerScreen>
-    with TickerProviderStateMixin {
+    with TickerProviderStateMixin, WidgetsBindingObserver {
   // Use constants from AppConstants
   static int get totalPages => AppConstants.totalPages;
   static double get pageVerticalOffset => AppConstants.pageVerticalOffset;
@@ -51,6 +51,9 @@ class _ViewerScreenState extends State<ViewerScreen>
   List<AyahMarker> _allMarkers = [];
   List<Surah> _allSurahs = [];
   Map<int, int> _juzStartPages = {};
+  Map<String, dynamic> _pageToHizbRub = {}; // Page -> Hizb/Rub mapping
+  Map<String, dynamic> _hizbToPages = {}; // Hizb -> Pages mapping
+  Map<String, dynamic> _rubToPages = {}; // Rub -> Pages mapping
   bool _isLoading = true;
   bool _isBookmarked = false;
   bool _isSearchActive = false;
@@ -64,7 +67,10 @@ class _ViewerScreenState extends State<ViewerScreen>
   Timer? _saveTimer;
 
   // Performance optimization: Cache expensive computations
-  final Map<int, ({String surahName, String juzNumber})> _pageInfoCache = {};
+  final Map<int, ({String surahName, String juzNumber, String hizbRub})> _pageInfoCache = {};
+  String _hizbRubDisplayMode = 'always'; // 'always', 'change', or 'never'
+  int _previousHizbNumber = 0;
+  int _previousRubNumber = 0;
   final PageCacheManager _pageCacheManager = PageCacheManager();
 
   // Memorization mode indicator
@@ -78,6 +84,9 @@ class _ViewerScreenState extends State<ViewerScreen>
   @override
   void initState() {
     super.initState();
+
+    // Add observer to detect app lifecycle changes
+    WidgetsBinding.instance.addObserver(this);
 
     // Initialize UI animation controller
     _uiAnimationController = AnimationController(
@@ -112,6 +121,15 @@ class _ViewerScreenState extends State<ViewerScreen>
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _enableWakelock();
     });
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    // Reload settings when app resumes from background
+    // Note: In-app navigation is handled by .then() callbacks
+    if (state == AppLifecycleState.resumed) {
+      _reloadDisplaySettings();
+    }
   }
 
   // Load khatmas so tracking works even if user hasn't opened Khatma screen
@@ -207,6 +225,9 @@ class _ViewerScreenState extends State<ViewerScreen>
 
   @override
   void dispose() {
+    // Remove lifecycle observer
+    WidgetsBinding.instance.removeObserver(this);
+
     // Cancel timers first to prevent any pending operations
     _saveTimer?.cancel();
     _saveTimer = null;
@@ -246,6 +267,28 @@ class _ViewerScreenState extends State<ViewerScreen>
       );
       final List<dynamic> surahsJsonList = json.decode(surahsJsonString);
       _allSurahs = surahsJsonList.map((json) => Surah.fromJson(json)).toList();
+
+      // Load Hizb and Rub data
+      try {
+        final hizbRubJsonString = await rootBundle.loadString(
+          'assets/data/page_to_hizb_rub.json',
+        );
+        _pageToHizbRub = json.decode(hizbRubJsonString);
+
+        final hizbJsonString = await rootBundle.loadString(
+          'assets/data/hizb_to_pages.json',
+        );
+        _hizbToPages = json.decode(hizbJsonString);
+
+        final rubJsonString = await rootBundle.loadString(
+          'assets/data/rub_to_pages.json',
+        );
+        _rubToPages = json.decode(rubJsonString);
+
+        debugPrint('Hizb/Rub data loaded successfully');
+      } catch (e) {
+        debugPrint('Failed to load Hizb/Rub data: $e');
+      }
 
       if (kDebugMode) {
         debugPrint(
@@ -418,14 +461,14 @@ class _ViewerScreenState extends State<ViewerScreen>
     }
   }
 
-  ({String surahName, String juzNumber}) _getInfoForPage(int page) {
+  ({String surahName, String juzNumber, String hizbRub}) _getInfoForPage(int page) {
     // Check cache first for performance
     if (_pageInfoCache.containsKey(page)) {
       return _pageInfoCache[page]!;
     }
 
     if (_allSurahs.isEmpty) {
-      final result = (surahName: '', juzNumber: '');
+      final result = (surahName: '', juzNumber: '', hizbRub: '');
       _pageInfoCache[page] = result;
       return result;
     }
@@ -445,16 +488,70 @@ class _ViewerScreenState extends State<ViewerScreen>
 
       // Get the correct juz for the current page, not just the surah's starting juz
       final currentJuz = JuzMappings.getJuzForPage(page);
-      final result = (surahName: surahName, juzNumber: "الجزء $currentJuz");
+
+      // Get Hizb and Rub information for this page
+      String hizbRubText = '';
+      if (_hizbRubDisplayMode != 'never' && _pageToHizbRub.isNotEmpty) {
+        final pageData = _pageToHizbRub[page.toString()];
+        if (pageData != null) {
+          final hizbNum = pageData['hizb_number'] as int?;
+          final rubNum = pageData['rub_number'] as int?;
+          if (hizbNum != null && rubNum != null) {
+            // Check if we should display based on mode
+            bool shouldDisplay = false;
+            if (_hizbRubDisplayMode == 'always') {
+              shouldDisplay = true;
+            } else if (_hizbRubDisplayMode == 'change') {
+              // Only show if Hizb or Rub changed from previous page
+              if (_previousHizbNumber != hizbNum || _previousRubNumber != rubNum) {
+                shouldDisplay = true;
+              }
+            }
+
+            if (shouldDisplay) {
+              // Calculate Rub within Hizb (1-4)
+              final rubInHizb = ((rubNum - 1) % 4) + 1;
+              hizbRubText = ' • ح$hizbNum ر$rubInHizb';
+            }
+
+            // Update previous values for next comparison
+            _previousHizbNumber = hizbNum;
+            _previousRubNumber = rubNum;
+          }
+        }
+      }
+
+      final result = (
+        surahName: surahName,
+        juzNumber: "الجزء $currentJuz$hizbRubText",
+        hizbRub: hizbRubText
+      );
 
       // Cache the result for performance
       _pageInfoCache[page] = result;
       return result;
     } catch (e) {
       debugPrint('Error getting page info: $e');
-      final result = (surahName: '', juzNumber: '');
+      final result = (surahName: '', juzNumber: '', hizbRub: '');
       _pageInfoCache[page] = result;
       return result;
+    }
+  }
+
+
+  Future<void> _reloadDisplaySettings() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final newMode = prefs.getString('hizb_rub_display_mode') ?? 'always';
+      if (newMode != _hizbRubDisplayMode) {
+        setState(() {
+          _hizbRubDisplayMode = newMode;
+        });
+        // Clear cache to force recalculation with new mode
+        _pageInfoCache.clear();
+      }
+    } catch (e) {
+      debugPrint('Failed to reload Hizb/Rub display mode: $e');
     }
   }
 
@@ -851,7 +948,10 @@ class _ViewerScreenState extends State<ViewerScreen>
         transitionType: PageTransitionType.slideLeftToRight,
         transitionDuration: AnimationUtils.normal,
       ),
-    );
+    ).then((_) {
+      // Reload settings when returning from any navigation
+      _reloadDisplaySettings();
+    });
   }
 
   @override
@@ -1002,6 +1102,7 @@ class _ViewerScreenState extends State<ViewerScreen>
                             () => _memorizationManager?.resumeSession(),
                         isPlaylistListeningModeNotifier:
                             _audioManager!.isPlaylistListeningModeNotifier,
+                        memorizationManager: _memorizationManager,
                       );
                     },
                   ),
@@ -1027,6 +1128,41 @@ class _ViewerScreenState extends State<ViewerScreen>
     );
   }
 
+  // Helper method to build selector button with consistent styling
+  Widget _buildSelectorButton({
+    required BuildContext context,
+    required String text,
+    required VoidCallback onTap,
+    required BoxConstraints constraints,
+    required TextStyle textStyle,
+  }) {
+    return ConstrainedBox(
+      constraints: constraints,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(8),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(
+              color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.3),
+            ),
+          ),
+          child: FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: Alignment.centerRight,
+            child: Text(
+              text,
+              style: textStyle,
+              textDirection: TextDirection.rtl,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   AppBar _buildAppBar(
     BuildContext context,
     String surahName,
@@ -1041,82 +1177,46 @@ class _ViewerScreenState extends State<ViewerScreen>
         textDirection: TextDirection.ltr,
         child: Row(
           children: [
-            // 1. Hamburger menu button (leftmost)
+            // Menu button
             IconButton(
-              onPressed: () {
-                _openSelectionScreen();
-              },
+              onPressed: _openSelectionScreen,
               icon: const Icon(Icons.menu),
               tooltip: 'المميزات',
             ),
 
-            // 2. Surah name - clickable and fits content
-            InkWell(
+            // Surah selector
+            _buildSelectorButton(
+              context: context,
+              text: surahName.isNotEmpty ? surahName : 'الفاتحة',
               onTap: () => _showSurahSelectionDialog(context),
-              borderRadius: BorderRadius.circular(8),
-              child: Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 8,
-                ),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(
-                    color: Theme.of(
-                      context,
-                    ).colorScheme.outline.withValues(alpha: 0.3),
-                  ),
-                ),
-                child: Text(
-                  surahName.isNotEmpty ? surahName : 'الفاتحة',
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
-                  textDirection: TextDirection.rtl,
-                ),
-              ),
+              constraints: const BoxConstraints(minWidth: 60, maxWidth: 150),
+              textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
             ),
 
+            // Spacer pushes Juz and Bookmark to the right
             const Spacer(),
 
-            // 3. Juz selector
-            InkWell(
+            // Juz selector with Hizb/Rub info
+            _buildSelectorButton(
+              context: context,
+              text: juzNumber.isNotEmpty ? juzNumber : 'الجزء 1',
               onTap: () => _showJuzSelectionDialog(context),
-              borderRadius: BorderRadius.circular(8),
-              child: Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 8,
-                ),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(
-                    color: Theme.of(
-                      context,
-                    ).colorScheme.outline.withValues(alpha: 0.3),
-                  ),
-                ),
-                child: Text(
-                  juzNumber.isNotEmpty ? juzNumber : 'الجزء 1',
-                  style: const TextStyle(fontSize: 14),
-                  textDirection: TextDirection.rtl,
-                ),
-              ),
+              constraints: const BoxConstraints(minWidth: 80, maxWidth: 200),
+              textStyle: const TextStyle(fontSize: 14),
             ),
 
-            // 4. Bookmark button (rightmost)
-            GestureDetector(
+            // Bookmark button
+            InkWell(
               onTap: _toggleBookmarkSafe,
               onLongPress: _showBookmarksSafe,
-              child: Container(
+              borderRadius: BorderRadius.circular(20),
+              child: Padding(
                 padding: const EdgeInsets.all(8),
                 child: Icon(
                   _isBookmarked ? Icons.bookmark : Icons.bookmark_border,
-                  color:
-                      _isBookmarked
-                          ? Theme.of(context).colorScheme.primary
-                          : Theme.of(context).colorScheme.onSurface,
+                  color: _isBookmarked
+                      ? Theme.of(context).colorScheme.primary
+                      : Theme.of(context).colorScheme.onSurface,
                 ),
               ),
             ),
@@ -1202,6 +1302,8 @@ class _ViewerScreenState extends State<ViewerScreen>
       allSurahs: _allSurahs,
       allMarkers: _allMarkers,
       juzStartPages: _juzStartPages,
+      hizbToPages: _hizbToPages,
+      rubToPages: _rubToPages,
       currentPage: currentPage,
       onSurahSelected: (surah) {
         setState(() {

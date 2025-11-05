@@ -15,6 +15,9 @@ import 'bookmark_manager.dart';
 import 'memorization_manager.dart';
 import 'widgets/loading_states.dart';
 import 'utils/input_sanitizer.dart';
+import 'utils/haptic_utils.dart';
+import 'widgets/quick_playback_settings_sheet.dart';
+import 'widgets/quick_memorization_settings_sheet.dart';
 
 class AyahActionsSheet extends StatefulWidget {
   final AyahMarker ayahMarker;
@@ -46,7 +49,7 @@ class _AyahActionsSheetState extends State<AyahActionsSheet> with TickerProvider
   String? _ayahText;
   String? _error;
   String? _tafsirSource;
-  String _defaultReciter = 'عبد الباسط عبد الصمد';
+  String _defaultReciter = 'محمود خليل الحصري';
   String _defaultTafsir = 'تفسير ابن كثير';
 
   // Enhanced cache with expiration
@@ -65,7 +68,7 @@ class _AyahActionsSheetState extends State<AyahActionsSheet> with TickerProvider
     try {
       final prefs = await SharedPreferences.getInstance();
       setState(() {
-        _defaultReciter = prefs.getString('selected_reciter') ?? 'عبد الباسط عبد الصمد';
+        _defaultReciter = prefs.getString('selected_reciter') ?? 'محمود خليل الحصري';
         _defaultTafsir = prefs.getString('default_tafsir') ?? 'تفسير ابن كثير';
       });
     } catch (e) {
@@ -805,6 +808,10 @@ class _AyahActionsSheetState extends State<AyahActionsSheet> with TickerProvider
                             child: InkWell(
                               borderRadius: BorderRadius.circular(16),
                               onTap: _playAyah,
+                              onLongPress: () {
+                                HapticUtils.heavyImpact();
+                                showQuickPlaybackSettings(context);
+                              },
                               child: Row(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
@@ -843,6 +850,21 @@ class _AyahActionsSheetState extends State<AyahActionsSheet> with TickerProvider
                           ),
                         ),
 
+                        const SizedBox(height: 8),
+
+                        // Clarifying text for long press
+                        Center(
+                          child: Text(
+                            'اضغط مطولاً لإعدادات التشغيل السريعة',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
+                              fontStyle: FontStyle.italic,
+                            ),
+                            textDirection: TextDirection.rtl,
+                          ),
+                        ),
+
                         const SizedBox(height: 16),
 
                         // Memorization section
@@ -873,6 +895,10 @@ class _AyahActionsSheetState extends State<AyahActionsSheet> with TickerProvider
                               child: InkWell(
                                 borderRadius: BorderRadius.circular(16),
                                 onTap: _startMemorization,
+                                onLongPress: () {
+                                  HapticUtils.heavyImpact();
+                                  showQuickMemorizationSettings(context, widget.memorizationManager);
+                                },
                                 child: Row(
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
@@ -910,6 +936,22 @@ class _AyahActionsSheetState extends State<AyahActionsSheet> with TickerProvider
                               ),
                             ),
                           ),
+
+                          const SizedBox(height: 8),
+
+                          // Clarifying text for long press
+                          Center(
+                            child: Text(
+                              'اضغط مطولاً لإعدادات الحفظ السريعة',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
+                                fontStyle: FontStyle.italic,
+                              ),
+                              textDirection: TextDirection.rtl,
+                            ),
+                          ),
+
                           const SizedBox(height: 24),
                         ],
 
