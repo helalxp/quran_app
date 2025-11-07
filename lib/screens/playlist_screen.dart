@@ -7,9 +7,12 @@ import '../utils/haptic_utils.dart';
 import '../constants/api_constants.dart';
 import '../models/surah.dart';
 import '../models/ayah_marker.dart';
+import '../models/quran_ayah.dart';
 import '../continuous_audio_manager.dart';
 import '../audio_download_manager.dart' show AudioDownloadManager, DownloadType;
 import '../viewer_screen.dart';
+import '../services/quran_text_service.dart';
+import '../utils/arabic_search_utils.dart';
 
 import '../services/analytics_service.dart';
 
@@ -2026,10 +2029,15 @@ class _PlaylistCreationSheetState extends State<_PlaylistCreationSheet> {
   List<Surah> _allSurahs = [];
   String? _playlistId;
 
+  // For ayah search
+  List<QuranAyah> _ayahsCache = [];
+  bool _isLoadingAyahs = false;
+
   @override
   void initState() {
     super.initState();
     _loadSurahs();
+    _loadAyahs();
     _selectedReciter = ApiConstants.reciterConfigs.keys.first;
 
     // Load existing playlist data if editing
@@ -2067,6 +2075,19 @@ class _PlaylistCreationSheetState extends State<_PlaylistCreationSheet> {
       });
     } catch (e) {
       debugPrint('Error loading surahs: $e');
+    }
+  }
+
+  Future<void> _loadAyahs() async {
+    if (_ayahsCache.isNotEmpty) return;
+
+    setState(() => _isLoadingAyahs = true);
+    try {
+      _ayahsCache = await QuranTextService().loadAyahs();
+    } catch (e) {
+      debugPrint('Error loading ayahs: $e');
+    } finally {
+      if (mounted) setState(() => _isLoadingAyahs = false);
     }
   }
 
@@ -2568,135 +2589,32 @@ class _PlaylistCreationSheetState extends State<_PlaylistCreationSheet> {
 
   void _showSurahSelector(bool isFrom) {
     HapticUtils.dialogOpen();
-
-    // Unfocus text field to dismiss keyboard
     FocusScope.of(context).unfocus();
 
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (context) => DraggableScrollableSheet(
-        initialChildSize: 0.9,
-        minChildSize: 0.5,
-        maxChildSize: 0.95,
-        builder: (context, scrollController) {
-          return Container(
-            decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.surface,
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-            ),
-            child: Column(
-              children: [
-                // Handle
-                Container(
-                  margin: const EdgeInsets.symmetric(vertical: 12),
-                  width: 40,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.4),
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                ),
-
-                // Header
-                Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Text(
-                    isFrom ? 'اختر السورة (من)' : 'اختر السورة (إلى)',
-                    style: const TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      fontFamily: 'Uthmanic',
-                    ),
-                    textDirection: TextDirection.rtl,
-                    textAlign: TextAlign.center,
-                  ),
-                ),
-
-                const Divider(height: 1),
-
-                // Surah list
-                Expanded(
-                  child: ListView.builder(
-                    controller: scrollController,
-                    itemCount: _allSurahs.length,
-                    itemBuilder: (context, index) {
-                      final surah = _allSurahs[index];
-                      final isDisabled = !isFrom && _fromSurah != null && surah.number < _fromSurah!.number;
-
-                      return ListTile(
-                        enabled: !isDisabled,
-                        leading: Container(
-                          width: 44,
-                          height: 44,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: isDisabled
-                                ? Theme.of(context).colorScheme.surfaceContainerHighest
-                                : Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.3),
-                          ),
-                          child: Center(
-                            child: Text(
-                              '${surah.number}',
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                color: isDisabled
-                                    ? Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.3)
-                                    : Theme.of(context).colorScheme.primary,
-                              ),
-                            ),
-                          ),
-                        ),
-                        title: Text(
-                          surah.nameArabic,
-                          style: TextStyle(
-                            fontFamily: 'Uthmanic',
-                            fontSize: 17,
-                            fontWeight: FontWeight.w600,
-                            color: isDisabled
-                                ? Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.3)
-                                : Theme.of(context).colorScheme.onSurface,
-                          ),
-                          textDirection: TextDirection.rtl,
-                        ),
-                        subtitle: Text(
-                          '${surah.nameEnglish} • ${surah.ayahCount} آية',
-                          style: TextStyle(
-                            fontSize: 13,
-                            color: isDisabled
-                                ? Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.2)
-                                : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
-                          ),
-                        ),
-                        onTap: isDisabled
-                            ? null
-                            : () {
-                                HapticUtils.selectionClick();
-                                setState(() {
-                                  if (isFrom) {
-                                    _fromSurah = surah;
-                                    _fromAyah = null; // Reset ayah selection
-                                    // Reset To selection if it's before From
-                                    if (_toSurah != null && _toSurah!.number < surah.number) {
-                                      _toSurah = null;
-                                      _toAyah = null;
-                                    }
-                                  } else {
-                                    _toSurah = surah;
-                                    _toAyah = null; // Reset ayah selection
-                                  }
-                                  _updatePlaylistName();
-                                });
-                                Navigator.pop(context);
-                              },
-                      );
-                    },
-                  ),
-                ),
-              ],
-            ),
-          );
+      builder: (context) => _SurahSelectorSheet(
+        isFrom: isFrom,
+        allSurahs: _allSurahs,
+        fromSurah: _fromSurah,
+        onSelect: (surah) {
+          setState(() {
+            if (isFrom) {
+              _fromSurah = surah;
+              _fromAyah = null;
+              if (_toSurah != null && _toSurah!.number < surah.number) {
+                _toSurah = null;
+                _toAyah = null;
+              }
+            } else {
+              _toSurah = surah;
+              _toAyah = null;
+            }
+            _updatePlaylistName();
+          });
+          Navigator.pop(context);
         },
       ),
     );
@@ -2709,170 +2627,43 @@ class _PlaylistCreationSheetState extends State<_PlaylistCreationSheet> {
         : 1;
 
     HapticUtils.dialogOpen();
-
-    // Unfocus text field to dismiss keyboard
     FocusScope.of(context).unfocus();
 
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (context) => DraggableScrollableSheet(
-        initialChildSize: 0.7,
-        minChildSize: 0.5,
-        maxChildSize: 0.9,
-        builder: (context, scrollController) {
-          return Container(
-            decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.surface,
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-            ),
-            child: Column(
-              children: [
-                // Handle
-                Container(
-                  margin: const EdgeInsets.symmetric(vertical: 12),
-                  width: 40,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.4),
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                ),
-
-                // Header
-                Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    children: [
-                      Text(
-                        isFrom ? 'اختر الآية (من)' : 'اختر الآية (إلى)',
-                        style: const TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                          fontFamily: 'Uthmanic',
-                        ),
-                        textDirection: TextDirection.rtl,
-                        textAlign: TextAlign.center,
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        surah.nameArabic,
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontFamily: 'Uthmanic',
-                          color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
-                        ),
-                        textDirection: TextDirection.rtl,
-                        textAlign: TextAlign.center,
-                      ),
-                    ],
-                  ),
-                ),
-
-                const Divider(height: 1),
-
-                // Ayah list
-                Expanded(
-                  child: ListView.builder(
-                    controller: scrollController,
-                    itemCount: surah.ayahCount + 1, // +1 for "entire surah" option
-                    itemBuilder: (context, index) {
-                      if (index == 0) {
-                        // "Entire surah" option
-                        return ListTile(
-                          leading: Icon(
-                            Icons.select_all,
-                            color: Theme.of(context).colorScheme.primary,
-                          ),
-                          title: Text(
-                            isFrom ? 'من بداية السورة' : 'حتى نهاية السورة',
-                            style: const TextStyle(
-                              fontFamily: 'Uthmanic',
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                            ),
-                            textDirection: TextDirection.rtl,
-                          ),
-                          onTap: () {
-                            HapticUtils.selectionClick();
-                            setState(() {
-                              if (isFrom) {
-                                _fromAyah = null;
-                              } else {
-                                _toAyah = null;
-                              }
-                              _updatePlaylistName();
-                            });
-                            Navigator.pop(context);
-                          },
-                        );
-                      }
-
-                      final ayahNumber = index;
-                      final isDisabled = ayahNumber < minAyah;
-
-                      return ListTile(
-                        enabled: !isDisabled,
-                        leading: Container(
-                          width: 40,
-                          height: 40,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: isDisabled
-                                ? Theme.of(context).colorScheme.surfaceContainerHighest
-                                : Theme.of(context).colorScheme.secondaryContainer.withValues(alpha: 0.3),
-                          ),
-                          child: Center(
-                            child: Text(
-                              '$ayahNumber',
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                color: isDisabled
-                                    ? Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.3)
-                                    : Theme.of(context).colorScheme.secondary,
-                              ),
-                            ),
-                          ),
-                        ),
-                        title: Text(
-                          'الآية $ayahNumber',
-                          style: TextStyle(
-                            fontFamily: 'Uthmanic',
-                            fontSize: 16,
-                            color: isDisabled
-                                ? Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.3)
-                                : Theme.of(context).colorScheme.onSurface,
-                          ),
-                          textDirection: TextDirection.rtl,
-                        ),
-                        onTap: isDisabled
-                            ? null
-                            : () {
-                                HapticUtils.selectionClick();
-                                setState(() {
-                                  if (isFrom) {
-                                    _fromAyah = ayahNumber;
-                                    // Reset To ayah if it's before From ayah (in same surah)
-                                    if (_toSurah != null && _toSurah!.number == _fromSurah!.number) {
-                                      if (_toAyah != null && _toAyah! < ayahNumber) {
-                                        _toAyah = null;
-                                      }
-                                    }
-                                  } else {
-                                    _toAyah = ayahNumber;
-                                  }
-                                  _updatePlaylistName();
-                                });
-                                Navigator.pop(context);
-                              },
-                      );
-                    },
-                  ),
-                ),
-              ],
-            ),
-          );
+      builder: (context) => _AyahSelectorSheet(
+        isFrom: isFrom,
+        surah: surah,
+        minAyah: minAyah,
+        ayahs: _ayahsCache.where((a) => a.surahNumber == surah.number).toList(),
+        onSelect: (ayahNumber) {
+          setState(() {
+            if (isFrom) {
+              _fromAyah = ayahNumber;
+              if (_toSurah != null && _toSurah!.number == _fromSurah!.number) {
+                if (_toAyah != null && _toAyah! < ayahNumber) {
+                  _toAyah = null;
+                }
+              }
+            } else {
+              _toAyah = ayahNumber;
+            }
+            _updatePlaylistName();
+          });
+          Navigator.pop(context);
+        },
+        onSelectAll: () {
+          setState(() {
+            if (isFrom) {
+              _fromAyah = null;
+            } else {
+              _toAyah = null;
+            }
+            _updatePlaylistName();
+          });
+          Navigator.pop(context);
         },
       ),
     );
@@ -3042,6 +2833,555 @@ class _PlaylistCreationSheetState extends State<_PlaylistCreationSheet> {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         duration: const Duration(seconds: 2),
       ),
+    );
+  }
+}
+
+// Surah Selector Sheet with Search
+class _SurahSelectorSheet extends StatefulWidget {
+  final bool isFrom;
+  final List<Surah> allSurahs;
+  final Surah? fromSurah;
+  final Function(Surah) onSelect;
+
+  const _SurahSelectorSheet({
+    required this.isFrom,
+    required this.allSurahs,
+    required this.fromSurah,
+    required this.onSelect,
+  });
+
+  @override
+  State<_SurahSelectorSheet> createState() => _SurahSelectorSheetState();
+}
+
+class _SurahSelectorSheetState extends State<_SurahSelectorSheet> {
+  String _searchQuery = '';
+
+  List<Surah> _getFilteredSurahs() {
+    if (_searchQuery.isEmpty) return widget.allSurahs;
+
+    final query = _searchQuery.trim().toLowerCase();
+    return widget.allSurahs.where((surah) {
+      return surah.nameArabic.contains(_searchQuery) ||
+             surah.nameEnglish.toLowerCase().contains(query) ||
+             surah.number.toString().contains(query);
+    }).toList();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final filteredSurahs = _getFilteredSurahs();
+    final keyboardHeight = MediaQuery.of(context).viewInsets.bottom;
+
+    return DraggableScrollableSheet(
+      initialChildSize: 0.9,
+      minChildSize: 0.5,
+      maxChildSize: 0.95,
+      builder: (context, scrollController) {
+        return Padding(
+          padding: EdgeInsets.only(bottom: keyboardHeight),
+          child: Container(
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.surface,
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+            ),
+            child: Column(
+            children: [
+              Container(
+                margin: const EdgeInsets.symmetric(vertical: 12),
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.4),
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: Text(
+                  widget.isFrom ? 'اختر السورة (من)' : 'اختر السورة (إلى)',
+                  style: const TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    fontFamily: 'Uthmanic',
+                  ),
+                  textDirection: TextDirection.rtl,
+                  textAlign: TextAlign.center,
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                child: TextField(
+                  textDirection: TextDirection.rtl,
+                  textAlign: TextAlign.right,
+                  decoration: InputDecoration(
+                    hintText: 'ابحث عن السورة...',
+                    hintTextDirection: TextDirection.rtl,
+                    hintStyle: TextStyle(
+                      fontFamily: 'Uthmanic',
+                      color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
+                    ),
+                    suffixIcon: Icon(
+                      Icons.search,
+                      color: Theme.of(context).colorScheme.primary,
+                    ),
+                    filled: true,
+                    fillColor: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide.none,
+                    ),
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  ),
+                  onChanged: (value) {
+                    setState(() => _searchQuery = value);
+                  },
+                ),
+              ),
+              const Divider(height: 1),
+              Expanded(
+                child: filteredSurahs.isEmpty
+                    ? Center(
+                        child: Text(
+                          'لم يتم العثور على نتائج',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontFamily: 'Uthmanic',
+                            color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
+                          ),
+                          textDirection: TextDirection.rtl,
+                        ),
+                      )
+                    : ListView.builder(
+                        controller: scrollController,
+                        itemCount: filteredSurahs.length,
+                        itemBuilder: (context, index) {
+                          final surah = filteredSurahs[index];
+                          final isDisabled = !widget.isFrom &&
+                              widget.fromSurah != null &&
+                              surah.number < widget.fromSurah!.number;
+
+                          return ListTile(
+                            enabled: !isDisabled,
+                            leading: Container(
+                              width: 44,
+                              height: 44,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: isDisabled
+                                    ? Theme.of(context).colorScheme.surfaceContainerHighest
+                                    : Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.3),
+                              ),
+                              child: Center(
+                                child: Text(
+                                  '${surah.number}',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    color: isDisabled
+                                        ? Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.3)
+                                        : Theme.of(context).colorScheme.primary,
+                                  ),
+                                ),
+                              ),
+                            ),
+                            title: Text(
+                              surah.nameArabic,
+                              style: TextStyle(
+                                fontFamily: 'Uthmanic',
+                                fontSize: 17,
+                                fontWeight: FontWeight.w600,
+                                color: isDisabled
+                                    ? Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.3)
+                                    : Theme.of(context).colorScheme.onSurface,
+                              ),
+                              textDirection: TextDirection.rtl,
+                            ),
+                            subtitle: Text(
+                              '${surah.nameEnglish} • ${surah.ayahCount} آية',
+                              style: TextStyle(
+                                fontSize: 13,
+                                color: isDisabled
+                                    ? Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.2)
+                                    : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
+                              ),
+                            ),
+                            onTap: isDisabled ? null : () {
+                              HapticUtils.selectionClick();
+                              widget.onSelect(surah);
+                            },
+                          );
+                        },
+                      ),
+              ),
+            ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+// Ayah Selector Sheet with Search and Highlighting
+class _AyahSelectorSheet extends StatefulWidget {
+  final bool isFrom;
+  final Surah surah;
+  final int minAyah;
+  final List<QuranAyah> ayahs;
+  final Function(int) onSelect;
+  final VoidCallback onSelectAll;
+
+  const _AyahSelectorSheet({
+    required this.isFrom,
+    required this.surah,
+    required this.minAyah,
+    required this.ayahs,
+    required this.onSelect,
+    required this.onSelectAll,
+  });
+
+  @override
+  State<_AyahSelectorSheet> createState() => _AyahSelectorSheetState();
+}
+
+class _AyahSelectorSheetState extends State<_AyahSelectorSheet> {
+  String _searchQuery = '';
+
+  List<int> _getFilteredAyahs() {
+    final allAyahs = List.generate(widget.surah.ayahCount, (i) => i + 1);
+    if (_searchQuery.isEmpty) return allAyahs;
+
+    final query = _searchQuery.trim();
+    final normalizedQuery = ArabicSearchUtils.normalize(query);
+
+    return allAyahs.where((ayahNum) {
+      // Search by number
+      if (ayahNum.toString().contains(query)) return true;
+
+      // Search by text
+      final ayahData = widget.ayahs.firstWhere(
+        (a) => a.ayahNumber == ayahNum,
+        orElse: () => QuranAyah(surahNumber: 0, ayahNumber: 0, text: ''),
+      );
+
+      final normalizedText = ArabicSearchUtils.normalize(ayahData.text);
+      return normalizedText.contains(normalizedQuery);
+    }).toList();
+  }
+
+  TextSpan _buildHighlightedText(String text, String query) {
+    if (query.isEmpty) {
+      return TextSpan(
+        text: text,
+        style: TextStyle(
+          fontSize: 14,
+          height: 1.6,
+          fontFamily: 'Uthmanic',
+          color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.85),
+        ),
+      );
+    }
+
+    final List<int> normalizedToOriginalStart = [];
+    final List<int> normalizedToOriginalEnd = [];
+    final normalizedChars = <String>[];
+
+    for (int i = 0; i < text.length; i++) {
+      final normalizedChar = ArabicSearchUtils.normalize(text[i]);
+      if (normalizedChar.isNotEmpty) {
+        normalizedToOriginalStart.add(i);
+        int endPos = i + 1;
+        while (endPos < text.length) {
+          final nextNormalized = ArabicSearchUtils.normalize(text[endPos]);
+          if (nextNormalized.isEmpty) {
+            endPos++;
+          } else {
+            break;
+          }
+        }
+        normalizedToOriginalEnd.add(endPos);
+        normalizedChars.add(normalizedChar);
+      }
+    }
+
+    final normalizedText = normalizedChars.join();
+    final normalizedQuery = ArabicSearchUtils.normalize(query);
+
+    final List<int> matchStarts = [];
+    final List<int> matchEnds = [];
+
+    int searchFrom = 0;
+    while (searchFrom < normalizedText.length) {
+      final matchIndex = normalizedText.indexOf(normalizedQuery, searchFrom);
+      if (matchIndex == -1) break;
+
+      matchStarts.add(matchIndex);
+      matchEnds.add(matchIndex + normalizedQuery.length);
+      searchFrom = matchIndex + 1;
+    }
+
+    if (matchStarts.isEmpty) {
+      return TextSpan(
+        text: text,
+        style: TextStyle(
+          fontSize: 14,
+          height: 1.6,
+          fontFamily: 'Uthmanic',
+          color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.85),
+        ),
+      );
+    }
+
+    final List<TextSpan> spans = [];
+    int currentPos = 0;
+
+    for (int i = 0; i < matchStarts.length; i++) {
+      final matchStart = matchStarts[i];
+      final matchEnd = matchEnds[i];
+
+      final originalStart = normalizedToOriginalStart[matchStart];
+      final originalEnd = normalizedToOriginalEnd[matchEnd - 1];
+
+      if (currentPos < originalStart) {
+        spans.add(
+          TextSpan(
+            text: text.substring(currentPos, originalStart),
+            style: TextStyle(
+              fontSize: 14,
+              height: 1.6,
+              fontFamily: 'Uthmanic',
+              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.85),
+            ),
+          ),
+        );
+      }
+
+      spans.add(
+        TextSpan(
+          text: text.substring(originalStart, originalEnd),
+          style: TextStyle(
+            fontSize: 14,
+            height: 1.6,
+            fontFamily: 'Uthmanic',
+            backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      );
+
+      currentPos = originalEnd;
+    }
+
+    if (currentPos < text.length) {
+      spans.add(
+        TextSpan(
+          text: text.substring(currentPos),
+          style: TextStyle(
+            fontSize: 14,
+            height: 1.6,
+            fontFamily: 'Uthmanic',
+            color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.85),
+          ),
+        ),
+      );
+    }
+
+    return TextSpan(children: spans);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final filteredAyahs = _getFilteredAyahs();
+    final keyboardHeight = MediaQuery.of(context).viewInsets.bottom;
+
+    return DraggableScrollableSheet(
+      initialChildSize: 0.7,
+      minChildSize: 0.5,
+      maxChildSize: 0.9,
+      builder: (context, scrollController) {
+        return Padding(
+          padding: EdgeInsets.only(bottom: keyboardHeight),
+          child: Container(
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.surface,
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+            ),
+            child: Column(
+            children: [
+              Container(
+                margin: const EdgeInsets.symmetric(vertical: 12),
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.4),
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  children: [
+                    Text(
+                      widget.isFrom ? 'اختر الآية (من)' : 'اختر الآية (إلى)',
+                      style: const TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        fontFamily: 'Uthmanic',
+                      ),
+                      textDirection: TextDirection.rtl,
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      widget.surah.nameArabic,
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontFamily: 'Uthmanic',
+                        color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
+                      ),
+                      textDirection: TextDirection.rtl,
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                child: TextField(
+                  textDirection: TextDirection.rtl,
+                  textAlign: TextAlign.right,
+                  decoration: InputDecoration(
+                    hintText: 'ابحث برقم الآية أو النص...',
+                    hintTextDirection: TextDirection.rtl,
+                    hintStyle: TextStyle(
+                      fontFamily: 'Uthmanic',
+                      color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
+                    ),
+                    suffixIcon: Icon(
+                      Icons.search,
+                      color: Theme.of(context).colorScheme.primary,
+                    ),
+                    filled: true,
+                    fillColor: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide.none,
+                    ),
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  ),
+                  onChanged: (value) {
+                    setState(() => _searchQuery = value);
+                  },
+                ),
+              ),
+              const Divider(height: 1),
+              Expanded(
+                child: filteredAyahs.isEmpty
+                    ? Center(
+                        child: Text(
+                          'لم يتم العثور على نتائج',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontFamily: 'Uthmanic',
+                            color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
+                          ),
+                          textDirection: TextDirection.rtl,
+                        ),
+                      )
+                    : ListView.builder(
+                        controller: scrollController,
+                        itemCount: _searchQuery.isEmpty ? filteredAyahs.length + 1 : filteredAyahs.length,
+                        itemBuilder: (context, index) {
+                          if (index == 0 && _searchQuery.isEmpty) {
+                            return ListTile(
+                              leading: Icon(
+                                Icons.select_all,
+                                color: Theme.of(context).colorScheme.primary,
+                              ),
+                              title: Text(
+                                widget.isFrom ? 'من بداية السورة' : 'حتى نهاية السورة',
+                                style: const TextStyle(
+                                  fontFamily: 'Uthmanic',
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                                textDirection: TextDirection.rtl,
+                              ),
+                              onTap: () {
+                                HapticUtils.selectionClick();
+                                widget.onSelectAll();
+                              },
+                            );
+                          }
+
+                          final ayahIndex = _searchQuery.isEmpty ? index - 1 : index;
+                          final ayahNumber = filteredAyahs[ayahIndex];
+                          final isDisabled = ayahNumber < widget.minAyah;
+                          final ayahData = widget.ayahs.firstWhere(
+                            (a) => a.ayahNumber == ayahNumber,
+                            orElse: () => QuranAyah(surahNumber: 0, ayahNumber: 0, text: ''),
+                          );
+
+                          return ListTile(
+                            enabled: !isDisabled,
+                            leading: Container(
+                              width: 40,
+                              height: 40,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: isDisabled
+                                    ? Theme.of(context).colorScheme.surfaceContainerHighest
+                                    : Theme.of(context).colorScheme.secondaryContainer.withValues(alpha: 0.3),
+                              ),
+                              child: Center(
+                                child: Text(
+                                  '$ayahNumber',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    color: isDisabled
+                                        ? Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.3)
+                                        : Theme.of(context).colorScheme.secondary,
+                                  ),
+                                ),
+                              ),
+                            ),
+                            title: Text(
+                              'الآية $ayahNumber',
+                              style: TextStyle(
+                                fontFamily: 'Uthmanic',
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                                color: isDisabled
+                                    ? Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.3)
+                                    : Theme.of(context).colorScheme.onSurface,
+                              ),
+                              textDirection: TextDirection.rtl,
+                            ),
+                            subtitle: ayahData.text.isNotEmpty
+                                ? Padding(
+                                    padding: const EdgeInsets.only(top: 4),
+                                    child: RichText(
+                                      textDirection: TextDirection.rtl,
+                                      maxLines: 2,
+                                      overflow: TextOverflow.ellipsis,
+                                      text: _buildHighlightedText(ayahData.text, _searchQuery),
+                                    ),
+                                  )
+                                : null,
+                            onTap: isDisabled ? null : () {
+                              HapticUtils.selectionClick();
+                              widget.onSelect(ayahNumber);
+                            },
+                          );
+                        },
+                      ),
+              ),
+            ],
+            ),
+          ),
+        );
+      },
     );
   }
 }
