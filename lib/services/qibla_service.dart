@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:adhan/adhan.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -46,8 +47,14 @@ class QiblaService {
     }
   }
 
-  // Update location from device GPS
+  // Update location from device GPS (native only)
   Future<bool> _updateLocationFromDevice() async {
+    // Geolocator not available on web
+    if (kIsWeb) {
+      _coordinates = Coordinates(_defaultLatitude, _defaultLongitude);
+      return false;
+    }
+
     try {
       // Check permission
       LocationPermission permission = await Geolocator.checkPermission();
@@ -113,12 +120,30 @@ class QiblaService {
   double getDistanceToMakkah() {
     if (_coordinates == null) {
       final defaultCoords = Coordinates(_defaultLatitude, _defaultLongitude);
+      if (kIsWeb) {
+        // Rough estimate for Cairo to Makkah (web fallback)
+        return 1400.0;
+      }
       return Geolocator.distanceBetween(
         defaultCoords.latitude,
         defaultCoords.longitude,
         21.4225, // Makkah latitude
         39.8262, // Makkah longitude
       ) / 1000; // Convert to kilometers
+    }
+
+    if (kIsWeb) {
+      // Rough Haversine calculation for web (geolocator not available)
+      const R = 6371; // Earth radius in km
+      final lat1 = _coordinates!.latitude * pi / 180;
+      final lat2 = 21.4225 * pi / 180;
+      final dLat = (21.4225 - _coordinates!.latitude) * pi / 180;
+      final dLon = (39.8262 - _coordinates!.longitude) * pi / 180;
+
+      final a = sin(dLat / 2) * sin(dLat / 2) +
+          cos(lat1) * cos(lat2) * sin(dLon / 2) * sin(dLon / 2);
+      final c = 2 * atan2(sqrt(a), sqrt(1 - a));
+      return R * c;
     }
 
     return Geolocator.distanceBetween(

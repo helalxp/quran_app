@@ -5,6 +5,7 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter/gestures.dart';
 import 'screens/feature_selection_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
@@ -988,6 +989,7 @@ class _ViewerScreenState extends State<ViewerScreen>
           resizeToAvoidBottomInset: false, // Keep background static
           body: GestureDetector(
             onTap: _resetUIVisibility,
+            onDoubleTap: _resetUIVisibility,
             behavior: HitTestBehavior.translucent,
             child: Stack(
               children: [
@@ -996,48 +998,98 @@ class _ViewerScreenState extends State<ViewerScreen>
                   padding: EdgeInsets.only(
                     bottom: bottomSafe + pageVerticalOffset,
                   ),
-                  child: PageView.builder(
-                    controller: _controller,
-                    itemCount: totalPages,
-                    reverse: true,
-                    allowImplicitScrolling: true, // Pre-cache adjacent pages
-                    physics: const BouncingScrollPhysics(
-                      parent: AlwaysScrollableScrollPhysics(),
-                    ),
-                    itemBuilder: (context, index) {
-                      final pageNumber = index + 1;
-
-                      final pageNumStr = pageNumber.toString().padLeft(3, '0');
-                      final pageMarkers = _markersByPage[pageNumber] ?? [];
-                      final pageInfo = _getInfoForPage(pageNumber);
-
-                      final pageWidget = SvgPageViewer(
-                        key: ValueKey(
-                          'page_$pageNumber',
-                        ), // Add key for better widget recycling
-                        svgAssetPath: 'assets/pages/$pageNumStr.svg',
-                        markers: pageMarkers,
-                        currentPage: pageNumber,
-                        surahName: pageInfo.surahName,
-                        juzName: pageInfo.juzNumber,
-                        currentlyPlayingAyah:
-                            _audioManager!.currentAyahNotifier,
-                        highlightedAyahFromSearch: _highlightedAyahFromSearch,
-                        onContinuousPlayRequested: _onContinuousPlayRequested,
-                        memorizationManager: _memorizationManager,
-                      );
-
-                      // Widget caching now handled by PageCacheManager
-
-                      // Wrap in themed container to prevent white flash during loading
-                      return Container(
-                        color: Theme.of(context).scaffoldBackgroundColor,
-                        child: RepaintBoundary(
-                          key: ValueKey('repaint_$pageNumber'),
-                          child: pageWidget,
-                        ),
-                      );
+                  child: Focus(
+                    autofocus: kIsWeb,
+                    onKeyEvent: (node, event) {
+                      if (kIsWeb && event is KeyDownEvent) {
+                        if (event.logicalKey == LogicalKeyboardKey.arrowLeft) {
+                          _controller?.nextPage(
+                            duration: const Duration(milliseconds: 300),
+                            curve: Curves.easeInOut,
+                          );
+                          return KeyEventResult.handled;
+                        } else if (event.logicalKey == LogicalKeyboardKey.arrowRight) {
+                          _controller?.previousPage(
+                            duration: const Duration(milliseconds: 300),
+                            curve: Curves.easeInOut,
+                          );
+                          return KeyEventResult.handled;
+                        } else if (event.logicalKey == LogicalKeyboardKey.space) {
+                          // Toggle audio play/pause
+                          if (_audioManager != null) {
+                            if (_audioManager!.isPlayingNotifier.value) {
+                              _audioManager!.pause();
+                            } else {
+                              _audioManager!.resume();
+                            }
+                          }
+                          return KeyEventResult.handled;
+                        } else if (event.logicalKey == LogicalKeyboardKey.mediaPlayPause) {
+                          // Media play/pause key
+                          if (_audioManager != null) {
+                            if (_audioManager!.isPlayingNotifier.value) {
+                              _audioManager!.pause();
+                            } else {
+                              _audioManager!.resume();
+                            }
+                          }
+                          return KeyEventResult.handled;
+                        }
+                      }
+                      return KeyEventResult.ignored;
                     },
+                    child: ScrollConfiguration(
+                      behavior: ScrollConfiguration.of(context).copyWith(
+                        dragDevices: {
+                          PointerDeviceKind.touch,
+                          if (kIsWeb) PointerDeviceKind.mouse,
+                        },
+                      ),
+                      child: PageView.builder(
+                        controller: _controller,
+                        itemCount: totalPages,
+                        reverse: true,
+                        allowImplicitScrolling: true, // Pre-cache adjacent pages
+                        physics: const BouncingScrollPhysics(
+                          parent: AlwaysScrollableScrollPhysics(),
+                        ),
+                        itemBuilder: (context, index) {
+                          final pageNumber = index + 1;
+
+                          final pageNumStr = pageNumber.toString().padLeft(3, '0');
+                          final pageMarkers = _markersByPage[pageNumber] ?? [];
+                          final pageInfo = _getInfoForPage(pageNumber);
+
+                          final pageWidget = SvgPageViewer(
+                            key: ValueKey(
+                              'page_$pageNumber',
+                            ), // Add key for better widget recycling
+                            svgAssetPath: 'assets/pages/$pageNumStr.svg',
+                            markers: pageMarkers,
+                            currentPage: pageNumber,
+                            surahName: pageInfo.surahName,
+                            juzName: pageInfo.juzNumber,
+                            currentlyPlayingAyah:
+                                _audioManager!.currentAyahNotifier,
+                            highlightedAyahFromSearch: _highlightedAyahFromSearch,
+                            onContinuousPlayRequested: _onContinuousPlayRequested,
+                            memorizationManager: _memorizationManager,
+                            onEmptyAreaTapped: _resetUIVisibility,
+                          );
+
+                          // Widget caching now handled by PageCacheManager
+
+                          // Wrap in themed container to prevent white flash during loading
+                          return Container(
+                            color: Theme.of(context).scaffoldBackgroundColor,
+                            child: RepaintBoundary(
+                              key: ValueKey('repaint_$pageNumber'),
+                              child: pageWidget,
+                            ),
+                          );
+                        },
+                      ),
+                    ),
                   ),
                 ),
 

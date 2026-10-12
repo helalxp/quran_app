@@ -1,4 +1,4 @@
-// lib/main.dart
+﻿// lib/main.dart
 
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
@@ -16,8 +16,8 @@ import 'services/alarm_scheduler_service.dart';
 import 'services/native_azan_service.dart';
 import 'services/suggestions_service.dart';
 import 'services/admob_service.dart';
-import 'package:in_app_update/in_app_update.dart';
 import 'dart:ui';
+import 'package:flutter/services.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -88,26 +88,74 @@ void main() async {
     // Continue app startup even if audio service fails
   }
 
-  // Initialize prayer services for background notifications and azan
-  try {
-    await PrayerTimesService.instance.initialize();
+  // Initialize prayer services for background notifications and azan (Android/iOS only)
+  if (!kIsWeb) {
+    try {
+      await PrayerTimesService.instance.initialize();
 
-    // Note: AzanService is deprecated - azan is now handled by native Android code.
-    // NotificationService is still needed for permission requests!
-    // await AzanService.instance.initialize();
-    await NotificationService.instance.initialize();
+      // Note: AzanService is deprecated - azan is now handled by native Android code.
+      // NotificationService is still needed for permission requests!
+      // await AzanService.instance.initialize();
+      await NotificationService.instance.initialize();
 
-    // Initialize and schedule prayer alarms (uses native Android alarms)
-    await AlarmSchedulerService.instance.initialize();
-    await AlarmSchedulerService.instance.scheduleAllPrayerAlarms();
+      // Initialize and schedule prayer alarms (uses native Android alarms)
+      await AlarmSchedulerService.instance.initialize();
+      await AlarmSchedulerService.instance.scheduleAllPrayerAlarms();
 
-    if (kDebugMode) debugPrint('✅ Prayer services initialized successfully');
-  } catch (e) {
-    if (kDebugMode) debugPrint('❌ Failed to initialize prayer services: $e');
-    // Continue app startup even if prayer services fail
+      if (kDebugMode) debugPrint('✅ Prayer services initialized successfully');
+    } catch (e) {
+      if (kDebugMode) debugPrint('❌ Failed to initialize prayer services: $e');
+      // Continue app startup even if prayer services fail
+    }
   }
 
+  // Pre-load custom fonts into the engine so TextPainter can use them
+  await _loadCustomFonts();
+
   runApp(const QuranApp());
+}
+
+/// Pre-loads custom fonts using FontLoader so they are guaranteed to be
+/// registered in the Flutter engine before any TextPainter.paint() call.
+/// This is critical for CustomPainter-based text rendering where
+/// font availability isn't guaranteed by the standard asset pipeline alone.
+Future<void> _loadCustomFonts() async {
+  try {
+    if (kDebugMode) debugPrint('[FONTS] Pre-loading Uthmanic font...');
+    final uthmanicData = await rootBundle.load('assets/fonts/UthmanicHafs.ttf');
+    if (kDebugMode) debugPrint('[FONTS] Loaded ${uthmanicData.lengthInBytes} bytes for Uthmanic');
+    final uthmanicLoader = FontLoader('Uthmanic');
+    uthmanicLoader.addFont(Future.value(uthmanicData));
+    await uthmanicLoader.load();
+    if (kDebugMode) debugPrint('[FONTS] ✅ Uthmanic font loaded and registered successfully');
+
+    // Web-specific: ensure font is ready for rendering
+    if (kIsWeb) {
+      // Give the browser time to process the font
+      await Future.delayed(const Duration(milliseconds: 100));
+      if (kDebugMode) debugPrint('[FONTS] Web font initialization complete');
+    }
+  } catch (e, stackTrace) {
+    if (kDebugMode) {
+      debugPrint('[FONTS] ❌ Failed to load Uthmanic font: $e');
+      debugPrint('[FONTS] Stack trace: $stackTrace');
+    }
+  }
+
+  try {
+    if (kDebugMode) debugPrint('[FONTS] Pre-loading SurahName font...');
+    final surahNameData = await rootBundle.load('assets/mushaf/SurahNameV4.ttf');
+    if (kDebugMode) debugPrint('[FONTS] Loaded ${surahNameData.lengthInBytes} bytes for SurahName');
+    final surahNameLoader = FontLoader('SurahName');
+    surahNameLoader.addFont(Future.value(surahNameData));
+    await surahNameLoader.load();
+    if (kDebugMode) debugPrint('[FONTS] ✅ SurahName font loaded and registered successfully');
+  } catch (e, stackTrace) {
+    if (kDebugMode) {
+      debugPrint('[FONTS] ❌ Failed to load SurahName font: $e');
+      debugPrint('[FONTS] Stack trace: $stackTrace');
+    }
+  }
 }
 
 /// Handle background alarm rescheduling when app is launched by boot or midnight receiver
@@ -136,38 +184,6 @@ class _QuranAppState extends State<QuranApp> with WidgetsBindingObserver {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-
-    // Check for app updates on Play Store
-    _checkForUpdate();
-  }
-
-  /// Check for app updates and prompt user if available
-  Future<void> _checkForUpdate() async {
-    try {
-      if (!kIsWeb) {
-        final info = await InAppUpdate.checkForUpdate();
-
-        if (info.updateAvailability == UpdateAvailability.updateAvailable) {
-          if (kDebugMode) debugPrint('📱 Update available! Starting flexible update...');
-
-          // Start flexible update (downloads in background)
-          await InAppUpdate.startFlexibleUpdate();
-
-          // Listen for update download completion
-          InAppUpdate.completeFlexibleUpdate().then((_) {
-            if (kDebugMode) debugPrint('✅ Update downloaded and ready to install');
-            // The update will be installed on next app restart
-          }).catchError((e) {
-            if (kDebugMode) debugPrint('❌ Update installation failed: $e');
-          });
-        } else {
-          if (kDebugMode) debugPrint('✅ App is up to date');
-        }
-      }
-    } catch (e) {
-      if (kDebugMode) debugPrint('❌ Update check failed: $e');
-      // Continue normally - updates are not critical
-    }
   }
 
   @override
@@ -204,7 +220,7 @@ class _QuranAppState extends State<QuranApp> with WidgetsBindingObserver {
               navigatorObservers: AnalyticsService.observer != null
                   ? [AnalyticsService.observer!]
                   : [],
-              home: const ViewerScreen(),
+              home: ViewerScreen(),
             ),
           );
         },

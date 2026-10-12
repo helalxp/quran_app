@@ -20,6 +20,7 @@ class SvgPageViewer extends StatefulWidget {
   final ValueNotifier<AyahMarker?>? highlightedAyahFromSearch;
   final Function(AyahMarker, String) onContinuousPlayRequested;
   final MemorizationManager? memorizationManager;
+  final VoidCallback? onEmptyAreaTapped;
 
   // SVG canvas dimensions - use constants
   double get sourceWidth => AppConstants.svgSourceWidth;
@@ -36,6 +37,7 @@ class SvgPageViewer extends StatefulWidget {
     this.highlightedAyahFromSearch,
     required this.onContinuousPlayRequested,
     this.memorizationManager,
+    this.onEmptyAreaTapped,
   });
 
   @override
@@ -194,6 +196,7 @@ class _SvgPageViewerState extends State<SvgPageViewer>
               transformationController: _transformationController,
               minScale: 1.0,
               maxScale: 3.0,
+              panAxis: PanAxis.vertical, // Only vertical panning, leave horizontal for PageView
               onInteractionEnd: (details) {
                 _resetZoom();
               },
@@ -203,6 +206,11 @@ class _SvgPageViewerState extends State<SvgPageViewer>
                   if (ModalRoute.of(context)?.isCurrent == false) {
                     Navigator.of(context).popUntil((route) => route.isCurrent);
                   }
+                  // Notify parent to toggle UI visibility
+                  widget.onEmptyAreaTapped?.call();
+                },
+                onDoubleTap: () {
+                  widget.onEmptyAreaTapped?.call();
                 },
                 child: Container(
                   // Full screen container - no padding/margin that could interfere

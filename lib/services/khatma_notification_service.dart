@@ -3,7 +3,7 @@ import 'package:flutter/services.dart';
 import '../models/khatma.dart';
 
 class KhatmaNotificationService {
-  static const MethodChannel _channel = MethodChannel('com.helal.quran/khatma_alarms');
+  static const MethodChannel? _channel = kIsWeb ? null : MethodChannel('com.helal.quran/khatma_alarms');
 
   /// Generate unique alarm ID from khatma ID string (prevents hash collisions)
   static int _getAlarmId(String khatmaId, {bool isProgressReminder = false}) {
@@ -19,6 +19,7 @@ class KhatmaNotificationService {
 
   /// Schedule a daily notification for a Khatma
   static Future<bool> scheduleKhatmaNotification(Khatma khatma) async {
+    if (_channel == null) return false;
     if (khatma.notificationTime == null) {
       return false;
     }
@@ -57,7 +58,7 @@ class KhatmaNotificationService {
       final timeInMillis = nextNotification.millisecondsSinceEpoch;
       final pagesPerDay = khatma.getCurrentPagesPerDay();
 
-      final result = await _channel.invokeMethod('scheduleKhatmaAlarm', {
+      final result = await _channel!.invokeMethod('scheduleKhatmaAlarm', {
         'alarmId': _getAlarmId(khatma.id),
         'timeInMillis': timeInMillis,
         'khatmaName': khatma.name,
@@ -80,8 +81,9 @@ class KhatmaNotificationService {
 
   /// Cancel a Khatma notification
   static Future<bool> cancelKhatmaNotification(String khatmaId) async {
+    if (_channel == null) return false;
     try {
-      await _channel.invokeMethod('cancelKhatmaAlarm', {
+      await _channel!.invokeMethod('cancelKhatmaAlarm', {
         'alarmId': _getAlarmId(khatmaId),
       });
 
@@ -120,6 +122,7 @@ class KhatmaNotificationService {
     int hoursAfter, {
     int? pagesRead,
   }) async {
+    if (_channel == null) return false;
     if (khatma.notificationTime == null || khatma.mode == KhatmaMode.tracking) {
       return false;
     }
@@ -166,7 +169,7 @@ class KhatmaNotificationService {
         return false;
       }
 
-      final result = await _channel.invokeMethod('scheduleProgressReminder', {
+      final result = await _channel!.invokeMethod('scheduleProgressReminder', {
         'alarmId': _getAlarmId(khatma.id, isProgressReminder: true),
         'timeInMillis': timeInMillis,
         'khatmaName': khatma.name,

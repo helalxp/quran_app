@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'dart:async';
 import 'dart:math' as math;
 import 'package:flutter_qiblah/flutter_qiblah.dart';
@@ -22,7 +23,7 @@ class _QiblaScreenState extends State<QiblaScreen> {
   bool _directionLogged = false;
   Timer? _alignmentVibrationTimer;
 
-  final _deviceSupport = FlutterQiblah.androidDeviceSensorSupport();
+  final _deviceSupport = kIsWeb ? Future.value(false) : FlutterQiblah.androidDeviceSensorSupport();
 
   @override
   void initState() {

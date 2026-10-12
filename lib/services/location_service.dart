@@ -48,7 +48,17 @@ class LocationService {
   // Get current device location
   Future<LocationData?> getCurrentLocation() async {
     try {
-     
+      // Geolocator not available on web
+      if (kIsWeb) {
+        if (kDebugMode) debugPrint('⏭️ LocationService: Geolocator not available on web, using default');
+        return LocationData(
+          latitude: 30.0444,
+          longitude: 31.2357,
+          name: 'القاهرة، مصر',
+          isAutoDetected: false,
+        );
+      }
+
       final connectivityResult = await Connectivity().checkConnectivity();
       if (connectivityResult == ConnectivityResult.none) {
         if (kDebugMode) debugPrint('❌ Location: No internet connection');
