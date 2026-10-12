@@ -97,19 +97,25 @@ class AudioCacheManager {
 
     try {
       _prefs = await SharedPreferences.getInstance();
-      _cacheDirectory = await _getCacheDirectory();
-      await _loadCacheIndex();
-      await _performCacheCleanup();
+
+      // On web, skip file-based caching and use URL-based playback
+      if (!kIsWeb) {
+        _cacheDirectory = await _getCacheDirectory();
+        await _loadCacheIndex();
+        await _performCacheCleanup();
+      }
+
       _initialized = true;
-      debugPrint('✅ AudioCacheManager initialized');
+      debugPrint('✅ AudioCacheManager initialized${kIsWeb ? " (web - URL-based playback)" : ""}');
     } catch (e) {
       debugPrint('❌ Error initializing AudioCacheManager: $e');
       rethrow;
     }
   }
 
-  /// Get or create cache directory
-  Future<Directory> _getCacheDirectory() async {
+  /// Get or create cache directory (native only)
+  Future<Directory?> _getCacheDirectory() async {
+    if (kIsWeb) return null;
     final appDir = await getApplicationDocumentsDirectory();
     final cacheDir = Directory('${appDir.path}/audio_cache');
     if (!await cacheDir.exists()) {
@@ -162,27 +168,30 @@ class AudioCacheManager {
     return digest.toString();
   }
 
-  /// Check if ayah is cached
+  /// Check if ayah is cached (native only)
   bool isAyahCached(String reciter, int surah, int ayah) {
+    if (kIsWeb) return false; // No file caching on web
+
     final key = _generateCacheKey(reciter, surah, ayah);
     final entry = _cacheIndex[key];
     if (entry == null) return false;
-    
+
     // Check if file still exists
     final file = File(entry.filePath);
     return file.existsSync();
   }
 
-  /// Get cached file path for ayah
+  /// Get cached file path for ayah (native only)
   String? getCachedFilePath(String reciter, int surah, int ayah) {
+    if (kIsWeb) return null; // No file caching on web
     if (!isAyahCached(reciter, surah, ayah)) return null;
-    
+
     final key = _generateCacheKey(reciter, surah, ayah);
     final entry = _cacheIndex[key];
-    
+
     // Update last accessed time
     _updateLastAccessed(key);
-    
+
     return 'file://${entry!.filePath}';
   }
 
@@ -201,7 +210,7 @@ class AudioCacheManager {
     return data;
   }
 
-  /// Cache ayah audio data
+  /// Cache ayah audio data (native only - returns URL directly on web)
   Future<String?> cacheAyahAudio({
     required String reciter,
     required int surah,
@@ -211,9 +220,17 @@ class AudioCacheManager {
     bool preloadToMemory = false,
   }) async {
     if (!_initialized) await initialize();
-    
+
+    // On web, return URL directly - no file caching
+    if (kIsWeb) {
+      if (onProgress != null) {
+        onProgress(0, 0, 100); // Report as ready
+      }
+      return url;
+    }
+
     final key = _generateCacheKey(reciter, surah, ayah);
-    
+
     // Check if already cached
     if (isAyahCached(reciter, surah, ayah)) {
       final filePath = getCachedFilePath(reciter, surah, ayah);
@@ -366,8 +383,9 @@ class AudioCacheManager {
     debugPrint('💾 Added to memory buffer: ${data.length} bytes ($_currentMemoryUsage MB total)');
   }
 
-  /// Load file to memory buffer
+  /// Load file to memory buffer (native only)
   Future<void> _loadToMemoryBuffer(String key, String filePath) async {
+    if (kIsWeb) return;
     try {
       final file = File(filePath);
       final data = await file.readAsBytes();
@@ -396,19 +414,21 @@ class AudioCacheManager {
 
   /// Perform cache cleanup based on size and age limits
   Future<void> _performCacheCleanup() async {
+    if (kIsWeb) return; // No file cleanup on web
+
     final now = DateTime.now();
     final entriesToRemove = <String>[];
 
     // Find expired or excess entries
     for (final entry in _cacheIndex.entries) {
       final cacheEntry = entry.value;
-      
+
       // Remove expired entries
       if (now.difference(cacheEntry.lastAccessed) > CacheLimits.cacheExpiry) {
         entriesToRemove.add(entry.key);
         continue;
       }
-      
+
       // Remove if file doesn't exist
       if (!File(cacheEntry.filePath).existsSync()) {
         entriesToRemove.add(entry.key);
@@ -442,10 +462,12 @@ class AudioCacheManager {
   Future<void> _removeFromCache(String key) async {
     final entry = _cacheIndex[key];
     if (entry != null) {
-      try {
-        await File(entry.filePath).delete();
-      } catch (e) {
-        debugPrint('⚠️ Error deleting cache file: $e');
+      if (!kIsWeb) {
+        try {
+          await File(entry.filePath).delete();
+        } catch (e) {
+          debugPrint('⚠️ Error deleting cache file: $e');
+        }
       }
       _cacheIndex.remove(key);
       _memoryBuffer.remove(key);
@@ -481,12 +503,14 @@ class AudioCacheManager {
     _bufferQueue.clear();
     _currentMemoryUsage = 0;
 
-    // Delete all cache files
-    for (final entry in _cacheIndex.values) {
-      try {
-        await File(entry.filePath).delete();
-      } catch (e) {
-        debugPrint('⚠️ Error deleting cache file: $e');
+    // Delete all cache files (native only)
+    if (!kIsWeb) {
+      for (final entry in _cacheIndex.values) {
+        try {
+          await File(entry.filePath).delete();
+        } catch (e) {
+          debugPrint('⚠️ Error deleting cache file: $e');
+        }
       }
     }
 
@@ -515,8 +539,10 @@ class AudioCacheManager {
         _currentMemoryUsage = 0;
       }
 
-      // Delete file
-      await File(entry.filePath).delete();
+      // Delete file (native only)
+      if (!kIsWeb) {
+        await File(entry.filePath).delete();
+      }
 
       // Remove from index
       _cacheIndex.remove(key);

@@ -1,0 +1,4834 @@
+{
+  "1": {
+    "hizb_number": 1,
+    "rub_number": 1,
+    "juz_number": 1,
+    "first_verse_key": "1:1",
+    "last_verse_key": "1:7",
+    "total_verses": 7
+  },
+  "2": {
+    "hizb_number": 1,
+    "rub_number": 1,
+    "juz_number": 1,
+    "first_verse_key": "2:1",
+    "last_verse_key": "2:5",
+    "total_verses": 5
+  },
+  "3": {
+    "hizb_number": 1,
+    "rub_number": 1,
+    "juz_number": 1,
+    "first_verse_key": "2:6",
+    "last_verse_key": "2:16",
+    "total_verses": 11
+  },
+  "4": {
+    "hizb_number": 1,
+    "rub_number": 1,
+    "juz_number": 1,
+    "first_verse_key": "2:17",
+    "last_verse_key": "2:24",
+    "total_verses": 8
+  },
+  "5": {
+    "hizb_number": 1,
+    "rub_number": 1,
+    "juz_number": 1,
+    "first_verse_key": "2:25",
+    "last_verse_key": "2:29",
+    "total_verses": 5
+  },
+  "6": {
+    "hizb_number": 1,
+    "rub_number": 2,
+    "juz_number": 1,
+    "first_verse_key": "2:30",
+    "last_verse_key": "2:37",
+    "total_verses": 8
+  },
+  "7": {
+    "hizb_number": 1,
+    "rub_number": 2,
+    "juz_number": 1,
+    "first_verse_key": "2:38",
+    "last_verse_key": "2:48",
+    "total_verses": 11
+  },
+  "8": {
+    "hizb_number": 1,
+    "rub_number": 3,
+    "juz_number": 1,
+    "first_verse_key": "2:49",
+    "last_verse_key": "2:57",
+    "total_verses": 9
+  },
+  "9": {
+    "hizb_number": 1,
+    "rub_number": 3,
+    "juz_number": 1,
+    "first_verse_key": "2:58",
+    "last_verse_key": "2:61",
+    "total_verses": 4
+  },
+  "10": {
+    "hizb_number": 1,
+    "rub_number": 4,
+    "juz_number": 1,
+    "first_verse_key": "2:62",
+    "last_verse_key": "2:69",
+    "total_verses": 8
+  },
+  "11": {
+    "hizb_number": 1,
+    "rub_number": 4,
+    "juz_number": 1,
+    "first_verse_key": "2:70",
+    "last_verse_key": "2:76",
+    "total_verses": 7
+  },
+  "12": {
+    "hizb_number": 2,
+    "rub_number": 5,
+    "juz_number": 1,
+    "first_verse_key": "2:77",
+    "last_verse_key": "2:83",
+    "total_verses": 7
+  },
+  "13": {
+    "hizb_number": 2,
+    "rub_number": 5,
+    "juz_number": 1,
+    "first_verse_key": "2:84",
+    "last_verse_key": "2:88",
+    "total_verses": 5
+  },
+  "14": {
+    "hizb_number": 2,
+    "rub_number": 5,
+    "juz_number": 1,
+    "first_verse_key": "2:89",
+    "last_verse_key": "2:93",
+    "total_verses": 5
+  },
+  "15": {
+    "hizb_number": 2,
+    "rub_number": 6,
+    "juz_number": 1,
+    "first_verse_key": "2:94",
+    "last_verse_key": "2:101",
+    "total_verses": 8
+  },
+  "16": {
+    "hizb_number": 2,
+    "rub_number": 6,
+    "juz_number": 1,
+    "first_verse_key": "2:102",
+    "last_verse_key": "2:105",
+    "total_verses": 4
+  },
+  "17": {
+    "hizb_number": 2,
+    "rub_number": 7,
+    "juz_number": 1,
+    "first_verse_key": "2:106",
+    "last_verse_key": "2:112",
+    "total_verses": 7
+  },
+  "18": {
+    "hizb_number": 2,
+    "rub_number": 7,
+    "juz_number": 1,
+    "first_verse_key": "2:113",
+    "last_verse_key": "2:119",
+    "total_verses": 7
+  },
+  "19": {
+    "hizb_number": 2,
+    "rub_number": 7,
+    "juz_number": 1,
+    "first_verse_key": "2:120",
+    "last_verse_key": "2:126",
+    "total_verses": 7
+  },
+  "20": {
+    "hizb_number": 2,
+    "rub_number": 8,
+    "juz_number": 1,
+    "first_verse_key": "2:127",
+    "last_verse_key": "2:134",
+    "total_verses": 8
+  },
+  "21": {
+    "hizb_number": 2,
+    "rub_number": 8,
+    "juz_number": 1,
+    "first_verse_key": "2:135",
+    "last_verse_key": "2:141",
+    "total_verses": 7
+  },
+  "22": {
+    "hizb_number": 3,
+    "rub_number": 9,
+    "juz_number": 2,
+    "first_verse_key": "2:142",
+    "last_verse_key": "2:145",
+    "total_verses": 4
+  },
+  "23": {
+    "hizb_number": 3,
+    "rub_number": 9,
+    "juz_number": 2,
+    "first_verse_key": "2:146",
+    "last_verse_key": "2:153",
+    "total_verses": 8
+  },
+  "24": {
+    "hizb_number": 3,
+    "rub_number": 9,
+    "juz_number": 2,
+    "first_verse_key": "2:154",
+    "last_verse_key": "2:163",
+    "total_verses": 10
+  },
+  "25": {
+    "hizb_number": 3,
+    "rub_number": 10,
+    "juz_number": 2,
+    "first_verse_key": "2:164",
+    "last_verse_key": "2:169",
+    "total_verses": 6
+  },
+  "26": {
+    "hizb_number": 3,
+    "rub_number": 10,
+    "juz_number": 2,
+    "first_verse_key": "2:170",
+    "last_verse_key": "2:176",
+    "total_verses": 7
+  },
+  "27": {
+    "hizb_number": 3,
+    "rub_number": 11,
+    "juz_number": 2,
+    "first_verse_key": "2:177",
+    "last_verse_key": "2:181",
+    "total_verses": 5
+  },
+  "28": {
+    "hizb_number": 3,
+    "rub_number": 11,
+    "juz_number": 2,
+    "first_verse_key": "2:182",
+    "last_verse_key": "2:186",
+    "total_verses": 5
+  },
+  "29": {
+    "hizb_number": 3,
+    "rub_number": 11,
+    "juz_number": 2,
+    "first_verse_key": "2:187",
+    "last_verse_key": "2:190",
+    "total_verses": 4
+  },
+  "30": {
+    "hizb_number": 3,
+    "rub_number": 12,
+    "juz_number": 2,
+    "first_verse_key": "2:191",
+    "last_verse_key": "2:196",
+    "total_verses": 6
+  },
+  "31": {
+    "hizb_number": 3,
+    "rub_number": 12,
+    "juz_number": 2,
+    "first_verse_key": "2:197",
+    "last_verse_key": "2:202",
+    "total_verses": 6
+  },
+  "32": {
+    "hizb_number": 4,
+    "rub_number": 13,
+    "juz_number": 2,
+    "first_verse_key": "2:203",
+    "last_verse_key": "2:210",
+    "total_verses": 8
+  },
+  "33": {
+    "hizb_number": 4,
+    "rub_number": 13,
+    "juz_number": 2,
+    "first_verse_key": "2:211",
+    "last_verse_key": "2:215",
+    "total_verses": 5
+  },
+  "34": {
+    "hizb_number": 4,
+    "rub_number": 13,
+    "juz_number": 2,
+    "first_verse_key": "2:216",
+    "last_verse_key": "2:219",
+    "total_verses": 4
+  },
+  "35": {
+    "hizb_number": 4,
+    "rub_number": 14,
+    "juz_number": 2,
+    "first_verse_key": "2:220",
+    "last_verse_key": "2:224",
+    "total_verses": 5
+  },
+  "36": {
+    "hizb_number": 4,
+    "rub_number": 14,
+    "juz_number": 2,
+    "first_verse_key": "2:225",
+    "last_verse_key": "2:230",
+    "total_verses": 6
+  },
+  "37": {
+    "hizb_number": 4,
+    "rub_number": 14,
+    "juz_number": 2,
+    "first_verse_key": "2:231",
+    "last_verse_key": "2:233",
+    "total_verses": 3
+  },
+  "38": {
+    "hizb_number": 4,
+    "rub_number": 15,
+    "juz_number": 2,
+    "first_verse_key": "2:234",
+    "last_verse_key": "2:237",
+    "total_verses": 4
+  },
+  "39": {
+    "hizb_number": 4,
+    "rub_number": 15,
+    "juz_number": 2,
+    "first_verse_key": "2:238",
+    "last_verse_key": "2:245",
+    "total_verses": 8
+  },
+  "40": {
+    "hizb_number": 4,
+    "rub_number": 16,
+    "juz_number": 2,
+    "first_verse_key": "2:246",
+    "last_verse_key": "2:248",
+    "total_verses": 3
+  },
+  "41": {
+    "hizb_number": 4,
+    "rub_number": 16,
+    "juz_number": 2,
+    "first_verse_key": "2:249",
+    "last_verse_key": "2:252",
+    "total_verses": 4
+  },
+  "42": {
+    "hizb_number": 5,
+    "rub_number": 17,
+    "juz_number": 3,
+    "first_verse_key": "2:253",
+    "last_verse_key": "2:256",
+    "total_verses": 4
+  },
+  "43": {
+    "hizb_number": 5,
+    "rub_number": 17,
+    "juz_number": 3,
+    "first_verse_key": "2:257",
+    "last_verse_key": "2:259",
+    "total_verses": 3
+  },
+  "44": {
+    "hizb_number": 5,
+    "rub_number": 17,
+    "juz_number": 3,
+    "first_verse_key": "2:260",
+    "last_verse_key": "2:264",
+    "total_verses": 5
+  },
+  "45": {
+    "hizb_number": 5,
+    "rub_number": 18,
+    "juz_number": 3,
+    "first_verse_key": "2:265",
+    "last_verse_key": "2:269",
+    "total_verses": 5
+  },
+  "46": {
+    "hizb_number": 5,
+    "rub_number": 18,
+    "juz_number": 3,
+    "first_verse_key": "2:270",
+    "last_verse_key": "2:274",
+    "total_verses": 5
+  },
+  "47": {
+    "hizb_number": 5,
+    "rub_number": 19,
+    "juz_number": 3,
+    "first_verse_key": "2:275",
+    "last_verse_key": "2:281",
+    "total_verses": 7
+  },
+  "48": {
+    "hizb_number": 5,
+    "rub_number": 19,
+    "juz_number": 3,
+    "first_verse_key": "2:282",
+    "last_verse_key": "2:282",
+    "total_verses": 1
+  },
+  "49": {
+    "hizb_number": 5,
+    "rub_number": 20,
+    "juz_number": 3,
+    "first_verse_key": "2:283",
+    "last_verse_key": "2:286",
+    "total_verses": 4
+  },
+  "50": {
+    "hizb_number": 5,
+    "rub_number": 20,
+    "juz_number": 3,
+    "first_verse_key": "3:1",
+    "last_verse_key": "3:9",
+    "total_verses": 9
+  },
+  "51": {
+    "hizb_number": 5,
+    "rub_number": 20,
+    "juz_number": 3,
+    "first_verse_key": "3:10",
+    "last_verse_key": "3:15",
+    "total_verses": 6
+  },
+  "52": {
+    "hizb_number": 6,
+    "rub_number": 21,
+    "juz_number": 3,
+    "first_verse_key": "3:16",
+    "last_verse_key": "3:22",
+    "total_verses": 7
+  },
+  "53": {
+    "hizb_number": 6,
+    "rub_number": 21,
+    "juz_number": 3,
+    "first_verse_key": "3:23",
+    "last_verse_key": "3:29",
+    "total_verses": 7
+  },
+  "54": {
+    "hizb_number": 6,
+    "rub_number": 21,
+    "juz_number": 3,
+    "first_verse_key": "3:30",
+    "last_verse_key": "3:37",
+    "total_verses": 8
+  },
+  "55": {
+    "hizb_number": 6,
+    "rub_number": 22,
+    "juz_number": 3,
+    "first_verse_key": "3:38",
+    "last_verse_key": "3:45",
+    "total_verses": 8
+  },
+  "56": {
+    "hizb_number": 6,
+    "rub_number": 22,
+    "juz_number": 3,
+    "first_verse_key": "3:46",
+    "last_verse_key": "3:52",
+    "total_verses": 7
+  },
+  "57": {
+    "hizb_number": 6,
+    "rub_number": 23,
+    "juz_number": 3,
+    "first_verse_key": "3:53",
+    "last_verse_key": "3:61",
+    "total_verses": 9
+  },
+  "58": {
+    "hizb_number": 6,
+    "rub_number": 23,
+    "juz_number": 3,
+    "first_verse_key": "3:62",
+    "last_verse_key": "3:70",
+    "total_verses": 9
+  },
+  "59": {
+    "hizb_number": 6,
+    "rub_number": 23,
+    "juz_number": 3,
+    "first_verse_key": "3:71",
+    "last_verse_key": "3:77",
+    "total_verses": 7
+  },
+  "60": {
+    "hizb_number": 6,
+    "rub_number": 24,
+    "juz_number": 3,
+    "first_verse_key": "3:78",
+    "last_verse_key": "3:83",
+    "total_verses": 6
+  },
+  "61": {
+    "hizb_number": 6,
+    "rub_number": 24,
+    "juz_number": 3,
+    "first_verse_key": "3:84",
+    "last_verse_key": "3:91",
+    "total_verses": 8
+  },
+  "62": {
+    "hizb_number": 6,
+    "rub_number": 24,
+    "juz_number": 3,
+    "first_verse_key": "3:92",
+    "last_verse_key": "3:100",
+    "total_verses": 9
+  },
+  "63": {
+    "hizb_number": 7,
+    "rub_number": 25,
+    "juz_number": 4,
+    "first_verse_key": "3:101",
+    "last_verse_key": "3:108",
+    "total_verses": 8
+  },
+  "64": {
+    "hizb_number": 7,
+    "rub_number": 25,
+    "juz_number": 4,
+    "first_verse_key": "3:109",
+    "last_verse_key": "3:115",
+    "total_verses": 7
+  },
+  "65": {
+    "hizb_number": 7,
+    "rub_number": 26,
+    "juz_number": 4,
+    "first_verse_key": "3:116",
+    "last_verse_key": "3:121",
+    "total_verses": 6
+  },
+  "66": {
+    "hizb_number": 7,
+    "rub_number": 26,
+    "juz_number": 4,
+    "first_verse_key": "3:122",
+    "last_verse_key": "3:132",
+    "total_verses": 11
+  },
+  "67": {
+    "hizb_number": 7,
+    "rub_number": 27,
+    "juz_number": 4,
+    "first_verse_key": "3:133",
+    "last_verse_key": "3:140",
+    "total_verses": 8
+  },
+  "68": {
+    "hizb_number": 7,
+    "rub_number": 27,
+    "juz_number": 4,
+    "first_verse_key": "3:141",
+    "last_verse_key": "3:148",
+    "total_verses": 8
+  },
+  "69": {
+    "hizb_number": 7,
+    "rub_number": 27,
+    "juz_number": 4,
+    "first_verse_key": "3:149",
+    "last_verse_key": "3:153",
+    "total_verses": 5
+  },
+  "70": {
+    "hizb_number": 7,
+    "rub_number": 28,
+    "juz_number": 4,
+    "first_verse_key": "3:154",
+    "last_verse_key": "3:157",
+    "total_verses": 4
+  },
+  "71": {
+    "hizb_number": 7,
+    "rub_number": 28,
+    "juz_number": 4,
+    "first_verse_key": "3:158",
+    "last_verse_key": "3:165",
+    "total_verses": 8
+  },
+  "72": {
+    "hizb_number": 7,
+    "rub_number": 28,
+    "juz_number": 4,
+    "first_verse_key": "3:166",
+    "last_verse_key": "3:173",
+    "total_verses": 8
+  },
+  "73": {
+    "hizb_number": 8,
+    "rub_number": 29,
+    "juz_number": 4,
+    "first_verse_key": "3:174",
+    "last_verse_key": "3:180",
+    "total_verses": 7
+  },
+  "74": {
+    "hizb_number": 8,
+    "rub_number": 29,
+    "juz_number": 4,
+    "first_verse_key": "3:181",
+    "last_verse_key": "3:186",
+    "total_verses": 6
+  },
+  "75": {
+    "hizb_number": 8,
+    "rub_number": 30,
+    "juz_number": 4,
+    "first_verse_key": "3:187",
+    "last_verse_key": "3:194",
+    "total_verses": 8
+  },
+  "76": {
+    "hizb_number": 8,
+    "rub_number": 30,
+    "juz_number": 4,
+    "first_verse_key": "3:195",
+    "last_verse_key": "3:200",
+    "total_verses": 6
+  },
+  "77": {
+    "hizb_number": 8,
+    "rub_number": 31,
+    "juz_number": 4,
+    "first_verse_key": "4:1",
+    "last_verse_key": "4:6",
+    "total_verses": 6
+  },
+  "78": {
+    "hizb_number": 8,
+    "rub_number": 31,
+    "juz_number": 4,
+    "first_verse_key": "4:7",
+    "last_verse_key": "4:11",
+    "total_verses": 5
+  },
+  "79": {
+    "hizb_number": 8,
+    "rub_number": 32,
+    "juz_number": 4,
+    "first_verse_key": "4:12",
+    "last_verse_key": "4:14",
+    "total_verses": 3
+  },
+  "80": {
+    "hizb_number": 8,
+    "rub_number": 32,
+    "juz_number": 4,
+    "first_verse_key": "4:15",
+    "last_verse_key": "4:19",
+    "total_verses": 5
+  },
+  "81": {
+    "hizb_number": 8,
+    "rub_number": 32,
+    "juz_number": 4,
+    "first_verse_key": "4:20",
+    "last_verse_key": "4:23",
+    "total_verses": 4
+  },
+  "82": {
+    "hizb_number": 9,
+    "rub_number": 33,
+    "juz_number": 5,
+    "first_verse_key": "4:24",
+    "last_verse_key": "4:26",
+    "total_verses": 3
+  },
+  "83": {
+    "hizb_number": 9,
+    "rub_number": 33,
+    "juz_number": 5,
+    "first_verse_key": "4:27",
+    "last_verse_key": "4:33",
+    "total_verses": 7
+  },
+  "84": {
+    "hizb_number": 9,
+    "rub_number": 33,
+    "juz_number": 5,
+    "first_verse_key": "4:34",
+    "last_verse_key": "4:37",
+    "total_verses": 4
+  },
+  "85": {
+    "hizb_number": 9,
+    "rub_number": 34,
+    "juz_number": 5,
+    "first_verse_key": "4:38",
+    "last_verse_key": "4:44",
+    "total_verses": 7
+  },
+  "86": {
+    "hizb_number": 9,
+    "rub_number": 34,
+    "juz_number": 5,
+    "first_verse_key": "4:45",
+    "last_verse_key": "4:51",
+    "total_verses": 7
+  },
+  "87": {
+    "hizb_number": 9,
+    "rub_number": 34,
+    "juz_number": 5,
+    "first_verse_key": "4:52",
+    "last_verse_key": "4:59",
+    "total_verses": 8
+  },
+  "88": {
+    "hizb_number": 9,
+    "rub_number": 35,
+    "juz_number": 5,
+    "first_verse_key": "4:60",
+    "last_verse_key": "4:65",
+    "total_verses": 6
+  },
+  "89": {
+    "hizb_number": 9,
+    "rub_number": 35,
+    "juz_number": 5,
+    "first_verse_key": "4:66",
+    "last_verse_key": "4:74",
+    "total_verses": 9
+  },
+  "90": {
+    "hizb_number": 9,
+    "rub_number": 36,
+    "juz_number": 5,
+    "first_verse_key": "4:75",
+    "last_verse_key": "4:79",
+    "total_verses": 5
+  },
+  "91": {
+    "hizb_number": 9,
+    "rub_number": 36,
+    "juz_number": 5,
+    "first_verse_key": "4:80",
+    "last_verse_key": "4:86",
+    "total_verses": 7
+  },
+  "92": {
+    "hizb_number": 9,
+    "rub_number": 36,
+    "juz_number": 5,
+    "first_verse_key": "4:87",
+    "last_verse_key": "4:91",
+    "total_verses": 5
+  },
+  "93": {
+    "hizb_number": 10,
+    "rub_number": 37,
+    "juz_number": 5,
+    "first_verse_key": "4:92",
+    "last_verse_key": "4:94",
+    "total_verses": 3
+  },
+  "94": {
+    "hizb_number": 10,
+    "rub_number": 37,
+    "juz_number": 5,
+    "first_verse_key": "4:95",
+    "last_verse_key": "4:101",
+    "total_verses": 7
+  },
+  "95": {
+    "hizb_number": 10,
+    "rub_number": 38,
+    "juz_number": 5,
+    "first_verse_key": "4:102",
+    "last_verse_key": "4:105",
+    "total_verses": 4
+  },
+  "96": {
+    "hizb_number": 10,
+    "rub_number": 38,
+    "juz_number": 5,
+    "first_verse_key": "4:106",
+    "last_verse_key": "4:113",
+    "total_verses": 8
+  },
+  "97": {
+    "hizb_number": 10,
+    "rub_number": 39,
+    "juz_number": 5,
+    "first_verse_key": "4:114",
+    "last_verse_key": "4:121",
+    "total_verses": 8
+  },
+  "98": {
+    "hizb_number": 10,
+    "rub_number": 39,
+    "juz_number": 5,
+    "first_verse_key": "4:122",
+    "last_verse_key": "4:127",
+    "total_verses": 6
+  },
+  "99": {
+    "hizb_number": 10,
+    "rub_number": 39,
+    "juz_number": 5,
+    "first_verse_key": "4:128",
+    "last_verse_key": "4:134",
+    "total_verses": 7
+  },
+  "100": {
+    "hizb_number": 10,
+    "rub_number": 40,
+    "juz_number": 5,
+    "first_verse_key": "4:135",
+    "last_verse_key": "4:140",
+    "total_verses": 6
+  },
+  "101": {
+    "hizb_number": 10,
+    "rub_number": 40,
+    "juz_number": 5,
+    "first_verse_key": "4:141",
+    "last_verse_key": "4:147",
+    "total_verses": 7
+  },
+  "102": {
+    "hizb_number": 11,
+    "rub_number": 41,
+    "juz_number": 6,
+    "first_verse_key": "4:148",
+    "last_verse_key": "4:154",
+    "total_verses": 7
+  },
+  "103": {
+    "hizb_number": 11,
+    "rub_number": 41,
+    "juz_number": 6,
+    "first_verse_key": "4:155",
+    "last_verse_key": "4:162",
+    "total_verses": 8
+  },
+  "104": {
+    "hizb_number": 11,
+    "rub_number": 42,
+    "juz_number": 6,
+    "first_verse_key": "4:163",
+    "last_verse_key": "4:170",
+    "total_verses": 8
+  },
+  "105": {
+    "hizb_number": 11,
+    "rub_number": 42,
+    "juz_number": 6,
+    "first_verse_key": "4:171",
+    "last_verse_key": "4:175",
+    "total_verses": 5
+  },
+  "106": {
+    "hizb_number": 11,
+    "rub_number": 42,
+    "juz_number": 6,
+    "first_verse_key": "4:176",
+    "last_verse_key": "5:2",
+    "total_verses": 3
+  },
+  "107": {
+    "hizb_number": 11,
+    "rub_number": 43,
+    "juz_number": 6,
+    "first_verse_key": "5:3",
+    "last_verse_key": "5:5",
+    "total_verses": 3
+  },
+  "108": {
+    "hizb_number": 11,
+    "rub_number": 43,
+    "juz_number": 6,
+    "first_verse_key": "5:6",
+    "last_verse_key": "5:9",
+    "total_verses": 4
+  },
+  "109": {
+    "hizb_number": 11,
+    "rub_number": 43,
+    "juz_number": 6,
+    "first_verse_key": "5:10",
+    "last_verse_key": "5:13",
+    "total_verses": 4
+  },
+  "110": {
+    "hizb_number": 11,
+    "rub_number": 44,
+    "juz_number": 6,
+    "first_verse_key": "5:14",
+    "last_verse_key": "5:17",
+    "total_verses": 4
+  },
+  "111": {
+    "hizb_number": 11,
+    "rub_number": 44,
+    "juz_number": 6,
+    "first_verse_key": "5:18",
+    "last_verse_key": "5:23",
+    "total_verses": 6
+  },
+  "112": {
+    "hizb_number": 11,
+    "rub_number": 44,
+    "juz_number": 6,
+    "first_verse_key": "5:24",
+    "last_verse_key": "5:31",
+    "total_verses": 8
+  },
+  "113": {
+    "hizb_number": 12,
+    "rub_number": 45,
+    "juz_number": 6,
+    "first_verse_key": "5:32",
+    "last_verse_key": "5:36",
+    "total_verses": 5
+  },
+  "114": {
+    "hizb_number": 12,
+    "rub_number": 45,
+    "juz_number": 6,
+    "first_verse_key": "5:37",
+    "last_verse_key": "5:41",
+    "total_verses": 5
+  },
+  "115": {
+    "hizb_number": 12,
+    "rub_number": 46,
+    "juz_number": 6,
+    "first_verse_key": "5:42",
+    "last_verse_key": "5:45",
+    "total_verses": 4
+  },
+  "116": {
+    "hizb_number": 12,
+    "rub_number": 46,
+    "juz_number": 6,
+    "first_verse_key": "5:46",
+    "last_verse_key": "5:50",
+    "total_verses": 5
+  },
+  "117": {
+    "hizb_number": 12,
+    "rub_number": 47,
+    "juz_number": 6,
+    "first_verse_key": "5:51",
+    "last_verse_key": "5:57",
+    "total_verses": 7
+  },
+  "118": {
+    "hizb_number": 12,
+    "rub_number": 47,
+    "juz_number": 6,
+    "first_verse_key": "5:58",
+    "last_verse_key": "5:64",
+    "total_verses": 7
+  },
+  "119": {
+    "hizb_number": 12,
+    "rub_number": 47,
+    "juz_number": 6,
+    "first_verse_key": "5:65",
+    "last_verse_key": "5:70",
+    "total_verses": 6
+  },
+  "120": {
+    "hizb_number": 12,
+    "rub_number": 48,
+    "juz_number": 6,
+    "first_verse_key": "5:71",
+    "last_verse_key": "5:76",
+    "total_verses": 6
+  },
+  "121": {
+    "hizb_number": 12,
+    "rub_number": 48,
+    "juz_number": 6,
+    "first_verse_key": "5:77",
+    "last_verse_key": "5:82",
+    "total_verses": 6
+  },
+  "122": {
+    "hizb_number": 13,
+    "rub_number": 49,
+    "juz_number": 7,
+    "first_verse_key": "5:83",
+    "last_verse_key": "5:89",
+    "total_verses": 7
+  },
+  "123": {
+    "hizb_number": 13,
+    "rub_number": 49,
+    "juz_number": 7,
+    "first_verse_key": "5:90",
+    "last_verse_key": "5:95",
+    "total_verses": 6
+  },
+  "124": {
+    "hizb_number": 13,
+    "rub_number": 49,
+    "juz_number": 7,
+    "first_verse_key": "5:96",
+    "last_verse_key": "5:103",
+    "total_verses": 8
+  },
+  "125": {
+    "hizb_number": 13,
+    "rub_number": 50,
+    "juz_number": 7,
+    "first_verse_key": "5:104",
+    "last_verse_key": "5:108",
+    "total_verses": 5
+  },
+  "126": {
+    "hizb_number": 13,
+    "rub_number": 51,
+    "juz_number": 7,
+    "first_verse_key": "5:109",
+    "last_verse_key": "5:113",
+    "total_verses": 5
+  },
+  "127": {
+    "hizb_number": 13,
+    "rub_number": 51,
+    "juz_number": 7,
+    "first_verse_key": "5:114",
+    "last_verse_key": "5:120",
+    "total_verses": 7
+  },
+  "128": {
+    "hizb_number": 13,
+    "rub_number": 51,
+    "juz_number": 7,
+    "first_verse_key": "6:1",
+    "last_verse_key": "6:8",
+    "total_verses": 8
+  },
+  "129": {
+    "hizb_number": 13,
+    "rub_number": 51,
+    "juz_number": 7,
+    "first_verse_key": "6:9",
+    "last_verse_key": "6:18",
+    "total_verses": 10
+  },
+  "130": {
+    "hizb_number": 13,
+    "rub_number": 52,
+    "juz_number": 7,
+    "first_verse_key": "6:19",
+    "last_verse_key": "6:27",
+    "total_verses": 9
+  },
+  "131": {
+    "hizb_number": 13,
+    "rub_number": 52,
+    "juz_number": 7,
+    "first_verse_key": "6:28",
+    "last_verse_key": "6:35",
+    "total_verses": 8
+  },
+  "132": {
+    "hizb_number": 14,
+    "rub_number": 53,
+    "juz_number": 7,
+    "first_verse_key": "6:36",
+    "last_verse_key": "6:44",
+    "total_verses": 9
+  },
+  "133": {
+    "hizb_number": 14,
+    "rub_number": 53,
+    "juz_number": 7,
+    "first_verse_key": "6:45",
+    "last_verse_key": "6:52",
+    "total_verses": 8
+  },
+  "134": {
+    "hizb_number": 14,
+    "rub_number": 53,
+    "juz_number": 7,
+    "first_verse_key": "6:53",
+    "last_verse_key": "6:59",
+    "total_verses": 7
+  },
+  "135": {
+    "hizb_number": 14,
+    "rub_number": 54,
+    "juz_number": 7,
+    "first_verse_key": "6:60",
+    "last_verse_key": "6:68",
+    "total_verses": 9
+  },
+  "136": {
+    "hizb_number": 14,
+    "rub_number": 54,
+    "juz_number": 7,
+    "first_verse_key": "6:69",
+    "last_verse_key": "6:73",
+    "total_verses": 5
+  },
+  "137": {
+    "hizb_number": 14,
+    "rub_number": 55,
+    "juz_number": 7,
+    "first_verse_key": "6:74",
+    "last_verse_key": "6:81",
+    "total_verses": 8
+  },
+  "138": {
+    "hizb_number": 14,
+    "rub_number": 55,
+    "juz_number": 7,
+    "first_verse_key": "6:82",
+    "last_verse_key": "6:90",
+    "total_verses": 9
+  },
+  "139": {
+    "hizb_number": 14,
+    "rub_number": 55,
+    "juz_number": 7,
+    "first_verse_key": "6:91",
+    "last_verse_key": "6:94",
+    "total_verses": 4
+  },
+  "140": {
+    "hizb_number": 14,
+    "rub_number": 56,
+    "juz_number": 7,
+    "first_verse_key": "6:95",
+    "last_verse_key": "6:101",
+    "total_verses": 7
+  },
+  "141": {
+    "hizb_number": 14,
+    "rub_number": 56,
+    "juz_number": 7,
+    "first_verse_key": "6:102",
+    "last_verse_key": "6:110",
+    "total_verses": 9
+  },
+  "142": {
+    "hizb_number": 15,
+    "rub_number": 57,
+    "juz_number": 8,
+    "first_verse_key": "6:111",
+    "last_verse_key": "6:118",
+    "total_verses": 8
+  },
+  "143": {
+    "hizb_number": 15,
+    "rub_number": 57,
+    "juz_number": 8,
+    "first_verse_key": "6:119",
+    "last_verse_key": "6:124",
+    "total_verses": 6
+  },
+  "144": {
+    "hizb_number": 15,
+    "rub_number": 57,
+    "juz_number": 8,
+    "first_verse_key": "6:125",
+    "last_verse_key": "6:131",
+    "total_verses": 7
+  },
+  "145": {
+    "hizb_number": 15,
+    "rub_number": 58,
+    "juz_number": 8,
+    "first_verse_key": "6:132",
+    "last_verse_key": "6:137",
+    "total_verses": 6
+  },
+  "146": {
+    "hizb_number": 15,
+    "rub_number": 58,
+    "juz_number": 8,
+    "first_verse_key": "6:138",
+    "last_verse_key": "6:142",
+    "total_verses": 5
+  },
+  "147": {
+    "hizb_number": 15,
+    "rub_number": 59,
+    "juz_number": 8,
+    "first_verse_key": "6:143",
+    "last_verse_key": "6:146",
+    "total_verses": 4
+  },
+  "148": {
+    "hizb_number": 15,
+    "rub_number": 59,
+    "juz_number": 8,
+    "first_verse_key": "6:147",
+    "last_verse_key": "6:151",
+    "total_verses": 5
+  },
+  "149": {
+    "hizb_number": 15,
+    "rub_number": 60,
+    "juz_number": 8,
+    "first_verse_key": "6:152",
+    "last_verse_key": "6:157",
+    "total_verses": 6
+  },
+  "150": {
+    "hizb_number": 15,
+    "rub_number": 60,
+    "juz_number": 8,
+    "first_verse_key": "6:158",
+    "last_verse_key": "6:165",
+    "total_verses": 8
+  },
+  "151": {
+    "hizb_number": 16,
+    "rub_number": 61,
+    "juz_number": 8,
+    "first_verse_key": "7:1",
+    "last_verse_key": "7:11",
+    "total_verses": 11
+  },
+  "152": {
+    "hizb_number": 16,
+    "rub_number": 61,
+    "juz_number": 8,
+    "first_verse_key": "7:12",
+    "last_verse_key": "7:22",
+    "total_verses": 11
+  },
+  "153": {
+    "hizb_number": 16,
+    "rub_number": 61,
+    "juz_number": 8,
+    "first_verse_key": "7:23",
+    "last_verse_key": "7:30",
+    "total_verses": 8
+  },
+  "154": {
+    "hizb_number": 16,
+    "rub_number": 62,
+    "juz_number": 8,
+    "first_verse_key": "7:31",
+    "last_verse_key": "7:37",
+    "total_verses": 7
+  },
+  "155": {
+    "hizb_number": 16,
+    "rub_number": 62,
+    "juz_number": 8,
+    "first_verse_key": "7:38",
+    "last_verse_key": "7:43",
+    "total_verses": 6
+  },
+  "156": {
+    "hizb_number": 16,
+    "rub_number": 62,
+    "juz_number": 8,
+    "first_verse_key": "7:44",
+    "last_verse_key": "7:51",
+    "total_verses": 8
+  },
+  "157": {
+    "hizb_number": 16,
+    "rub_number": 63,
+    "juz_number": 8,
+    "first_verse_key": "7:52",
+    "last_verse_key": "7:57",
+    "total_verses": 6
+  },
+  "158": {
+    "hizb_number": 16,
+    "rub_number": 63,
+    "juz_number": 8,
+    "first_verse_key": "7:58",
+    "last_verse_key": "7:67",
+    "total_verses": 10
+  },
+  "159": {
+    "hizb_number": 16,
+    "rub_number": 64,
+    "juz_number": 8,
+    "first_verse_key": "7:68",
+    "last_verse_key": "7:73",
+    "total_verses": 6
+  },
+  "160": {
+    "hizb_number": 16,
+    "rub_number": 64,
+    "juz_number": 8,
+    "first_verse_key": "7:74",
+    "last_verse_key": "7:81",
+    "total_verses": 8
+  },
+  "161": {
+    "hizb_number": 16,
+    "rub_number": 64,
+    "juz_number": 8,
+    "first_verse_key": "7:82",
+    "last_verse_key": "7:87",
+    "total_verses": 6
+  },
+  "162": {
+    "hizb_number": 17,
+    "rub_number": 65,
+    "juz_number": 9,
+    "first_verse_key": "7:88",
+    "last_verse_key": "7:95",
+    "total_verses": 8
+  },
+  "163": {
+    "hizb_number": 17,
+    "rub_number": 65,
+    "juz_number": 9,
+    "first_verse_key": "7:96",
+    "last_verse_key": "7:104",
+    "total_verses": 9
+  },
+  "164": {
+    "hizb_number": 17,
+    "rub_number": 65,
+    "juz_number": 9,
+    "first_verse_key": "7:105",
+    "last_verse_key": "7:120",
+    "total_verses": 16
+  },
+  "165": {
+    "hizb_number": 17,
+    "rub_number": 66,
+    "juz_number": 9,
+    "first_verse_key": "7:121",
+    "last_verse_key": "7:130",
+    "total_verses": 10
+  },
+  "166": {
+    "hizb_number": 17,
+    "rub_number": 66,
+    "juz_number": 9,
+    "first_verse_key": "7:131",
+    "last_verse_key": "7:137",
+    "total_verses": 7
+  },
+  "167": {
+    "hizb_number": 17,
+    "rub_number": 66,
+    "juz_number": 9,
+    "first_verse_key": "7:138",
+    "last_verse_key": "7:143",
+    "total_verses": 6
+  },
+  "168": {
+    "hizb_number": 17,
+    "rub_number": 67,
+    "juz_number": 9,
+    "first_verse_key": "7:144",
+    "last_verse_key": "7:149",
+    "total_verses": 6
+  },
+  "169": {
+    "hizb_number": 17,
+    "rub_number": 67,
+    "juz_number": 9,
+    "first_verse_key": "7:150",
+    "last_verse_key": "7:155",
+    "total_verses": 6
+  },
+  "170": {
+    "hizb_number": 17,
+    "rub_number": 68,
+    "juz_number": 9,
+    "first_verse_key": "7:156",
+    "last_verse_key": "7:159",
+    "total_verses": 4
+  },
+  "171": {
+    "hizb_number": 17,
+    "rub_number": 68,
+    "juz_number": 9,
+    "first_verse_key": "7:160",
+    "last_verse_key": "7:163",
+    "total_verses": 4
+  },
+  "172": {
+    "hizb_number": 17,
+    "rub_number": 68,
+    "juz_number": 9,
+    "first_verse_key": "7:164",
+    "last_verse_key": "7:170",
+    "total_verses": 7
+  },
+  "173": {
+    "hizb_number": 18,
+    "rub_number": 69,
+    "juz_number": 9,
+    "first_verse_key": "7:171",
+    "last_verse_key": "7:178",
+    "total_verses": 8
+  },
+  "174": {
+    "hizb_number": 18,
+    "rub_number": 69,
+    "juz_number": 9,
+    "first_verse_key": "7:179",
+    "last_verse_key": "7:187",
+    "total_verses": 9
+  },
+  "175": {
+    "hizb_number": 18,
+    "rub_number": 69,
+    "juz_number": 9,
+    "first_verse_key": "7:188",
+    "last_verse_key": "7:195",
+    "total_verses": 8
+  },
+  "176": {
+    "hizb_number": 18,
+    "rub_number": 70,
+    "juz_number": 9,
+    "first_verse_key": "7:196",
+    "last_verse_key": "7:206",
+    "total_verses": 11
+  },
+  "177": {
+    "hizb_number": 18,
+    "rub_number": 71,
+    "juz_number": 9,
+    "first_verse_key": "8:1",
+    "last_verse_key": "8:8",
+    "total_verses": 8
+  },
+  "178": {
+    "hizb_number": 18,
+    "rub_number": 71,
+    "juz_number": 9,
+    "first_verse_key": "8:9",
+    "last_verse_key": "8:16",
+    "total_verses": 8
+  },
+  "179": {
+    "hizb_number": 18,
+    "rub_number": 71,
+    "juz_number": 9,
+    "first_verse_key": "8:17",
+    "last_verse_key": "8:25",
+    "total_verses": 9
+  },
+  "180": {
+    "hizb_number": 18,
+    "rub_number": 72,
+    "juz_number": 9,
+    "first_verse_key": "8:26",
+    "last_verse_key": "8:33",
+    "total_verses": 8
+  },
+  "181": {
+    "hizb_number": 18,
+    "rub_number": 72,
+    "juz_number": 9,
+    "first_verse_key": "8:34",
+    "last_verse_key": "8:40",
+    "total_verses": 7
+  },
+  "182": {
+    "hizb_number": 19,
+    "rub_number": 73,
+    "juz_number": 10,
+    "first_verse_key": "8:41",
+    "last_verse_key": "8:45",
+    "total_verses": 5
+  },
+  "183": {
+    "hizb_number": 19,
+    "rub_number": 73,
+    "juz_number": 10,
+    "first_verse_key": "8:46",
+    "last_verse_key": "8:52",
+    "total_verses": 7
+  },
+  "184": {
+    "hizb_number": 19,
+    "rub_number": 73,
+    "juz_number": 10,
+    "first_verse_key": "8:53",
+    "last_verse_key": "8:61",
+    "total_verses": 9
+  },
+  "185": {
+    "hizb_number": 19,
+    "rub_number": 74,
+    "juz_number": 10,
+    "first_verse_key": "8:62",
+    "last_verse_key": "8:69",
+    "total_verses": 8
+  },
+  "186": {
+    "hizb_number": 19,
+    "rub_number": 74,
+    "juz_number": 10,
+    "first_verse_key": "8:70",
+    "last_verse_key": "8:75",
+    "total_verses": 6
+  },
+  "187": {
+    "hizb_number": 19,
+    "rub_number": 75,
+    "juz_number": 10,
+    "first_verse_key": "9:1",
+    "last_verse_key": "9:6",
+    "total_verses": 6
+  },
+  "188": {
+    "hizb_number": 19,
+    "rub_number": 75,
+    "juz_number": 10,
+    "first_verse_key": "9:7",
+    "last_verse_key": "9:13",
+    "total_verses": 7
+  },
+  "189": {
+    "hizb_number": 19,
+    "rub_number": 75,
+    "juz_number": 10,
+    "first_verse_key": "9:14",
+    "last_verse_key": "9:20",
+    "total_verses": 7
+  },
+  "190": {
+    "hizb_number": 19,
+    "rub_number": 76,
+    "juz_number": 10,
+    "first_verse_key": "9:21",
+    "last_verse_key": "9:26",
+    "total_verses": 6
+  },
+  "191": {
+    "hizb_number": 19,
+    "rub_number": 76,
+    "juz_number": 10,
+    "first_verse_key": "9:27",
+    "last_verse_key": "9:31",
+    "total_verses": 5
+  },
+  "192": {
+    "hizb_number": 19,
+    "rub_number": 76,
+    "juz_number": 10,
+    "first_verse_key": "9:32",
+    "last_verse_key": "9:36",
+    "total_verses": 5
+  },
+  "193": {
+    "hizb_number": 20,
+    "rub_number": 77,
+    "juz_number": 10,
+    "first_verse_key": "9:37",
+    "last_verse_key": "9:40",
+    "total_verses": 4
+  },
+  "194": {
+    "hizb_number": 20,
+    "rub_number": 77,
+    "juz_number": 10,
+    "first_verse_key": "9:41",
+    "last_verse_key": "9:47",
+    "total_verses": 7
+  },
+  "195": {
+    "hizb_number": 20,
+    "rub_number": 78,
+    "juz_number": 10,
+    "first_verse_key": "9:48",
+    "last_verse_key": "9:54",
+    "total_verses": 7
+  },
+  "196": {
+    "hizb_number": 20,
+    "rub_number": 78,
+    "juz_number": 10,
+    "first_verse_key": "9:55",
+    "last_verse_key": "9:61",
+    "total_verses": 7
+  },
+  "197": {
+    "hizb_number": 20,
+    "rub_number": 79,
+    "juz_number": 10,
+    "first_verse_key": "9:62",
+    "last_verse_key": "9:68",
+    "total_verses": 7
+  },
+  "198": {
+    "hizb_number": 20,
+    "rub_number": 79,
+    "juz_number": 10,
+    "first_verse_key": "9:69",
+    "last_verse_key": "9:72",
+    "total_verses": 4
+  },
+  "199": {
+    "hizb_number": 20,
+    "rub_number": 79,
+    "juz_number": 10,
+    "first_verse_key": "9:73",
+    "last_verse_key": "9:79",
+    "total_verses": 7
+  },
+  "200": {
+    "hizb_number": 20,
+    "rub_number": 80,
+    "juz_number": 10,
+    "first_verse_key": "9:80",
+    "last_verse_key": "9:86",
+    "total_verses": 7
+  },
+  "201": {
+    "hizb_number": 20,
+    "rub_number": 80,
+    "juz_number": 10,
+    "first_verse_key": "9:87",
+    "last_verse_key": "9:93",
+    "total_verses": 7
+  },
+  "202": {
+    "hizb_number": 21,
+    "rub_number": 81,
+    "juz_number": 11,
+    "first_verse_key": "9:94",
+    "last_verse_key": "9:99",
+    "total_verses": 6
+  },
+  "203": {
+    "hizb_number": 21,
+    "rub_number": 81,
+    "juz_number": 11,
+    "first_verse_key": "9:100",
+    "last_verse_key": "9:106",
+    "total_verses": 7
+  },
+  "204": {
+    "hizb_number": 21,
+    "rub_number": 81,
+    "juz_number": 11,
+    "first_verse_key": "9:107",
+    "last_verse_key": "9:111",
+    "total_verses": 5
+  },
+  "205": {
+    "hizb_number": 21,
+    "rub_number": 82,
+    "juz_number": 11,
+    "first_verse_key": "9:112",
+    "last_verse_key": "9:117",
+    "total_verses": 6
+  },
+  "206": {
+    "hizb_number": 21,
+    "rub_number": 82,
+    "juz_number": 11,
+    "first_verse_key": "9:118",
+    "last_verse_key": "9:122",
+    "total_verses": 5
+  },
+  "207": {
+    "hizb_number": 21,
+    "rub_number": 83,
+    "juz_number": 11,
+    "first_verse_key": "9:123",
+    "last_verse_key": "9:129",
+    "total_verses": 7
+  },
+  "208": {
+    "hizb_number": 21,
+    "rub_number": 83,
+    "juz_number": 11,
+    "first_verse_key": "10:1",
+    "last_verse_key": "10:6",
+    "total_verses": 6
+  },
+  "209": {
+    "hizb_number": 21,
+    "rub_number": 83,
+    "juz_number": 11,
+    "first_verse_key": "10:7",
+    "last_verse_key": "10:14",
+    "total_verses": 8
+  },
+  "210": {
+    "hizb_number": 21,
+    "rub_number": 84,
+    "juz_number": 11,
+    "first_verse_key": "10:15",
+    "last_verse_key": "10:20",
+    "total_verses": 6
+  },
+  "211": {
+    "hizb_number": 21,
+    "rub_number": 84,
+    "juz_number": 11,
+    "first_verse_key": "10:21",
+    "last_verse_key": "10:25",
+    "total_verses": 5
+  },
+  "212": {
+    "hizb_number": 22,
+    "rub_number": 85,
+    "juz_number": 11,
+    "first_verse_key": "10:26",
+    "last_verse_key": "10:33",
+    "total_verses": 8
+  },
+  "213": {
+    "hizb_number": 22,
+    "rub_number": 85,
+    "juz_number": 11,
+    "first_verse_key": "10:34",
+    "last_verse_key": "10:42",
+    "total_verses": 9
+  },
+  "214": {
+    "hizb_number": 22,
+    "rub_number": 85,
+    "juz_number": 11,
+    "first_verse_key": "10:43",
+    "last_verse_key": "10:53",
+    "total_verses": 11
+  },
+  "215": {
+    "hizb_number": 22,
+    "rub_number": 86,
+    "juz_number": 11,
+    "first_verse_key": "10:54",
+    "last_verse_key": "10:61",
+    "total_verses": 8
+  },
+  "216": {
+    "hizb_number": 22,
+    "rub_number": 86,
+    "juz_number": 11,
+    "first_verse_key": "10:62",
+    "last_verse_key": "10:70",
+    "total_verses": 9
+  },
+  "217": {
+    "hizb_number": 22,
+    "rub_number": 87,
+    "juz_number": 11,
+    "first_verse_key": "10:71",
+    "last_verse_key": "10:78",
+    "total_verses": 8
+  },
+  "218": {
+    "hizb_number": 22,
+    "rub_number": 87,
+    "juz_number": 11,
+    "first_verse_key": "10:79",
+    "last_verse_key": "10:88",
+    "total_verses": 10
+  },
+  "219": {
+    "hizb_number": 22,
+    "rub_number": 87,
+    "juz_number": 11,
+    "first_verse_key": "10:89",
+    "last_verse_key": "10:97",
+    "total_verses": 9
+  },
+  "220": {
+    "hizb_number": 22,
+    "rub_number": 88,
+    "juz_number": 11,
+    "first_verse_key": "10:98",
+    "last_verse_key": "10:106",
+    "total_verses": 9
+  },
+  "221": {
+    "hizb_number": 22,
+    "rub_number": 88,
+    "juz_number": 11,
+    "first_verse_key": "10:107",
+    "last_verse_key": "11:5",
+    "total_verses": 8
+  },
+  "222": {
+    "hizb_number": 23,
+    "rub_number": 89,
+    "juz_number": 12,
+    "first_verse_key": "11:6",
+    "last_verse_key": "11:12",
+    "total_verses": 7
+  },
+  "223": {
+    "hizb_number": 23,
+    "rub_number": 89,
+    "juz_number": 12,
+    "first_verse_key": "11:13",
+    "last_verse_key": "11:19",
+    "total_verses": 7
+  },
+  "224": {
+    "hizb_number": 23,
+    "rub_number": 89,
+    "juz_number": 12,
+    "first_verse_key": "11:20",
+    "last_verse_key": "11:28",
+    "total_verses": 9
+  },
+  "225": {
+    "hizb_number": 23,
+    "rub_number": 90,
+    "juz_number": 12,
+    "first_verse_key": "11:29",
+    "last_verse_key": "11:37",
+    "total_verses": 9
+  },
+  "226": {
+    "hizb_number": 23,
+    "rub_number": 90,
+    "juz_number": 12,
+    "first_verse_key": "11:38",
+    "last_verse_key": "11:45",
+    "total_verses": 8
+  },
+  "227": {
+    "hizb_number": 23,
+    "rub_number": 91,
+    "juz_number": 12,
+    "first_verse_key": "11:46",
+    "last_verse_key": "11:53",
+    "total_verses": 8
+  },
+  "228": {
+    "hizb_number": 23,
+    "rub_number": 91,
+    "juz_number": 12,
+    "first_verse_key": "11:54",
+    "last_verse_key": "11:62",
+    "total_verses": 9
+  },
+  "229": {
+    "hizb_number": 23,
+    "rub_number": 92,
+    "juz_number": 12,
+    "first_verse_key": "11:63",
+    "last_verse_key": "11:71",
+    "total_verses": 9
+  },
+  "230": {
+    "hizb_number": 23,
+    "rub_number": 92,
+    "juz_number": 12,
+    "first_verse_key": "11:72",
+    "last_verse_key": "11:81",
+    "total_verses": 10
+  },
+  "231": {
+    "hizb_number": 23,
+    "rub_number": 92,
+    "juz_number": 12,
+    "first_verse_key": "11:82",
+    "last_verse_key": "11:88",
+    "total_verses": 7
+  },
+  "232": {
+    "hizb_number": 24,
+    "rub_number": 93,
+    "juz_number": 12,
+    "first_verse_key": "11:89",
+    "last_verse_key": "11:97",
+    "total_verses": 9
+  },
+  "233": {
+    "hizb_number": 24,
+    "rub_number": 93,
+    "juz_number": 12,
+    "first_verse_key": "11:98",
+    "last_verse_key": "11:108",
+    "total_verses": 11
+  },
+  "234": {
+    "hizb_number": 24,
+    "rub_number": 94,
+    "juz_number": 12,
+    "first_verse_key": "11:109",
+    "last_verse_key": "11:117",
+    "total_verses": 9
+  },
+  "235": {
+    "hizb_number": 24,
+    "rub_number": 94,
+    "juz_number": 12,
+    "first_verse_key": "11:118",
+    "last_verse_key": "12:4",
+    "total_verses": 10
+  },
+  "236": {
+    "hizb_number": 24,
+    "rub_number": 94,
+    "juz_number": 12,
+    "first_verse_key": "12:5",
+    "last_verse_key": "12:14",
+    "total_verses": 10
+  },
+  "237": {
+    "hizb_number": 24,
+    "rub_number": 95,
+    "juz_number": 12,
+    "first_verse_key": "12:15",
+    "last_verse_key": "12:22",
+    "total_verses": 8
+  },
+  "238": {
+    "hizb_number": 24,
+    "rub_number": 95,
+    "juz_number": 12,
+    "first_verse_key": "12:23",
+    "last_verse_key": "12:30",
+    "total_verses": 8
+  },
+  "239": {
+    "hizb_number": 24,
+    "rub_number": 96,
+    "juz_number": 12,
+    "first_verse_key": "12:31",
+    "last_verse_key": "12:37",
+    "total_verses": 7
+  },
+  "240": {
+    "hizb_number": 24,
+    "rub_number": 96,
+    "juz_number": 12,
+    "first_verse_key": "12:38",
+    "last_verse_key": "12:43",
+    "total_verses": 6
+  },
+  "241": {
+    "hizb_number": 24,
+    "rub_number": 96,
+    "juz_number": 12,
+    "first_verse_key": "12:44",
+    "last_verse_key": "12:52",
+    "total_verses": 9
+  },
+  "242": {
+    "hizb_number": 25,
+    "rub_number": 97,
+    "juz_number": 13,
+    "first_verse_key": "12:53",
+    "last_verse_key": "12:63",
+    "total_verses": 11
+  },
+  "243": {
+    "hizb_number": 25,
+    "rub_number": 97,
+    "juz_number": 13,
+    "first_verse_key": "12:64",
+    "last_verse_key": "12:69",
+    "total_verses": 6
+  },
+  "244": {
+    "hizb_number": 25,
+    "rub_number": 97,
+    "juz_number": 13,
+    "first_verse_key": "12:70",
+    "last_verse_key": "12:78",
+    "total_verses": 9
+  },
+  "245": {
+    "hizb_number": 25,
+    "rub_number": 98,
+    "juz_number": 13,
+    "first_verse_key": "12:79",
+    "last_verse_key": "12:86",
+    "total_verses": 8
+  },
+  "246": {
+    "hizb_number": 25,
+    "rub_number": 98,
+    "juz_number": 13,
+    "first_verse_key": "12:87",
+    "last_verse_key": "12:95",
+    "total_verses": 9
+  },
+  "247": {
+    "hizb_number": 25,
+    "rub_number": 98,
+    "juz_number": 13,
+    "first_verse_key": "12:96",
+    "last_verse_key": "12:103",
+    "total_verses": 8
+  },
+  "248": {
+    "hizb_number": 25,
+    "rub_number": 99,
+    "juz_number": 13,
+    "first_verse_key": "12:104",
+    "last_verse_key": "12:111",
+    "total_verses": 8
+  },
+  "249": {
+    "hizb_number": 25,
+    "rub_number": 99,
+    "juz_number": 13,
+    "first_verse_key": "13:1",
+    "last_verse_key": "13:5",
+    "total_verses": 5
+  },
+  "250": {
+    "hizb_number": 25,
+    "rub_number": 100,
+    "juz_number": 13,
+    "first_verse_key": "13:6",
+    "last_verse_key": "13:13",
+    "total_verses": 8
+  },
+  "251": {
+    "hizb_number": 25,
+    "rub_number": 100,
+    "juz_number": 13,
+    "first_verse_key": "13:14",
+    "last_verse_key": "13:18",
+    "total_verses": 5
+  },
+  "252": {
+    "hizb_number": 26,
+    "rub_number": 101,
+    "juz_number": 13,
+    "first_verse_key": "13:19",
+    "last_verse_key": "13:28",
+    "total_verses": 10
+  },
+  "253": {
+    "hizb_number": 26,
+    "rub_number": 101,
+    "juz_number": 13,
+    "first_verse_key": "13:29",
+    "last_verse_key": "13:34",
+    "total_verses": 6
+  },
+  "254": {
+    "hizb_number": 26,
+    "rub_number": 102,
+    "juz_number": 13,
+    "first_verse_key": "13:35",
+    "last_verse_key": "13:42",
+    "total_verses": 8
+  },
+  "255": {
+    "hizb_number": 26,
+    "rub_number": 102,
+    "juz_number": 13,
+    "first_verse_key": "13:43",
+    "last_verse_key": "14:5",
+    "total_verses": 6
+  },
+  "256": {
+    "hizb_number": 26,
+    "rub_number": 102,
+    "juz_number": 13,
+    "first_verse_key": "14:6",
+    "last_verse_key": "14:10",
+    "total_verses": 5
+  },
+  "257": {
+    "hizb_number": 26,
+    "rub_number": 103,
+    "juz_number": 13,
+    "first_verse_key": "14:11",
+    "last_verse_key": "14:18",
+    "total_verses": 8
+  },
+  "258": {
+    "hizb_number": 26,
+    "rub_number": 103,
+    "juz_number": 13,
+    "first_verse_key": "14:19",
+    "last_verse_key": "14:24",
+    "total_verses": 6
+  },
+  "259": {
+    "hizb_number": 26,
+    "rub_number": 103,
+    "juz_number": 13,
+    "first_verse_key": "14:25",
+    "last_verse_key": "14:33",
+    "total_verses": 9
+  },
+  "260": {
+    "hizb_number": 26,
+    "rub_number": 104,
+    "juz_number": 13,
+    "first_verse_key": "14:34",
+    "last_verse_key": "14:42",
+    "total_verses": 9
+  },
+  "261": {
+    "hizb_number": 26,
+    "rub_number": 104,
+    "juz_number": 13,
+    "first_verse_key": "14:43",
+    "last_verse_key": "14:52",
+    "total_verses": 10
+  },
+  "262": {
+    "hizb_number": 27,
+    "rub_number": 105,
+    "juz_number": 14,
+    "first_verse_key": "15:1",
+    "last_verse_key": "15:15",
+    "total_verses": 15
+  },
+  "263": {
+    "hizb_number": 27,
+    "rub_number": 105,
+    "juz_number": 14,
+    "first_verse_key": "15:16",
+    "last_verse_key": "15:31",
+    "total_verses": 16
+  },
+  "264": {
+    "hizb_number": 27,
+    "rub_number": 105,
+    "juz_number": 14,
+    "first_verse_key": "15:32",
+    "last_verse_key": "15:51",
+    "total_verses": 20
+  },
+  "265": {
+    "hizb_number": 27,
+    "rub_number": 106,
+    "juz_number": 14,
+    "first_verse_key": "15:52",
+    "last_verse_key": "15:70",
+    "total_verses": 19
+  },
+  "266": {
+    "hizb_number": 27,
+    "rub_number": 106,
+    "juz_number": 14,
+    "first_verse_key": "15:71",
+    "last_verse_key": "15:90",
+    "total_verses": 20
+  },
+  "267": {
+    "hizb_number": 27,
+    "rub_number": 106,
+    "juz_number": 14,
+    "first_verse_key": "15:91",
+    "last_verse_key": "16:6",
+    "total_verses": 15
+  },
+  "268": {
+    "hizb_number": 27,
+    "rub_number": 107,
+    "juz_number": 14,
+    "first_verse_key": "16:7",
+    "last_verse_key": "16:14",
+    "total_verses": 8
+  },
+  "269": {
+    "hizb_number": 27,
+    "rub_number": 107,
+    "juz_number": 14,
+    "first_verse_key": "16:15",
+    "last_verse_key": "16:26",
+    "total_verses": 12
+  },
+  "270": {
+    "hizb_number": 27,
+    "rub_number": 107,
+    "juz_number": 14,
+    "first_verse_key": "16:27",
+    "last_verse_key": "16:34",
+    "total_verses": 8
+  },
+  "271": {
+    "hizb_number": 27,
+    "rub_number": 108,
+    "juz_number": 14,
+    "first_verse_key": "16:35",
+    "last_verse_key": "16:42",
+    "total_verses": 8
+  },
+  "272": {
+    "hizb_number": 27,
+    "rub_number": 108,
+    "juz_number": 14,
+    "first_verse_key": "16:43",
+    "last_verse_key": "16:54",
+    "total_verses": 12
+  },
+  "273": {
+    "hizb_number": 28,
+    "rub_number": 109,
+    "juz_number": 14,
+    "first_verse_key": "16:55",
+    "last_verse_key": "16:64",
+    "total_verses": 10
+  },
+  "274": {
+    "hizb_number": 28,
+    "rub_number": 109,
+    "juz_number": 14,
+    "first_verse_key": "16:65",
+    "last_verse_key": "16:72",
+    "total_verses": 8
+  },
+  "275": {
+    "hizb_number": 28,
+    "rub_number": 109,
+    "juz_number": 14,
+    "first_verse_key": "16:73",
+    "last_verse_key": "16:79",
+    "total_verses": 7
+  },
+  "276": {
+    "hizb_number": 28,
+    "rub_number": 110,
+    "juz_number": 14,
+    "first_verse_key": "16:80",
+    "last_verse_key": "16:87",
+    "total_verses": 8
+  },
+  "277": {
+    "hizb_number": 28,
+    "rub_number": 110,
+    "juz_number": 14,
+    "first_verse_key": "16:88",
+    "last_verse_key": "16:93",
+    "total_verses": 6
+  },
+  "278": {
+    "hizb_number": 28,
+    "rub_number": 111,
+    "juz_number": 14,
+    "first_verse_key": "16:94",
+    "last_verse_key": "16:102",
+    "total_verses": 9
+  },
+  "279": {
+    "hizb_number": 28,
+    "rub_number": 111,
+    "juz_number": 14,
+    "first_verse_key": "16:103",
+    "last_verse_key": "16:110",
+    "total_verses": 8
+  },
+  "280": {
+    "hizb_number": 28,
+    "rub_number": 112,
+    "juz_number": 14,
+    "first_verse_key": "16:111",
+    "last_verse_key": "16:118",
+    "total_verses": 8
+  },
+  "281": {
+    "hizb_number": 28,
+    "rub_number": 112,
+    "juz_number": 14,
+    "first_verse_key": "16:119",
+    "last_verse_key": "16:128",
+    "total_verses": 10
+  },
+  "282": {
+    "hizb_number": 29,
+    "rub_number": 113,
+    "juz_number": 15,
+    "first_verse_key": "17:1",
+    "last_verse_key": "17:7",
+    "total_verses": 7
+  },
+  "283": {
+    "hizb_number": 29,
+    "rub_number": 113,
+    "juz_number": 15,
+    "first_verse_key": "17:8",
+    "last_verse_key": "17:17",
+    "total_verses": 10
+  },
+  "284": {
+    "hizb_number": 29,
+    "rub_number": 113,
+    "juz_number": 15,
+    "first_verse_key": "17:18",
+    "last_verse_key": "17:27",
+    "total_verses": 10
+  },
+  "285": {
+    "hizb_number": 29,
+    "rub_number": 114,
+    "juz_number": 15,
+    "first_verse_key": "17:28",
+    "last_verse_key": "17:38",
+    "total_verses": 11
+  },
+  "286": {
+    "hizb_number": 29,
+    "rub_number": 114,
+    "juz_number": 15,
+    "first_verse_key": "17:39",
+    "last_verse_key": "17:49",
+    "total_verses": 11
+  },
+  "287": {
+    "hizb_number": 29,
+    "rub_number": 115,
+    "juz_number": 15,
+    "first_verse_key": "17:50",
+    "last_verse_key": "17:58",
+    "total_verses": 9
+  },
+  "288": {
+    "hizb_number": 29,
+    "rub_number": 115,
+    "juz_number": 15,
+    "first_verse_key": "17:59",
+    "last_verse_key": "17:66",
+    "total_verses": 8
+  },
+  "289": {
+    "hizb_number": 29,
+    "rub_number": 115,
+    "juz_number": 15,
+    "first_verse_key": "17:67",
+    "last_verse_key": "17:75",
+    "total_verses": 9
+  },
+  "290": {
+    "hizb_number": 29,
+    "rub_number": 116,
+    "juz_number": 15,
+    "first_verse_key": "17:76",
+    "last_verse_key": "17:86",
+    "total_verses": 11
+  },
+  "291": {
+    "hizb_number": 29,
+    "rub_number": 116,
+    "juz_number": 15,
+    "first_verse_key": "17:87",
+    "last_verse_key": "17:96",
+    "total_verses": 10
+  },
+  "292": {
+    "hizb_number": 29,
+    "rub_number": 116,
+    "juz_number": 15,
+    "first_verse_key": "17:97",
+    "last_verse_key": "17:104",
+    "total_verses": 8
+  },
+  "293": {
+    "hizb_number": 30,
+    "rub_number": 117,
+    "juz_number": 15,
+    "first_verse_key": "17:105",
+    "last_verse_key": "18:4",
+    "total_verses": 11
+  },
+  "294": {
+    "hizb_number": 30,
+    "rub_number": 117,
+    "juz_number": 15,
+    "first_verse_key": "18:5",
+    "last_verse_key": "18:15",
+    "total_verses": 11
+  },
+  "295": {
+    "hizb_number": 30,
+    "rub_number": 117,
+    "juz_number": 15,
+    "first_verse_key": "18:16",
+    "last_verse_key": "18:20",
+    "total_verses": 5
+  },
+  "296": {
+    "hizb_number": 30,
+    "rub_number": 118,
+    "juz_number": 15,
+    "first_verse_key": "18:21",
+    "last_verse_key": "18:27",
+    "total_verses": 7
+  },
+  "297": {
+    "hizb_number": 30,
+    "rub_number": 118,
+    "juz_number": 15,
+    "first_verse_key": "18:28",
+    "last_verse_key": "18:34",
+    "total_verses": 7
+  },
+  "298": {
+    "hizb_number": 30,
+    "rub_number": 119,
+    "juz_number": 15,
+    "first_verse_key": "18:35",
+    "last_verse_key": "18:45",
+    "total_verses": 11
+  },
+  "299": {
+    "hizb_number": 30,
+    "rub_number": 119,
+    "juz_number": 15,
+    "first_verse_key": "18:46",
+    "last_verse_key": "18:53",
+    "total_verses": 8
+  },
+  "300": {
+    "hizb_number": 30,
+    "rub_number": 120,
+    "juz_number": 15,
+    "first_verse_key": "18:54",
+    "last_verse_key": "18:61",
+    "total_verses": 8
+  },
+  "301": {
+    "hizb_number": 30,
+    "rub_number": 120,
+    "juz_number": 15,
+    "first_verse_key": "18:62",
+    "last_verse_key": "18:74",
+    "total_verses": 13
+  },
+  "302": {
+    "hizb_number": 31,
+    "rub_number": 121,
+    "juz_number": 16,
+    "first_verse_key": "18:75",
+    "last_verse_key": "18:83",
+    "total_verses": 9
+  },
+  "303": {
+    "hizb_number": 31,
+    "rub_number": 121,
+    "juz_number": 16,
+    "first_verse_key": "18:84",
+    "last_verse_key": "18:97",
+    "total_verses": 14
+  },
+  "304": {
+    "hizb_number": 31,
+    "rub_number": 121,
+    "juz_number": 16,
+    "first_verse_key": "18:98",
+    "last_verse_key": "18:110",
+    "total_verses": 13
+  },
+  "305": {
+    "hizb_number": 31,
+    "rub_number": 122,
+    "juz_number": 16,
+    "first_verse_key": "19:1",
+    "last_verse_key": "19:11",
+    "total_verses": 11
+  },
+  "306": {
+    "hizb_number": 31,
+    "rub_number": 122,
+    "juz_number": 16,
+    "first_verse_key": "19:12",
+    "last_verse_key": "19:25",
+    "total_verses": 14
+  },
+  "307": {
+    "hizb_number": 31,
+    "rub_number": 123,
+    "juz_number": 16,
+    "first_verse_key": "19:26",
+    "last_verse_key": "19:38",
+    "total_verses": 13
+  },
+  "308": {
+    "hizb_number": 31,
+    "rub_number": 123,
+    "juz_number": 16,
+    "first_verse_key": "19:39",
+    "last_verse_key": "19:51",
+    "total_verses": 13
+  },
+  "309": {
+    "hizb_number": 31,
+    "rub_number": 123,
+    "juz_number": 16,
+    "first_verse_key": "19:52",
+    "last_verse_key": "19:64",
+    "total_verses": 13
+  },
+  "310": {
+    "hizb_number": 31,
+    "rub_number": 124,
+    "juz_number": 16,
+    "first_verse_key": "19:65",
+    "last_verse_key": "19:76",
+    "total_verses": 12
+  },
+  "311": {
+    "hizb_number": 31,
+    "rub_number": 124,
+    "juz_number": 16,
+    "first_verse_key": "19:77",
+    "last_verse_key": "19:95",
+    "total_verses": 19
+  },
+  "312": {
+    "hizb_number": 31,
+    "rub_number": 124,
+    "juz_number": 16,
+    "first_verse_key": "19:96",
+    "last_verse_key": "20:12",
+    "total_verses": 15
+  },
+  "313": {
+    "hizb_number": 32,
+    "rub_number": 125,
+    "juz_number": 16,
+    "first_verse_key": "20:13",
+    "last_verse_key": "20:37",
+    "total_verses": 25
+  },
+  "314": {
+    "hizb_number": 32,
+    "rub_number": 125,
+    "juz_number": 16,
+    "first_verse_key": "20:38",
+    "last_verse_key": "20:51",
+    "total_verses": 14
+  },
+  "315": {
+    "hizb_number": 32,
+    "rub_number": 125,
+    "juz_number": 16,
+    "first_verse_key": "20:52",
+    "last_verse_key": "20:64",
+    "total_verses": 13
+  },
+  "316": {
+    "hizb_number": 32,
+    "rub_number": 126,
+    "juz_number": 16,
+    "first_verse_key": "20:65",
+    "last_verse_key": "20:76",
+    "total_verses": 12
+  },
+  "317": {
+    "hizb_number": 32,
+    "rub_number": 126,
+    "juz_number": 16,
+    "first_verse_key": "20:77",
+    "last_verse_key": "20:87",
+    "total_verses": 11
+  },
+  "318": {
+    "hizb_number": 32,
+    "rub_number": 127,
+    "juz_number": 16,
+    "first_verse_key": "20:88",
+    "last_verse_key": "20:98",
+    "total_verses": 11
+  },
+  "319": {
+    "hizb_number": 32,
+    "rub_number": 127,
+    "juz_number": 16,
+    "first_verse_key": "20:99",
+    "last_verse_key": "20:113",
+    "total_verses": 15
+  },
+  "320": {
+    "hizb_number": 32,
+    "rub_number": 128,
+    "juz_number": 16,
+    "first_verse_key": "20:114",
+    "last_verse_key": "20:125",
+    "total_verses": 12
+  },
+  "321": {
+    "hizb_number": 32,
+    "rub_number": 128,
+    "juz_number": 16,
+    "first_verse_key": "20:126",
+    "last_verse_key": "20:135",
+    "total_verses": 10
+  },
+  "322": {
+    "hizb_number": 33,
+    "rub_number": 129,
+    "juz_number": 17,
+    "first_verse_key": "21:1",
+    "last_verse_key": "21:10",
+    "total_verses": 10
+  },
+  "323": {
+    "hizb_number": 33,
+    "rub_number": 129,
+    "juz_number": 17,
+    "first_verse_key": "21:11",
+    "last_verse_key": "21:24",
+    "total_verses": 14
+  },
+  "324": {
+    "hizb_number": 33,
+    "rub_number": 129,
+    "juz_number": 17,
+    "first_verse_key": "21:25",
+    "last_verse_key": "21:35",
+    "total_verses": 11
+  },
+  "325": {
+    "hizb_number": 33,
+    "rub_number": 130,
+    "juz_number": 17,
+    "first_verse_key": "21:36",
+    "last_verse_key": "21:44",
+    "total_verses": 9
+  },
+  "326": {
+    "hizb_number": 33,
+    "rub_number": 130,
+    "juz_number": 17,
+    "first_verse_key": "21:45",
+    "last_verse_key": "21:57",
+    "total_verses": 13
+  },
+  "327": {
+    "hizb_number": 33,
+    "rub_number": 131,
+    "juz_number": 17,
+    "first_verse_key": "21:58",
+    "last_verse_key": "21:72",
+    "total_verses": 15
+  },
+  "328": {
+    "hizb_number": 33,
+    "rub_number": 131,
+    "juz_number": 17,
+    "first_verse_key": "21:73",
+    "last_verse_key": "21:81",
+    "total_verses": 9
+  },
+  "329": {
+    "hizb_number": 33,
+    "rub_number": 131,
+    "juz_number": 17,
+    "first_verse_key": "21:82",
+    "last_verse_key": "21:90",
+    "total_verses": 9
+  },
+  "330": {
+    "hizb_number": 33,
+    "rub_number": 132,
+    "juz_number": 17,
+    "first_verse_key": "21:91",
+    "last_verse_key": "21:101",
+    "total_verses": 11
+  },
+  "331": {
+    "hizb_number": 33,
+    "rub_number": 132,
+    "juz_number": 17,
+    "first_verse_key": "21:102",
+    "last_verse_key": "21:112",
+    "total_verses": 11
+  },
+  "332": {
+    "hizb_number": 34,
+    "rub_number": 133,
+    "juz_number": 17,
+    "first_verse_key": "22:1",
+    "last_verse_key": "22:5",
+    "total_verses": 5
+  },
+  "333": {
+    "hizb_number": 34,
+    "rub_number": 133,
+    "juz_number": 17,
+    "first_verse_key": "22:6",
+    "last_verse_key": "22:15",
+    "total_verses": 10
+  },
+  "334": {
+    "hizb_number": 34,
+    "rub_number": 133,
+    "juz_number": 17,
+    "first_verse_key": "22:16",
+    "last_verse_key": "22:23",
+    "total_verses": 8
+  },
+  "335": {
+    "hizb_number": 34,
+    "rub_number": 134,
+    "juz_number": 17,
+    "first_verse_key": "22:24",
+    "last_verse_key": "22:30",
+    "total_verses": 7
+  },
+  "336": {
+    "hizb_number": 34,
+    "rub_number": 134,
+    "juz_number": 17,
+    "first_verse_key": "22:31",
+    "last_verse_key": "22:38",
+    "total_verses": 8
+  },
+  "337": {
+    "hizb_number": 34,
+    "rub_number": 135,
+    "juz_number": 17,
+    "first_verse_key": "22:39",
+    "last_verse_key": "22:46",
+    "total_verses": 8
+  },
+  "338": {
+    "hizb_number": 34,
+    "rub_number": 135,
+    "juz_number": 17,
+    "first_verse_key": "22:47",
+    "last_verse_key": "22:55",
+    "total_verses": 9
+  },
+  "339": {
+    "hizb_number": 34,
+    "rub_number": 135,
+    "juz_number": 17,
+    "first_verse_key": "22:56",
+    "last_verse_key": "22:64",
+    "total_verses": 9
+  },
+  "340": {
+    "hizb_number": 34,
+    "rub_number": 136,
+    "juz_number": 17,
+    "first_verse_key": "22:65",
+    "last_verse_key": "22:72",
+    "total_verses": 8
+  },
+  "341": {
+    "hizb_number": 34,
+    "rub_number": 136,
+    "juz_number": 17,
+    "first_verse_key": "22:73",
+    "last_verse_key": "22:78",
+    "total_verses": 6
+  },
+  "342": {
+    "hizb_number": 35,
+    "rub_number": 137,
+    "juz_number": 18,
+    "first_verse_key": "23:1",
+    "last_verse_key": "23:17",
+    "total_verses": 17
+  },
+  "343": {
+    "hizb_number": 35,
+    "rub_number": 137,
+    "juz_number": 18,
+    "first_verse_key": "23:18",
+    "last_verse_key": "23:27",
+    "total_verses": 10
+  },
+  "344": {
+    "hizb_number": 35,
+    "rub_number": 137,
+    "juz_number": 18,
+    "first_verse_key": "23:28",
+    "last_verse_key": "23:42",
+    "total_verses": 15
+  },
+  "345": {
+    "hizb_number": 35,
+    "rub_number": 138,
+    "juz_number": 18,
+    "first_verse_key": "23:43",
+    "last_verse_key": "23:59",
+    "total_verses": 17
+  },
+  "346": {
+    "hizb_number": 35,
+    "rub_number": 138,
+    "juz_number": 18,
+    "first_verse_key": "23:60",
+    "last_verse_key": "23:74",
+    "total_verses": 15
+  },
+  "347": {
+    "hizb_number": 35,
+    "rub_number": 139,
+    "juz_number": 18,
+    "first_verse_key": "23:75",
+    "last_verse_key": "23:89",
+    "total_verses": 15
+  },
+  "348": {
+    "hizb_number": 35,
+    "rub_number": 139,
+    "juz_number": 18,
+    "first_verse_key": "23:90",
+    "last_verse_key": "23:104",
+    "total_verses": 15
+  },
+  "349": {
+    "hizb_number": 35,
+    "rub_number": 139,
+    "juz_number": 18,
+    "first_verse_key": "23:105",
+    "last_verse_key": "23:118",
+    "total_verses": 14
+  },
+  "350": {
+    "hizb_number": 35,
+    "rub_number": 140,
+    "juz_number": 18,
+    "first_verse_key": "24:1",
+    "last_verse_key": "24:10",
+    "total_verses": 10
+  },
+  "351": {
+    "hizb_number": 35,
+    "rub_number": 140,
+    "juz_number": 18,
+    "first_verse_key": "24:11",
+    "last_verse_key": "24:20",
+    "total_verses": 10
+  },
+  "352": {
+    "hizb_number": 36,
+    "rub_number": 141,
+    "juz_number": 18,
+    "first_verse_key": "24:21",
+    "last_verse_key": "24:27",
+    "total_verses": 7
+  },
+  "353": {
+    "hizb_number": 36,
+    "rub_number": 141,
+    "juz_number": 18,
+    "first_verse_key": "24:28",
+    "last_verse_key": "24:31",
+    "total_verses": 4
+  },
+  "354": {
+    "hizb_number": 36,
+    "rub_number": 141,
+    "juz_number": 18,
+    "first_verse_key": "24:32",
+    "last_verse_key": "24:36",
+    "total_verses": 5
+  },
+  "355": {
+    "hizb_number": 36,
+    "rub_number": 142,
+    "juz_number": 18,
+    "first_verse_key": "24:37",
+    "last_verse_key": "24:43",
+    "total_verses": 7
+  },
+  "356": {
+    "hizb_number": 36,
+    "rub_number": 142,
+    "juz_number": 18,
+    "first_verse_key": "24:44",
+    "last_verse_key": "24:53",
+    "total_verses": 10
+  },
+  "357": {
+    "hizb_number": 36,
+    "rub_number": 143,
+    "juz_number": 18,
+    "first_verse_key": "24:54",
+    "last_verse_key": "24:58",
+    "total_verses": 5
+  },
+  "358": {
+    "hizb_number": 36,
+    "rub_number": 143,
+    "juz_number": 18,
+    "first_verse_key": "24:59",
+    "last_verse_key": "24:61",
+    "total_verses": 3
+  },
+  "359": {
+    "hizb_number": 36,
+    "rub_number": 143,
+    "juz_number": 18,
+    "first_verse_key": "24:62",
+    "last_verse_key": "25:2",
+    "total_verses": 5
+  },
+  "360": {
+    "hizb_number": 36,
+    "rub_number": 144,
+    "juz_number": 18,
+    "first_verse_key": "25:3",
+    "last_verse_key": "25:11",
+    "total_verses": 9
+  },
+  "361": {
+    "hizb_number": 36,
+    "rub_number": 144,
+    "juz_number": 18,
+    "first_verse_key": "25:12",
+    "last_verse_key": "25:20",
+    "total_verses": 9
+  },
+  "362": {
+    "hizb_number": 37,
+    "rub_number": 145,
+    "juz_number": 19,
+    "first_verse_key": "25:21",
+    "last_verse_key": "25:32",
+    "total_verses": 12
+  },
+  "363": {
+    "hizb_number": 37,
+    "rub_number": 145,
+    "juz_number": 19,
+    "first_verse_key": "25:33",
+    "last_verse_key": "25:43",
+    "total_verses": 11
+  },
+  "364": {
+    "hizb_number": 37,
+    "rub_number": 145,
+    "juz_number": 19,
+    "first_verse_key": "25:44",
+    "last_verse_key": "25:55",
+    "total_verses": 12
+  },
+  "365": {
+    "hizb_number": 37,
+    "rub_number": 146,
+    "juz_number": 19,
+    "first_verse_key": "25:56",
+    "last_verse_key": "25:67",
+    "total_verses": 12
+  },
+  "366": {
+    "hizb_number": 37,
+    "rub_number": 146,
+    "juz_number": 19,
+    "first_verse_key": "25:68",
+    "last_verse_key": "25:77",
+    "total_verses": 10
+  },
+  "367": {
+    "hizb_number": 37,
+    "rub_number": 147,
+    "juz_number": 19,
+    "first_verse_key": "26:1",
+    "last_verse_key": "26:19",
+    "total_verses": 19
+  },
+  "368": {
+    "hizb_number": 37,
+    "rub_number": 147,
+    "juz_number": 19,
+    "first_verse_key": "26:20",
+    "last_verse_key": "26:39",
+    "total_verses": 20
+  },
+  "369": {
+    "hizb_number": 37,
+    "rub_number": 147,
+    "juz_number": 19,
+    "first_verse_key": "26:40",
+    "last_verse_key": "26:60",
+    "total_verses": 21
+  },
+  "370": {
+    "hizb_number": 37,
+    "rub_number": 148,
+    "juz_number": 19,
+    "first_verse_key": "26:61",
+    "last_verse_key": "26:83",
+    "total_verses": 23
+  },
+  "371": {
+    "hizb_number": 37,
+    "rub_number": 148,
+    "juz_number": 19,
+    "first_verse_key": "26:84",
+    "last_verse_key": "26:111",
+    "total_verses": 28
+  },
+  "372": {
+    "hizb_number": 38,
+    "rub_number": 149,
+    "juz_number": 19,
+    "first_verse_key": "26:112",
+    "last_verse_key": "26:136",
+    "total_verses": 25
+  },
+  "373": {
+    "hizb_number": 38,
+    "rub_number": 149,
+    "juz_number": 19,
+    "first_verse_key": "26:137",
+    "last_verse_key": "26:159",
+    "total_verses": 23
+  },
+  "374": {
+    "hizb_number": 38,
+    "rub_number": 149,
+    "juz_number": 19,
+    "first_verse_key": "26:160",
+    "last_verse_key": "26:183",
+    "total_verses": 24
+  },
+  "375": {
+    "hizb_number": 38,
+    "rub_number": 150,
+    "juz_number": 19,
+    "first_verse_key": "26:184",
+    "last_verse_key": "26:206",
+    "total_verses": 23
+  },
+  "376": {
+    "hizb_number": 38,
+    "rub_number": 150,
+    "juz_number": 19,
+    "first_verse_key": "26:207",
+    "last_verse_key": "26:227",
+    "total_verses": 21
+  },
+  "377": {
+    "hizb_number": 38,
+    "rub_number": 151,
+    "juz_number": 19,
+    "first_verse_key": "27:1",
+    "last_verse_key": "27:13",
+    "total_verses": 13
+  },
+  "378": {
+    "hizb_number": 38,
+    "rub_number": 151,
+    "juz_number": 19,
+    "first_verse_key": "27:14",
+    "last_verse_key": "27:22",
+    "total_verses": 9
+  },
+  "379": {
+    "hizb_number": 38,
+    "rub_number": 151,
+    "juz_number": 19,
+    "first_verse_key": "27:23",
+    "last_verse_key": "27:35",
+    "total_verses": 13
+  },
+  "380": {
+    "hizb_number": 38,
+    "rub_number": 152,
+    "juz_number": 19,
+    "first_verse_key": "27:36",
+    "last_verse_key": "27:44",
+    "total_verses": 9
+  },
+  "381": {
+    "hizb_number": 38,
+    "rub_number": 152,
+    "juz_number": 19,
+    "first_verse_key": "27:45",
+    "last_verse_key": "27:55",
+    "total_verses": 11
+  },
+  "382": {
+    "hizb_number": 39,
+    "rub_number": 153,
+    "juz_number": 20,
+    "first_verse_key": "27:56",
+    "last_verse_key": "27:63",
+    "total_verses": 8
+  },
+  "383": {
+    "hizb_number": 39,
+    "rub_number": 153,
+    "juz_number": 20,
+    "first_verse_key": "27:64",
+    "last_verse_key": "27:76",
+    "total_verses": 13
+  },
+  "384": {
+    "hizb_number": 39,
+    "rub_number": 153,
+    "juz_number": 20,
+    "first_verse_key": "27:77",
+    "last_verse_key": "27:88",
+    "total_verses": 12
+  },
+  "385": {
+    "hizb_number": 39,
+    "rub_number": 154,
+    "juz_number": 20,
+    "first_verse_key": "27:89",
+    "last_verse_key": "28:5",
+    "total_verses": 10
+  },
+  "386": {
+    "hizb_number": 39,
+    "rub_number": 154,
+    "juz_number": 20,
+    "first_verse_key": "28:6",
+    "last_verse_key": "28:13",
+    "total_verses": 8
+  },
+  "387": {
+    "hizb_number": 39,
+    "rub_number": 155,
+    "juz_number": 20,
+    "first_verse_key": "28:14",
+    "last_verse_key": "28:21",
+    "total_verses": 8
+  },
+  "388": {
+    "hizb_number": 39,
+    "rub_number": 155,
+    "juz_number": 20,
+    "first_verse_key": "28:22",
+    "last_verse_key": "28:28",
+    "total_verses": 7
+  },
+  "389": {
+    "hizb_number": 39,
+    "rub_number": 156,
+    "juz_number": 20,
+    "first_verse_key": "28:29",
+    "last_verse_key": "28:35",
+    "total_verses": 7
+  },
+  "390": {
+    "hizb_number": 39,
+    "rub_number": 156,
+    "juz_number": 20,
+    "first_verse_key": "28:36",
+    "last_verse_key": "28:43",
+    "total_verses": 8
+  },
+  "391": {
+    "hizb_number": 39,
+    "rub_number": 156,
+    "juz_number": 20,
+    "first_verse_key": "28:44",
+    "last_verse_key": "28:50",
+    "total_verses": 7
+  },
+  "392": {
+    "hizb_number": 40,
+    "rub_number": 157,
+    "juz_number": 20,
+    "first_verse_key": "28:51",
+    "last_verse_key": "28:59",
+    "total_verses": 9
+  },
+  "393": {
+    "hizb_number": 40,
+    "rub_number": 157,
+    "juz_number": 20,
+    "first_verse_key": "28:60",
+    "last_verse_key": "28:70",
+    "total_verses": 11
+  },
+  "394": {
+    "hizb_number": 40,
+    "rub_number": 157,
+    "juz_number": 20,
+    "first_verse_key": "28:71",
+    "last_verse_key": "28:77",
+    "total_verses": 7
+  },
+  "395": {
+    "hizb_number": 40,
+    "rub_number": 158,
+    "juz_number": 20,
+    "first_verse_key": "28:78",
+    "last_verse_key": "28:84",
+    "total_verses": 7
+  },
+  "396": {
+    "hizb_number": 40,
+    "rub_number": 158,
+    "juz_number": 20,
+    "first_verse_key": "28:85",
+    "last_verse_key": "29:6",
+    "total_verses": 10
+  },
+  "397": {
+    "hizb_number": 40,
+    "rub_number": 159,
+    "juz_number": 20,
+    "first_verse_key": "29:7",
+    "last_verse_key": "29:14",
+    "total_verses": 8
+  },
+  "398": {
+    "hizb_number": 40,
+    "rub_number": 159,
+    "juz_number": 20,
+    "first_verse_key": "29:15",
+    "last_verse_key": "29:23",
+    "total_verses": 9
+  },
+  "399": {
+    "hizb_number": 40,
+    "rub_number": 159,
+    "juz_number": 20,
+    "first_verse_key": "29:24",
+    "last_verse_key": "29:30",
+    "total_verses": 7
+  },
+  "400": {
+    "hizb_number": 40,
+    "rub_number": 160,
+    "juz_number": 20,
+    "first_verse_key": "29:31",
+    "last_verse_key": "29:38",
+    "total_verses": 8
+  },
+  "401": {
+    "hizb_number": 40,
+    "rub_number": 160,
+    "juz_number": 20,
+    "first_verse_key": "29:39",
+    "last_verse_key": "29:45",
+    "total_verses": 7
+  },
+  "402": {
+    "hizb_number": 41,
+    "rub_number": 161,
+    "juz_number": 21,
+    "first_verse_key": "29:46",
+    "last_verse_key": "29:52",
+    "total_verses": 7
+  },
+  "403": {
+    "hizb_number": 41,
+    "rub_number": 161,
+    "juz_number": 21,
+    "first_verse_key": "29:53",
+    "last_verse_key": "29:63",
+    "total_verses": 11
+  },
+  "404": {
+    "hizb_number": 41,
+    "rub_number": 161,
+    "juz_number": 21,
+    "first_verse_key": "29:64",
+    "last_verse_key": "30:5",
+    "total_verses": 11
+  },
+  "405": {
+    "hizb_number": 41,
+    "rub_number": 162,
+    "juz_number": 21,
+    "first_verse_key": "30:6",
+    "last_verse_key": "30:15",
+    "total_verses": 10
+  },
+  "406": {
+    "hizb_number": 41,
+    "rub_number": 162,
+    "juz_number": 21,
+    "first_verse_key": "30:16",
+    "last_verse_key": "30:24",
+    "total_verses": 9
+  },
+  "407": {
+    "hizb_number": 41,
+    "rub_number": 162,
+    "juz_number": 21,
+    "first_verse_key": "30:25",
+    "last_verse_key": "30:32",
+    "total_verses": 8
+  },
+  "408": {
+    "hizb_number": 41,
+    "rub_number": 163,
+    "juz_number": 21,
+    "first_verse_key": "30:33",
+    "last_verse_key": "30:41",
+    "total_verses": 9
+  },
+  "409": {
+    "hizb_number": 41,
+    "rub_number": 163,
+    "juz_number": 21,
+    "first_verse_key": "30:42",
+    "last_verse_key": "30:50",
+    "total_verses": 9
+  },
+  "410": {
+    "hizb_number": 41,
+    "rub_number": 163,
+    "juz_number": 21,
+    "first_verse_key": "30:51",
+    "last_verse_key": "30:60",
+    "total_verses": 10
+  },
+  "411": {
+    "hizb_number": 41,
+    "rub_number": 164,
+    "juz_number": 21,
+    "first_verse_key": "31:1",
+    "last_verse_key": "31:11",
+    "total_verses": 11
+  },
+  "412": {
+    "hizb_number": 41,
+    "rub_number": 164,
+    "juz_number": 21,
+    "first_verse_key": "31:12",
+    "last_verse_key": "31:19",
+    "total_verses": 8
+  },
+  "413": {
+    "hizb_number": 41,
+    "rub_number": 164,
+    "juz_number": 21,
+    "first_verse_key": "31:20",
+    "last_verse_key": "31:28",
+    "total_verses": 9
+  },
+  "414": {
+    "hizb_number": 42,
+    "rub_number": 165,
+    "juz_number": 21,
+    "first_verse_key": "31:29",
+    "last_verse_key": "31:34",
+    "total_verses": 6
+  },
+  "415": {
+    "hizb_number": 42,
+    "rub_number": 165,
+    "juz_number": 21,
+    "first_verse_key": "32:1",
+    "last_verse_key": "32:11",
+    "total_verses": 11
+  },
+  "416": {
+    "hizb_number": 42,
+    "rub_number": 166,
+    "juz_number": 21,
+    "first_verse_key": "32:12",
+    "last_verse_key": "32:20",
+    "total_verses": 9
+  },
+  "417": {
+    "hizb_number": 42,
+    "rub_number": 166,
+    "juz_number": 21,
+    "first_verse_key": "32:21",
+    "last_verse_key": "32:30",
+    "total_verses": 10
+  },
+  "418": {
+    "hizb_number": 42,
+    "rub_number": 167,
+    "juz_number": 21,
+    "first_verse_key": "33:1",
+    "last_verse_key": "33:6",
+    "total_verses": 6
+  },
+  "419": {
+    "hizb_number": 42,
+    "rub_number": 167,
+    "juz_number": 21,
+    "first_verse_key": "33:7",
+    "last_verse_key": "33:15",
+    "total_verses": 9
+  },
+  "420": {
+    "hizb_number": 42,
+    "rub_number": 167,
+    "juz_number": 21,
+    "first_verse_key": "33:16",
+    "last_verse_key": "33:22",
+    "total_verses": 7
+  },
+  "421": {
+    "hizb_number": 42,
+    "rub_number": 168,
+    "juz_number": 21,
+    "first_verse_key": "33:23",
+    "last_verse_key": "33:30",
+    "total_verses": 8
+  },
+  "422": {
+    "hizb_number": 43,
+    "rub_number": 169,
+    "juz_number": 22,
+    "first_verse_key": "33:31",
+    "last_verse_key": "33:35",
+    "total_verses": 5
+  },
+  "423": {
+    "hizb_number": 43,
+    "rub_number": 169,
+    "juz_number": 22,
+    "first_verse_key": "33:36",
+    "last_verse_key": "33:43",
+    "total_verses": 8
+  },
+  "424": {
+    "hizb_number": 43,
+    "rub_number": 169,
+    "juz_number": 22,
+    "first_verse_key": "33:44",
+    "last_verse_key": "33:50",
+    "total_verses": 7
+  },
+  "425": {
+    "hizb_number": 43,
+    "rub_number": 170,
+    "juz_number": 22,
+    "first_verse_key": "33:51",
+    "last_verse_key": "33:54",
+    "total_verses": 4
+  },
+  "426": {
+    "hizb_number": 43,
+    "rub_number": 170,
+    "juz_number": 22,
+    "first_verse_key": "33:55",
+    "last_verse_key": "33:62",
+    "total_verses": 8
+  },
+  "427": {
+    "hizb_number": 43,
+    "rub_number": 171,
+    "juz_number": 22,
+    "first_verse_key": "33:63",
+    "last_verse_key": "33:73",
+    "total_verses": 11
+  },
+  "428": {
+    "hizb_number": 43,
+    "rub_number": 171,
+    "juz_number": 22,
+    "first_verse_key": "34:1",
+    "last_verse_key": "34:7",
+    "total_verses": 7
+  },
+  "429": {
+    "hizb_number": 43,
+    "rub_number": 171,
+    "juz_number": 22,
+    "first_verse_key": "34:8",
+    "last_verse_key": "34:14",
+    "total_verses": 7
+  },
+  "430": {
+    "hizb_number": 43,
+    "rub_number": 172,
+    "juz_number": 22,
+    "first_verse_key": "34:15",
+    "last_verse_key": "34:22",
+    "total_verses": 8
+  },
+  "431": {
+    "hizb_number": 43,
+    "rub_number": 172,
+    "juz_number": 22,
+    "first_verse_key": "34:23",
+    "last_verse_key": "34:31",
+    "total_verses": 9
+  },
+  "432": {
+    "hizb_number": 44,
+    "rub_number": 173,
+    "juz_number": 22,
+    "first_verse_key": "34:32",
+    "last_verse_key": "34:39",
+    "total_verses": 8
+  },
+  "433": {
+    "hizb_number": 44,
+    "rub_number": 173,
+    "juz_number": 22,
+    "first_verse_key": "34:40",
+    "last_verse_key": "34:48",
+    "total_verses": 9
+  },
+  "434": {
+    "hizb_number": 44,
+    "rub_number": 174,
+    "juz_number": 22,
+    "first_verse_key": "34:49",
+    "last_verse_key": "35:3",
+    "total_verses": 9
+  },
+  "435": {
+    "hizb_number": 44,
+    "rub_number": 174,
+    "juz_number": 22,
+    "first_verse_key": "35:4",
+    "last_verse_key": "35:11",
+    "total_verses": 8
+  },
+  "436": {
+    "hizb_number": 44,
+    "rub_number": 174,
+    "juz_number": 22,
+    "first_verse_key": "35:12",
+    "last_verse_key": "35:18",
+    "total_verses": 7
+  },
+  "437": {
+    "hizb_number": 44,
+    "rub_number": 175,
+    "juz_number": 22,
+    "first_verse_key": "35:19",
+    "last_verse_key": "35:30",
+    "total_verses": 12
+  },
+  "438": {
+    "hizb_number": 44,
+    "rub_number": 175,
+    "juz_number": 22,
+    "first_verse_key": "35:31",
+    "last_verse_key": "35:38",
+    "total_verses": 8
+  },
+  "439": {
+    "hizb_number": 44,
+    "rub_number": 175,
+    "juz_number": 22,
+    "first_verse_key": "35:39",
+    "last_verse_key": "35:44",
+    "total_verses": 6
+  },
+  "440": {
+    "hizb_number": 44,
+    "rub_number": 176,
+    "juz_number": 22,
+    "first_verse_key": "35:45",
+    "last_verse_key": "36:12",
+    "total_verses": 13
+  },
+  "441": {
+    "hizb_number": 44,
+    "rub_number": 176,
+    "juz_number": 22,
+    "first_verse_key": "36:13",
+    "last_verse_key": "36:27",
+    "total_verses": 15
+  },
+  "442": {
+    "hizb_number": 45,
+    "rub_number": 177,
+    "juz_number": 23,
+    "first_verse_key": "36:28",
+    "last_verse_key": "36:40",
+    "total_verses": 13
+  },
+  "443": {
+    "hizb_number": 45,
+    "rub_number": 177,
+    "juz_number": 23,
+    "first_verse_key": "36:41",
+    "last_verse_key": "36:54",
+    "total_verses": 14
+  },
+  "444": {
+    "hizb_number": 45,
+    "rub_number": 177,
+    "juz_number": 23,
+    "first_verse_key": "36:55",
+    "last_verse_key": "36:70",
+    "total_verses": 16
+  },
+  "445": {
+    "hizb_number": 45,
+    "rub_number": 178,
+    "juz_number": 23,
+    "first_verse_key": "36:71",
+    "last_verse_key": "36:83",
+    "total_verses": 13
+  },
+  "446": {
+    "hizb_number": 45,
+    "rub_number": 178,
+    "juz_number": 23,
+    "first_verse_key": "37:1",
+    "last_verse_key": "37:24",
+    "total_verses": 24
+  },
+  "447": {
+    "hizb_number": 45,
+    "rub_number": 179,
+    "juz_number": 23,
+    "first_verse_key": "37:25",
+    "last_verse_key": "37:51",
+    "total_verses": 27
+  },
+  "448": {
+    "hizb_number": 45,
+    "rub_number": 179,
+    "juz_number": 23,
+    "first_verse_key": "37:52",
+    "last_verse_key": "37:76",
+    "total_verses": 25
+  },
+  "449": {
+    "hizb_number": 45,
+    "rub_number": 179,
+    "juz_number": 23,
+    "first_verse_key": "37:77",
+    "last_verse_key": "37:102",
+    "total_verses": 26
+  },
+  "450": {
+    "hizb_number": 45,
+    "rub_number": 180,
+    "juz_number": 23,
+    "first_verse_key": "37:103",
+    "last_verse_key": "37:126",
+    "total_verses": 24
+  },
+  "451": {
+    "hizb_number": 45,
+    "rub_number": 180,
+    "juz_number": 23,
+    "first_verse_key": "37:127",
+    "last_verse_key": "37:153",
+    "total_verses": 27
+  },
+  "452": {
+    "hizb_number": 46,
+    "rub_number": 181,
+    "juz_number": 23,
+    "first_verse_key": "37:154",
+    "last_verse_key": "37:182",
+    "total_verses": 29
+  },
+  "453": {
+    "hizb_number": 46,
+    "rub_number": 181,
+    "juz_number": 23,
+    "first_verse_key": "38:1",
+    "last_verse_key": "38:16",
+    "total_verses": 16
+  },
+  "454": {
+    "hizb_number": 46,
+    "rub_number": 181,
+    "juz_number": 23,
+    "first_verse_key": "38:17",
+    "last_verse_key": "38:26",
+    "total_verses": 10
+  },
+  "455": {
+    "hizb_number": 46,
+    "rub_number": 182,
+    "juz_number": 23,
+    "first_verse_key": "38:27",
+    "last_verse_key": "38:42",
+    "total_verses": 16
+  },
+  "456": {
+    "hizb_number": 46,
+    "rub_number": 182,
+    "juz_number": 23,
+    "first_verse_key": "38:43",
+    "last_verse_key": "38:61",
+    "total_verses": 19
+  },
+  "457": {
+    "hizb_number": 46,
+    "rub_number": 183,
+    "juz_number": 23,
+    "first_verse_key": "38:62",
+    "last_verse_key": "38:83",
+    "total_verses": 22
+  },
+  "458": {
+    "hizb_number": 46,
+    "rub_number": 183,
+    "juz_number": 23,
+    "first_verse_key": "38:84",
+    "last_verse_key": "39:5",
+    "total_verses": 10
+  },
+  "459": {
+    "hizb_number": 46,
+    "rub_number": 183,
+    "juz_number": 23,
+    "first_verse_key": "39:6",
+    "last_verse_key": "39:10",
+    "total_verses": 5
+  },
+  "460": {
+    "hizb_number": 46,
+    "rub_number": 184,
+    "juz_number": 23,
+    "first_verse_key": "39:11",
+    "last_verse_key": "39:21",
+    "total_verses": 11
+  },
+  "461": {
+    "hizb_number": 46,
+    "rub_number": 184,
+    "juz_number": 23,
+    "first_verse_key": "39:22",
+    "last_verse_key": "39:31",
+    "total_verses": 10
+  },
+  "462": {
+    "hizb_number": 47,
+    "rub_number": 185,
+    "juz_number": 24,
+    "first_verse_key": "39:32",
+    "last_verse_key": "39:40",
+    "total_verses": 9
+  },
+  "463": {
+    "hizb_number": 47,
+    "rub_number": 185,
+    "juz_number": 24,
+    "first_verse_key": "39:41",
+    "last_verse_key": "39:47",
+    "total_verses": 7
+  },
+  "464": {
+    "hizb_number": 47,
+    "rub_number": 185,
+    "juz_number": 24,
+    "first_verse_key": "39:48",
+    "last_verse_key": "39:56",
+    "total_verses": 9
+  },
+  "465": {
+    "hizb_number": 47,
+    "rub_number": 186,
+    "juz_number": 24,
+    "first_verse_key": "39:57",
+    "last_verse_key": "39:67",
+    "total_verses": 11
+  },
+  "466": {
+    "hizb_number": 47,
+    "rub_number": 186,
+    "juz_number": 24,
+    "first_verse_key": "39:68",
+    "last_verse_key": "39:74",
+    "total_verses": 7
+  },
+  "467": {
+    "hizb_number": 47,
+    "rub_number": 186,
+    "juz_number": 24,
+    "first_verse_key": "39:75",
+    "last_verse_key": "40:7",
+    "total_verses": 8
+  },
+  "468": {
+    "hizb_number": 47,
+    "rub_number": 187,
+    "juz_number": 24,
+    "first_verse_key": "40:8",
+    "last_verse_key": "40:16",
+    "total_verses": 9
+  },
+  "469": {
+    "hizb_number": 47,
+    "rub_number": 187,
+    "juz_number": 24,
+    "first_verse_key": "40:17",
+    "last_verse_key": "40:25",
+    "total_verses": 9
+  },
+  "470": {
+    "hizb_number": 47,
+    "rub_number": 188,
+    "juz_number": 24,
+    "first_verse_key": "40:26",
+    "last_verse_key": "40:33",
+    "total_verses": 8
+  },
+  "471": {
+    "hizb_number": 47,
+    "rub_number": 188,
+    "juz_number": 24,
+    "first_verse_key": "40:34",
+    "last_verse_key": "40:40",
+    "total_verses": 7
+  },
+  "472": {
+    "hizb_number": 48,
+    "rub_number": 189,
+    "juz_number": 24,
+    "first_verse_key": "40:41",
+    "last_verse_key": "40:49",
+    "total_verses": 9
+  },
+  "473": {
+    "hizb_number": 48,
+    "rub_number": 189,
+    "juz_number": 24,
+    "first_verse_key": "40:50",
+    "last_verse_key": "40:58",
+    "total_verses": 9
+  },
+  "474": {
+    "hizb_number": 48,
+    "rub_number": 189,
+    "juz_number": 24,
+    "first_verse_key": "40:59",
+    "last_verse_key": "40:66",
+    "total_verses": 8
+  },
+  "475": {
+    "hizb_number": 48,
+    "rub_number": 190,
+    "juz_number": 24,
+    "first_verse_key": "40:67",
+    "last_verse_key": "40:77",
+    "total_verses": 11
+  },
+  "476": {
+    "hizb_number": 48,
+    "rub_number": 190,
+    "juz_number": 24,
+    "first_verse_key": "40:78",
+    "last_verse_key": "40:85",
+    "total_verses": 8
+  },
+  "477": {
+    "hizb_number": 48,
+    "rub_number": 190,
+    "juz_number": 24,
+    "first_verse_key": "41:1",
+    "last_verse_key": "41:11",
+    "total_verses": 11
+  },
+  "478": {
+    "hizb_number": 48,
+    "rub_number": 191,
+    "juz_number": 24,
+    "first_verse_key": "41:12",
+    "last_verse_key": "41:20",
+    "total_verses": 9
+  },
+  "479": {
+    "hizb_number": 48,
+    "rub_number": 191,
+    "juz_number": 24,
+    "first_verse_key": "41:21",
+    "last_verse_key": "41:29",
+    "total_verses": 9
+  },
+  "480": {
+    "hizb_number": 48,
+    "rub_number": 192,
+    "juz_number": 24,
+    "first_verse_key": "41:30",
+    "last_verse_key": "41:38",
+    "total_verses": 9
+  },
+  "481": {
+    "hizb_number": 48,
+    "rub_number": 192,
+    "juz_number": 24,
+    "first_verse_key": "41:39",
+    "last_verse_key": "41:46",
+    "total_verses": 8
+  },
+  "482": {
+    "hizb_number": 49,
+    "rub_number": 193,
+    "juz_number": 25,
+    "first_verse_key": "41:47",
+    "last_verse_key": "41:54",
+    "total_verses": 8
+  },
+  "483": {
+    "hizb_number": 49,
+    "rub_number": 193,
+    "juz_number": 25,
+    "first_verse_key": "42:1",
+    "last_verse_key": "42:10",
+    "total_verses": 10
+  },
+  "484": {
+    "hizb_number": 49,
+    "rub_number": 193,
+    "juz_number": 25,
+    "first_verse_key": "42:11",
+    "last_verse_key": "42:15",
+    "total_verses": 5
+  },
+  "485": {
+    "hizb_number": 49,
+    "rub_number": 194,
+    "juz_number": 25,
+    "first_verse_key": "42:16",
+    "last_verse_key": "42:22",
+    "total_verses": 7
+  },
+  "486": {
+    "hizb_number": 49,
+    "rub_number": 194,
+    "juz_number": 25,
+    "first_verse_key": "42:23",
+    "last_verse_key": "42:31",
+    "total_verses": 9
+  },
+  "487": {
+    "hizb_number": 49,
+    "rub_number": 195,
+    "juz_number": 25,
+    "first_verse_key": "42:32",
+    "last_verse_key": "42:44",
+    "total_verses": 13
+  },
+  "488": {
+    "hizb_number": 49,
+    "rub_number": 195,
+    "juz_number": 25,
+    "first_verse_key": "42:45",
+    "last_verse_key": "42:51",
+    "total_verses": 7
+  },
+  "489": {
+    "hizb_number": 49,
+    "rub_number": 196,
+    "juz_number": 25,
+    "first_verse_key": "42:52",
+    "last_verse_key": "43:10",
+    "total_verses": 12
+  },
+  "490": {
+    "hizb_number": 49,
+    "rub_number": 196,
+    "juz_number": 25,
+    "first_verse_key": "43:11",
+    "last_verse_key": "43:22",
+    "total_verses": 12
+  },
+  "491": {
+    "hizb_number": 49,
+    "rub_number": 196,
+    "juz_number": 25,
+    "first_verse_key": "43:23",
+    "last_verse_key": "43:33",
+    "total_verses": 11
+  },
+  "492": {
+    "hizb_number": 50,
+    "rub_number": 197,
+    "juz_number": 25,
+    "first_verse_key": "43:34",
+    "last_verse_key": "43:47",
+    "total_verses": 14
+  },
+  "493": {
+    "hizb_number": 50,
+    "rub_number": 197,
+    "juz_number": 25,
+    "first_verse_key": "43:48",
+    "last_verse_key": "43:60",
+    "total_verses": 13
+  },
+  "494": {
+    "hizb_number": 50,
+    "rub_number": 198,
+    "juz_number": 25,
+    "first_verse_key": "43:61",
+    "last_verse_key": "43:73",
+    "total_verses": 13
+  },
+  "495": {
+    "hizb_number": 50,
+    "rub_number": 198,
+    "juz_number": 25,
+    "first_verse_key": "43:74",
+    "last_verse_key": "43:89",
+    "total_verses": 16
+  },
+  "496": {
+    "hizb_number": 50,
+    "rub_number": 198,
+    "juz_number": 25,
+    "first_verse_key": "44:1",
+    "last_verse_key": "44:18",
+    "total_verses": 18
+  },
+  "497": {
+    "hizb_number": 50,
+    "rub_number": 199,
+    "juz_number": 25,
+    "first_verse_key": "44:19",
+    "last_verse_key": "44:39",
+    "total_verses": 21
+  },
+  "498": {
+    "hizb_number": 50,
+    "rub_number": 199,
+    "juz_number": 25,
+    "first_verse_key": "44:40",
+    "last_verse_key": "44:59",
+    "total_verses": 20
+  },
+  "499": {
+    "hizb_number": 50,
+    "rub_number": 199,
+    "juz_number": 25,
+    "first_verse_key": "45:1",
+    "last_verse_key": "45:13",
+    "total_verses": 13
+  },
+  "500": {
+    "hizb_number": 50,
+    "rub_number": 200,
+    "juz_number": 25,
+    "first_verse_key": "45:14",
+    "last_verse_key": "45:22",
+    "total_verses": 9
+  },
+  "501": {
+    "hizb_number": 50,
+    "rub_number": 200,
+    "juz_number": 25,
+    "first_verse_key": "45:23",
+    "last_verse_key": "45:32",
+    "total_verses": 10
+  },
+  "502": {
+    "hizb_number": 50,
+    "rub_number": 200,
+    "juz_number": 25,
+    "first_verse_key": "45:33",
+    "last_verse_key": "46:5",
+    "total_verses": 10
+  },
+  "503": {
+    "hizb_number": 51,
+    "rub_number": 201,
+    "juz_number": 26,
+    "first_verse_key": "46:6",
+    "last_verse_key": "46:14",
+    "total_verses": 9
+  },
+  "504": {
+    "hizb_number": 51,
+    "rub_number": 201,
+    "juz_number": 26,
+    "first_verse_key": "46:15",
+    "last_verse_key": "46:20",
+    "total_verses": 6
+  },
+  "505": {
+    "hizb_number": 51,
+    "rub_number": 202,
+    "juz_number": 26,
+    "first_verse_key": "46:21",
+    "last_verse_key": "46:28",
+    "total_verses": 8
+  },
+  "506": {
+    "hizb_number": 51,
+    "rub_number": 202,
+    "juz_number": 26,
+    "first_verse_key": "46:29",
+    "last_verse_key": "46:35",
+    "total_verses": 7
+  },
+  "507": {
+    "hizb_number": 51,
+    "rub_number": 202,
+    "juz_number": 26,
+    "first_verse_key": "47:1",
+    "last_verse_key": "47:11",
+    "total_verses": 11
+  },
+  "508": {
+    "hizb_number": 51,
+    "rub_number": 203,
+    "juz_number": 26,
+    "first_verse_key": "47:12",
+    "last_verse_key": "47:19",
+    "total_verses": 8
+  },
+  "509": {
+    "hizb_number": 51,
+    "rub_number": 203,
+    "juz_number": 26,
+    "first_verse_key": "47:20",
+    "last_verse_key": "47:29",
+    "total_verses": 10
+  },
+  "510": {
+    "hizb_number": 51,
+    "rub_number": 203,
+    "juz_number": 26,
+    "first_verse_key": "47:30",
+    "last_verse_key": "47:38",
+    "total_verses": 9
+  },
+  "511": {
+    "hizb_number": 51,
+    "rub_number": 204,
+    "juz_number": 26,
+    "first_verse_key": "48:1",
+    "last_verse_key": "48:9",
+    "total_verses": 9
+  },
+  "512": {
+    "hizb_number": 51,
+    "rub_number": 204,
+    "juz_number": 26,
+    "first_verse_key": "48:10",
+    "last_verse_key": "48:15",
+    "total_verses": 6
+  },
+  "513": {
+    "hizb_number": 51,
+    "rub_number": 204,
+    "juz_number": 26,
+    "first_verse_key": "48:16",
+    "last_verse_key": "48:23",
+    "total_verses": 8
+  },
+  "514": {
+    "hizb_number": 52,
+    "rub_number": 205,
+    "juz_number": 26,
+    "first_verse_key": "48:24",
+    "last_verse_key": "48:28",
+    "total_verses": 5
+  },
+  "515": {
+    "hizb_number": 52,
+    "rub_number": 205,
+    "juz_number": 26,
+    "first_verse_key": "48:29",
+    "last_verse_key": "49:4",
+    "total_verses": 5
+  },
+  "516": {
+    "hizb_number": 52,
+    "rub_number": 206,
+    "juz_number": 26,
+    "first_verse_key": "49:5",
+    "last_verse_key": "49:11",
+    "total_verses": 7
+  },
+  "517": {
+    "hizb_number": 52,
+    "rub_number": 206,
+    "juz_number": 26,
+    "first_verse_key": "49:12",
+    "last_verse_key": "49:18",
+    "total_verses": 7
+  },
+  "518": {
+    "hizb_number": 52,
+    "rub_number": 207,
+    "juz_number": 26,
+    "first_verse_key": "50:1",
+    "last_verse_key": "50:15",
+    "total_verses": 15
+  },
+  "519": {
+    "hizb_number": 52,
+    "rub_number": 207,
+    "juz_number": 26,
+    "first_verse_key": "50:16",
+    "last_verse_key": "50:35",
+    "total_verses": 20
+  },
+  "520": {
+    "hizb_number": 52,
+    "rub_number": 208,
+    "juz_number": 26,
+    "first_verse_key": "50:36",
+    "last_verse_key": "51:6",
+    "total_verses": 16
+  },
+  "521": {
+    "hizb_number": 52,
+    "rub_number": 208,
+    "juz_number": 26,
+    "first_verse_key": "51:7",
+    "last_verse_key": "51:30",
+    "total_verses": 24
+  },
+  "522": {
+    "hizb_number": 53,
+    "rub_number": 209,
+    "juz_number": 27,
+    "first_verse_key": "51:31",
+    "last_verse_key": "51:51",
+    "total_verses": 21
+  },
+  "523": {
+    "hizb_number": 53,
+    "rub_number": 209,
+    "juz_number": 27,
+    "first_verse_key": "51:52",
+    "last_verse_key": "52:14",
+    "total_verses": 23
+  },
+  "524": {
+    "hizb_number": 53,
+    "rub_number": 209,
+    "juz_number": 27,
+    "first_verse_key": "52:15",
+    "last_verse_key": "52:31",
+    "total_verses": 17
+  },
+  "525": {
+    "hizb_number": 53,
+    "rub_number": 210,
+    "juz_number": 27,
+    "first_verse_key": "52:32",
+    "last_verse_key": "52:49",
+    "total_verses": 18
+  },
+  "526": {
+    "hizb_number": 53,
+    "rub_number": 210,
+    "juz_number": 27,
+    "first_verse_key": "53:1",
+    "last_verse_key": "53:26",
+    "total_verses": 26
+  },
+  "527": {
+    "hizb_number": 53,
+    "rub_number": 211,
+    "juz_number": 27,
+    "first_verse_key": "53:27",
+    "last_verse_key": "53:44",
+    "total_verses": 18
+  },
+  "528": {
+    "hizb_number": 53,
+    "rub_number": 211,
+    "juz_number": 27,
+    "first_verse_key": "53:45",
+    "last_verse_key": "54:6",
+    "total_verses": 24
+  },
+  "529": {
+    "hizb_number": 53,
+    "rub_number": 211,
+    "juz_number": 27,
+    "first_verse_key": "54:7",
+    "last_verse_key": "54:27",
+    "total_verses": 21
+  },
+  "530": {
+    "hizb_number": 53,
+    "rub_number": 212,
+    "juz_number": 27,
+    "first_verse_key": "54:28",
+    "last_verse_key": "54:49",
+    "total_verses": 22
+  },
+  "531": {
+    "hizb_number": 53,
+    "rub_number": 212,
+    "juz_number": 27,
+    "first_verse_key": "54:50",
+    "last_verse_key": "55:16",
+    "total_verses": 22
+  },
+  "532": {
+    "hizb_number": 54,
+    "rub_number": 213,
+    "juz_number": 27,
+    "first_verse_key": "55:17",
+    "last_verse_key": "55:40",
+    "total_verses": 24
+  },
+  "533": {
+    "hizb_number": 54,
+    "rub_number": 213,
+    "juz_number": 27,
+    "first_verse_key": "55:41",
+    "last_verse_key": "55:67",
+    "total_verses": 27
+  },
+  "534": {
+    "hizb_number": 54,
+    "rub_number": 213,
+    "juz_number": 27,
+    "first_verse_key": "55:68",
+    "last_verse_key": "56:16",
+    "total_verses": 27
+  },
+  "535": {
+    "hizb_number": 54,
+    "rub_number": 214,
+    "juz_number": 27,
+    "first_verse_key": "56:17",
+    "last_verse_key": "56:50",
+    "total_verses": 34
+  },
+  "536": {
+    "hizb_number": 54,
+    "rub_number": 214,
+    "juz_number": 27,
+    "first_verse_key": "56:51",
+    "last_verse_key": "56:76",
+    "total_verses": 26
+  },
+  "537": {
+    "hizb_number": 54,
+    "rub_number": 215,
+    "juz_number": 27,
+    "first_verse_key": "56:77",
+    "last_verse_key": "57:3",
+    "total_verses": 23
+  },
+  "538": {
+    "hizb_number": 54,
+    "rub_number": 215,
+    "juz_number": 27,
+    "first_verse_key": "57:4",
+    "last_verse_key": "57:11",
+    "total_verses": 8
+  },
+  "539": {
+    "hizb_number": 54,
+    "rub_number": 215,
+    "juz_number": 27,
+    "first_verse_key": "57:12",
+    "last_verse_key": "57:18",
+    "total_verses": 7
+  },
+  "540": {
+    "hizb_number": 54,
+    "rub_number": 216,
+    "juz_number": 27,
+    "first_verse_key": "57:19",
+    "last_verse_key": "57:24",
+    "total_verses": 6
+  },
+  "541": {
+    "hizb_number": 54,
+    "rub_number": 216,
+    "juz_number": 27,
+    "first_verse_key": "57:25",
+    "last_verse_key": "57:29",
+    "total_verses": 5
+  },
+  "542": {
+    "hizb_number": 55,
+    "rub_number": 217,
+    "juz_number": 28,
+    "first_verse_key": "58:1",
+    "last_verse_key": "58:6",
+    "total_verses": 6
+  },
+  "543": {
+    "hizb_number": 55,
+    "rub_number": 217,
+    "juz_number": 28,
+    "first_verse_key": "58:7",
+    "last_verse_key": "58:11",
+    "total_verses": 5
+  },
+  "544": {
+    "hizb_number": 55,
+    "rub_number": 217,
+    "juz_number": 28,
+    "first_verse_key": "58:12",
+    "last_verse_key": "58:21",
+    "total_verses": 10
+  },
+  "545": {
+    "hizb_number": 55,
+    "rub_number": 218,
+    "juz_number": 28,
+    "first_verse_key": "58:22",
+    "last_verse_key": "59:3",
+    "total_verses": 4
+  },
+  "546": {
+    "hizb_number": 55,
+    "rub_number": 218,
+    "juz_number": 28,
+    "first_verse_key": "59:4",
+    "last_verse_key": "59:9",
+    "total_verses": 6
+  },
+  "547": {
+    "hizb_number": 55,
+    "rub_number": 218,
+    "juz_number": 28,
+    "first_verse_key": "59:10",
+    "last_verse_key": "59:16",
+    "total_verses": 7
+  },
+  "548": {
+    "hizb_number": 55,
+    "rub_number": 219,
+    "juz_number": 28,
+    "first_verse_key": "59:17",
+    "last_verse_key": "59:24",
+    "total_verses": 8
+  },
+  "549": {
+    "hizb_number": 55,
+    "rub_number": 219,
+    "juz_number": 28,
+    "first_verse_key": "60:1",
+    "last_verse_key": "60:5",
+    "total_verses": 5
+  },
+  "550": {
+    "hizb_number": 55,
+    "rub_number": 219,
+    "juz_number": 28,
+    "first_verse_key": "60:6",
+    "last_verse_key": "60:11",
+    "total_verses": 6
+  },
+  "551": {
+    "hizb_number": 55,
+    "rub_number": 220,
+    "juz_number": 28,
+    "first_verse_key": "60:12",
+    "last_verse_key": "61:5",
+    "total_verses": 7
+  },
+  "552": {
+    "hizb_number": 55,
+    "rub_number": 220,
+    "juz_number": 28,
+    "first_verse_key": "61:6",
+    "last_verse_key": "61:14",
+    "total_verses": 9
+  },
+  "553": {
+    "hizb_number": 56,
+    "rub_number": 221,
+    "juz_number": 28,
+    "first_verse_key": "62:1",
+    "last_verse_key": "62:8",
+    "total_verses": 8
+  },
+  "554": {
+    "hizb_number": 56,
+    "rub_number": 221,
+    "juz_number": 28,
+    "first_verse_key": "62:9",
+    "last_verse_key": "63:4",
+    "total_verses": 7
+  },
+  "555": {
+    "hizb_number": 56,
+    "rub_number": 222,
+    "juz_number": 28,
+    "first_verse_key": "63:5",
+    "last_verse_key": "63:11",
+    "total_verses": 7
+  },
+  "556": {
+    "hizb_number": 56,
+    "rub_number": 222,
+    "juz_number": 28,
+    "first_verse_key": "64:1",
+    "last_verse_key": "64:9",
+    "total_verses": 9
+  },
+  "557": {
+    "hizb_number": 56,
+    "rub_number": 222,
+    "juz_number": 28,
+    "first_verse_key": "64:10",
+    "last_verse_key": "64:18",
+    "total_verses": 9
+  },
+  "558": {
+    "hizb_number": 56,
+    "rub_number": 223,
+    "juz_number": 28,
+    "first_verse_key": "65:1",
+    "last_verse_key": "65:5",
+    "total_verses": 5
+  },
+  "559": {
+    "hizb_number": 56,
+    "rub_number": 223,
+    "juz_number": 28,
+    "first_verse_key": "65:6",
+    "last_verse_key": "65:12",
+    "total_verses": 7
+  },
+  "560": {
+    "hizb_number": 56,
+    "rub_number": 224,
+    "juz_number": 28,
+    "first_verse_key": "66:1",
+    "last_verse_key": "66:7",
+    "total_verses": 7
+  },
+  "561": {
+    "hizb_number": 56,
+    "rub_number": 224,
+    "juz_number": 28,
+    "first_verse_key": "66:8",
+    "last_verse_key": "66:12",
+    "total_verses": 5
+  },
+  "562": {
+    "hizb_number": 57,
+    "rub_number": 225,
+    "juz_number": 29,
+    "first_verse_key": "67:1",
+    "last_verse_key": "67:12",
+    "total_verses": 12
+  },
+  "563": {
+    "hizb_number": 57,
+    "rub_number": 225,
+    "juz_number": 29,
+    "first_verse_key": "67:13",
+    "last_verse_key": "67:26",
+    "total_verses": 14
+  },
+  "564": {
+    "hizb_number": 57,
+    "rub_number": 225,
+    "juz_number": 29,
+    "first_verse_key": "67:27",
+    "last_verse_key": "68:15",
+    "total_verses": 19
+  },
+  "565": {
+    "hizb_number": 57,
+    "rub_number": 226,
+    "juz_number": 29,
+    "first_verse_key": "68:16",
+    "last_verse_key": "68:42",
+    "total_verses": 27
+  },
+  "566": {
+    "hizb_number": 57,
+    "rub_number": 226,
+    "juz_number": 29,
+    "first_verse_key": "68:43",
+    "last_verse_key": "69:8",
+    "total_verses": 18
+  },
+  "567": {
+    "hizb_number": 57,
+    "rub_number": 227,
+    "juz_number": 29,
+    "first_verse_key": "69:9",
+    "last_verse_key": "69:34",
+    "total_verses": 26
+  },
+  "568": {
+    "hizb_number": 57,
+    "rub_number": 227,
+    "juz_number": 29,
+    "first_verse_key": "69:35",
+    "last_verse_key": "70:10",
+    "total_verses": 28
+  },
+  "569": {
+    "hizb_number": 57,
+    "rub_number": 227,
+    "juz_number": 29,
+    "first_verse_key": "70:11",
+    "last_verse_key": "70:39",
+    "total_verses": 29
+  },
+  "570": {
+    "hizb_number": 57,
+    "rub_number": 228,
+    "juz_number": 29,
+    "first_verse_key": "70:40",
+    "last_verse_key": "71:10",
+    "total_verses": 15
+  },
+  "571": {
+    "hizb_number": 57,
+    "rub_number": 228,
+    "juz_number": 29,
+    "first_verse_key": "71:11",
+    "last_verse_key": "71:28",
+    "total_verses": 18
+  },
+  "572": {
+    "hizb_number": 58,
+    "rub_number": 229,
+    "juz_number": 29,
+    "first_verse_key": "72:1",
+    "last_verse_key": "72:13",
+    "total_verses": 13
+  },
+  "573": {
+    "hizb_number": 58,
+    "rub_number": 229,
+    "juz_number": 29,
+    "first_verse_key": "72:14",
+    "last_verse_key": "72:28",
+    "total_verses": 15
+  },
+  "574": {
+    "hizb_number": 58,
+    "rub_number": 229,
+    "juz_number": 29,
+    "first_verse_key": "73:1",
+    "last_verse_key": "73:19",
+    "total_verses": 19
+  },
+  "575": {
+    "hizb_number": 58,
+    "rub_number": 230,
+    "juz_number": 29,
+    "first_verse_key": "73:20",
+    "last_verse_key": "74:17",
+    "total_verses": 18
+  },
+  "576": {
+    "hizb_number": 58,
+    "rub_number": 230,
+    "juz_number": 29,
+    "first_verse_key": "74:18",
+    "last_verse_key": "74:47",
+    "total_verses": 30
+  },
+  "577": {
+    "hizb_number": 58,
+    "rub_number": 230,
+    "juz_number": 29,
+    "first_verse_key": "74:48",
+    "last_verse_key": "75:19",
+    "total_verses": 28
+  },
+  "578": {
+    "hizb_number": 58,
+    "rub_number": 231,
+    "juz_number": 29,
+    "first_verse_key": "75:20",
+    "last_verse_key": "76:5",
+    "total_verses": 26
+  },
+  "579": {
+    "hizb_number": 58,
+    "rub_number": 231,
+    "juz_number": 29,
+    "first_verse_key": "76:6",
+    "last_verse_key": "76:25",
+    "total_verses": 20
+  },
+  "580": {
+    "hizb_number": 58,
+    "rub_number": 232,
+    "juz_number": 29,
+    "first_verse_key": "76:26",
+    "last_verse_key": "77:19",
+    "total_verses": 25
+  },
+  "581": {
+    "hizb_number": 58,
+    "rub_number": 232,
+    "juz_number": 29,
+    "first_verse_key": "77:20",
+    "last_verse_key": "77:50",
+    "total_verses": 31
+  },
+  "582": {
+    "hizb_number": 59,
+    "rub_number": 233,
+    "juz_number": 30,
+    "first_verse_key": "78:1",
+    "last_verse_key": "78:30",
+    "total_verses": 30
+  },
+  "583": {
+    "hizb_number": 59,
+    "rub_number": 233,
+    "juz_number": 30,
+    "first_verse_key": "78:31",
+    "last_verse_key": "79:15",
+    "total_verses": 25
+  },
+  "584": {
+    "hizb_number": 59,
+    "rub_number": 233,
+    "juz_number": 30,
+    "first_verse_key": "79:16",
+    "last_verse_key": "79:46",
+    "total_verses": 31
+  },
+  "585": {
+    "hizb_number": 59,
+    "rub_number": 234,
+    "juz_number": 30,
+    "first_verse_key": "80:1",
+    "last_verse_key": "80:42",
+    "total_verses": 42
+  },
+  "586": {
+    "hizb_number": 59,
+    "rub_number": 234,
+    "juz_number": 30,
+    "first_verse_key": "81:1",
+    "last_verse_key": "81:29",
+    "total_verses": 29
+  },
+  "587": {
+    "hizb_number": 59,
+    "rub_number": 235,
+    "juz_number": 30,
+    "first_verse_key": "82:1",
+    "last_verse_key": "83:6",
+    "total_verses": 25
+  },
+  "588": {
+    "hizb_number": 59,
+    "rub_number": 235,
+    "juz_number": 30,
+    "first_verse_key": "83:7",
+    "last_verse_key": "83:34",
+    "total_verses": 28
+  },
+  "589": {
+    "hizb_number": 59,
+    "rub_number": 235,
+    "juz_number": 30,
+    "first_verse_key": "83:35",
+    "last_verse_key": "84:25",
+    "total_verses": 27
+  },
+  "590": {
+    "hizb_number": 59,
+    "rub_number": 236,
+    "juz_number": 30,
+    "first_verse_key": "85:1",
+    "last_verse_key": "85:22",
+    "total_verses": 22
+  },
+  "591": {
+    "hizb_number": 59,
+    "rub_number": 236,
+    "juz_number": 30,
+    "first_verse_key": "86:1",
+    "last_verse_key": "87:15",
+    "total_verses": 32
+  },
+  "592": {
+    "hizb_number": 60,
+    "rub_number": 237,
+    "juz_number": 30,
+    "first_verse_key": "87:16",
+    "last_verse_key": "88:26",
+    "total_verses": 30
+  },
+  "593": {
+    "hizb_number": 60,
+    "rub_number": 237,
+    "juz_number": 30,
+    "first_verse_key": "89:1",
+    "last_verse_key": "89:23",
+    "total_verses": 23
+  },
+  "594": {
+    "hizb_number": 60,
+    "rub_number": 237,
+    "juz_number": 30,
+    "first_verse_key": "89:24",
+    "last_verse_key": "90:20",
+    "total_verses": 27
+  },
+  "595": {
+    "hizb_number": 60,
+    "rub_number": 238,
+    "juz_number": 30,
+    "first_verse_key": "91:1",
+    "last_verse_key": "92:14",
+    "total_verses": 29
+  },
+  "596": {
+    "hizb_number": 60,
+    "rub_number": 238,
+    "juz_number": 30,
+    "first_verse_key": "92:15",
+    "last_verse_key": "94:8",
+    "total_verses": 26
+  },
+  "597": {
+    "hizb_number": 60,
+    "rub_number": 239,
+    "juz_number": 30,
+    "first_verse_key": "95:1",
+    "last_verse_key": "96:19",
+    "total_verses": 27
+  },
+  "598": {
+    "hizb_number": 60,
+    "rub_number": 239,
+    "juz_number": 30,
+    "first_verse_key": "97:1",
+    "last_verse_key": "98:7",
+    "total_verses": 12
+  },
+  "599": {
+    "hizb_number": 60,
+    "rub_number": 239,
+    "juz_number": 30,
+    "first_verse_key": "98:8",
+    "last_verse_key": "100:9",
+    "total_verses": 18
+  },
+  "600": {
+    "hizb_number": 60,
+    "rub_number": 240,
+    "juz_number": 30,
+    "first_verse_key": "100:10",
+    "last_verse_key": "102:8",
+    "total_verses": 21
+  },
+  "601": {
+    "hizb_number": 60,
+    "rub_number": 240,
+    "juz_number": 30,
+    "first_verse_key": "103:1",
+    "last_verse_key": "105:5",
+    "total_verses": 17
+  },
+  "602": {
+    "hizb_number": 60,
+    "rub_number": 240,
+    "juz_number": 30,
+    "first_verse_key": "106:1",
+    "last_verse_key": "108:3",
+    "total_verses": 14
+  },
+  "603": {
+    "hizb_number": 60,
+    "rub_number": 240,
+    "juz_number": 30,
+    "first_verse_key": "109:1",
+    "last_verse_key": "111:5",
+    "total_verses": 14
+  },
+  "604": {
+    "hizb_number": 60,
+    "rub_number": 240,
+    "juz_number": 30,
+    "first_verse_key": "112:1",
+    "last_verse_key": "114:6",
+    "total_verses": 15
+  }
+}

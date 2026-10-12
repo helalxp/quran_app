@@ -114,22 +114,23 @@ class _AyahActionsSheetState extends State<AyahActionsSheet> with TickerProvider
     });
 
     // Enhanced API endpoints with better reliability
+    // REORDERED: Uthmanic text first (authentic Quranic script), then translations, then fallback
     final apiStrategies = [
-      // Strategy 1: AlQuran.cloud (most reliable)
+      // Strategy 1: Quran.com API - Uthmanic (authentic Quranic script with proper diacritics)
           () async {
         final response = await http.get(
-          Uri.parse(ApiConstants.getAyahTranslation(widget.ayahMarker.surah, widget.ayahMarker.ayah, 'ar.asad')),
-          headers: {'Accept': 'application/json', 'User-Agent': 'QuranApp/1.0'},
+          Uri.parse(ApiConstants.getVerseUthmani(widget.ayahMarker.surah, widget.ayahMarker.ayah)),
+          headers: {'Accept': 'application/json'},
         ).timeout(AppConstants.apiTimeout);
 
         if (response.statusCode == 200) {
           final data = json.decode(response.body);
-          return data['data']['text'] as String?;
+          return data['verse']['text_uthmani'] as String?;
         }
         return null;
       },
 
-      // Strategy 2: Alternative AlQuran endpoint
+      // Strategy 2: AlQuran.cloud simple endpoint - also returns Uthmanic
           () async {
         final response = await http.get(
           Uri.parse(ApiConstants.getAyahSimple(widget.ayahMarker.surah, widget.ayahMarker.ayah)),
@@ -143,16 +144,16 @@ class _AyahActionsSheetState extends State<AyahActionsSheet> with TickerProvider
         return null;
       },
 
-      // Strategy 3: Quran.com API
+      // Strategy 3: AlQuran.cloud with Asad translation (fallback to translation if Uthmanic unavailable)
           () async {
         final response = await http.get(
-          Uri.parse(ApiConstants.getVerseUthmani(widget.ayahMarker.surah, widget.ayahMarker.ayah)),
-          headers: {'Accept': 'application/json'},
+          Uri.parse(ApiConstants.getAyahTranslation(widget.ayahMarker.surah, widget.ayahMarker.ayah, 'ar.asad')),
+          headers: {'Accept': 'application/json', 'User-Agent': 'QuranApp/1.0'},
         ).timeout(AppConstants.apiTimeout);
 
         if (response.statusCode == 200) {
           final data = json.decode(response.body);
-          return data['verse']['text_uthmani'] as String?;
+          return data['data']['text'] as String?;
         }
         return null;
       },

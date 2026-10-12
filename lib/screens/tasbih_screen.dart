@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter/gestures.dart' show PointerDeviceKind;
+import 'package:flutter/services.dart';
 import 'dart:async';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:just_audio/just_audio.dart';
@@ -600,7 +603,7 @@ class _TasbihScreenState extends State<TasbihScreen> with SingleTickerProviderSt
   Widget _buildAfterPrayerTab() {
     return GestureDetector(
       onTap: _onAfterPrayerTap,
-      behavior: HitTestBehavior.opaque,
+      behavior: HitTestBehavior.translucent,
       child: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
@@ -620,45 +623,53 @@ class _TasbihScreenState extends State<TasbihScreen> with SingleTickerProviderSt
               // Word display (swipeable RTL)
               SizedBox(
                 height: 150,
-              child: PageView.builder(
-                controller: _afterPrayerPageController,
-                reverse: true, // RTL support
-                itemCount: _afterPrayerWords.length,
-                onPageChanged: (index) {
-                  setState(() {
-                    _afterPrayerWordIndex = index;
-                  });
-                  _saveProgress();
-                },
-                itemBuilder: (context, index) {
-                  return Center(
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 32.0),
-                      child: FittedBox(
-                        fit: BoxFit.scaleDown,
-                        child: ConstrainedBox(
-                          constraints: BoxConstraints(
-                            maxWidth: MediaQuery.of(context).size.width - 64,
-                          ),
-                          child: Text(
-                            _afterPrayerWords[index],
-                            textAlign: TextAlign.center,
-                            textDirection: TextDirection.rtl,
-                            style: TextStyle(
-                              fontSize: index == 3 ? 24 : 32,
-                              fontWeight: FontWeight.bold,
-                              fontFamily: 'Uthmanic',
-                              color: Theme.of(context).colorScheme.primary,
-                              height: 1.8,
+                child: ScrollConfiguration(
+                  behavior: ScrollConfiguration.of(context).copyWith(
+                    dragDevices: {
+                      PointerDeviceKind.touch,
+                      if (kIsWeb) PointerDeviceKind.mouse,
+                    },
+                  ),
+                  child: PageView.builder(
+                    controller: _afterPrayerPageController,
+                    reverse: true, // RTL support
+                    itemCount: _afterPrayerWords.length,
+                    onPageChanged: (index) {
+                      setState(() {
+                        _afterPrayerWordIndex = index;
+                      });
+                      _saveProgress();
+                    },
+                    itemBuilder: (context, index) {
+                      return Center(
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 32.0),
+                          child: FittedBox(
+                            fit: BoxFit.scaleDown,
+                            child: ConstrainedBox(
+                              constraints: BoxConstraints(
+                                maxWidth: MediaQuery.of(context).size.width - 64,
+                              ),
+                              child: Text(
+                                _afterPrayerWords[index],
+                                textAlign: TextAlign.center,
+                                textDirection: TextDirection.rtl,
+                                style: TextStyle(
+                                  fontSize: index == 3 ? 24 : 32,
+                                  fontWeight: FontWeight.bold,
+                                  fontFamily: 'Uthmanic',
+                                  color: Theme.of(context).colorScheme.primary,
+                                  height: 1.8,
+                                ),
+                              ),
                             ),
                           ),
                         ),
-                      ),
-                    ),
-                  );
-                },
+                      );
+                    },
+                  ),
+                ),
               ),
-            ),
 
             const SizedBox(height: 16),
 
@@ -711,7 +722,7 @@ class _TasbihScreenState extends State<TasbihScreen> with SingleTickerProviderSt
   Widget _buildCustomTab() {
     return GestureDetector(
       onTap: _onCustomTap,
-      behavior: HitTestBehavior.opaque,
+      behavior: HitTestBehavior.translucent,
       child: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
@@ -731,56 +742,64 @@ class _TasbihScreenState extends State<TasbihScreen> with SingleTickerProviderSt
               // Word display (swipeable RTL)
               SizedBox(
                 height: 150,
-              child: _customWords.isEmpty
-                  ? Center(
-                      child: Text(
-                        'اضغط + لإضافة دعاء أو ذكر',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontFamily: 'Uthmanic',
-                          color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
+                child: _customWords.isEmpty
+                    ? Center(
+                        child: Text(
+                          'اضغط + لإضافة دعاء أو ذكر',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontFamily: 'Uthmanic',
+                            color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
+                          ),
                         ),
-                      ),
-                    )
-                  : PageView.builder(
-                      controller: _customPageController,
-                      reverse: true, // RTL support
-                      itemCount: _customWords.length,
-                      onPageChanged: (index) {
-                        setState(() {
-                          _customWordIndex = index;
-                        });
-                        _saveProgress();
-                      },
-                      itemBuilder: (context, index) {
-                        return Center(
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 32.0),
-                            child: FittedBox(
-                              fit: BoxFit.scaleDown,
-                              child: ConstrainedBox(
-                                constraints: BoxConstraints(
-                                  maxWidth: MediaQuery.of(context).size.width - 64,
-                                ),
-                                child: Text(
-                                  _customWords[index],
-                                  textAlign: TextAlign.center,
-                                  textDirection: TextDirection.rtl,
-                                  style: TextStyle(
-                                    fontSize: 32,
-                                    fontWeight: FontWeight.bold,
-                                    fontFamily: 'Uthmanic',
-                                    color: Theme.of(context).colorScheme.secondary,
-                                    height: 1.8,
+                      )
+                    : ScrollConfiguration(
+                        behavior: ScrollConfiguration.of(context).copyWith(
+                          dragDevices: {
+                            PointerDeviceKind.touch,
+                            if (kIsWeb) PointerDeviceKind.mouse,
+                          },
+                        ),
+                        child: PageView.builder(
+                          controller: _customPageController,
+                          reverse: true, // RTL support
+                          itemCount: _customWords.length,
+                          onPageChanged: (index) {
+                            setState(() {
+                              _customWordIndex = index;
+                            });
+                            _saveProgress();
+                          },
+                          itemBuilder: (context, index) {
+                            return Center(
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: 32.0),
+                                child: FittedBox(
+                                  fit: BoxFit.scaleDown,
+                                  child: ConstrainedBox(
+                                    constraints: BoxConstraints(
+                                      maxWidth: MediaQuery.of(context).size.width - 64,
+                                    ),
+                                    child: Text(
+                                      _customWords[index],
+                                      textAlign: TextAlign.center,
+                                      textDirection: TextDirection.rtl,
+                                      style: TextStyle(
+                                        fontSize: 32,
+                                        fontWeight: FontWeight.bold,
+                                        fontFamily: 'Uthmanic',
+                                        color: Theme.of(context).colorScheme.secondary,
+                                        height: 1.8,
+                                      ),
+                                    ),
                                   ),
                                 ),
                               ),
-                            ),
-                          ),
-                        );
-                      },
-                    ),
-            ),
+                            );
+                          },
+                        ),
+                      ),
+              ),
 
             const SizedBox(height: 16),
 
@@ -833,58 +852,77 @@ class _TasbihScreenState extends State<TasbihScreen> with SingleTickerProviderSt
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        leading: IconButton(
-          onPressed: () {
-            HapticUtils.navigation();
-            Navigator.pop(context);
-          },
-          icon: const Icon(Icons.arrow_back_outlined),
-          tooltip: 'رجوع',
-        ),
-        title: const Text(
-          'التسبيح',
-          style: TextStyle(fontWeight: FontWeight.bold, fontFamily: 'Uthmanic'),
-        ),
-        centerTitle: true,
-        actions: [
-          IconButton(
-            onPressed: _resetCounter,
-            icon: const Icon(Icons.refresh),
-            tooltip: 'إعادة تعيين',
+    return Focus(
+      autofocus: kIsWeb,
+      onKeyEvent: (node, event) {
+        if (kIsWeb && event is KeyDownEvent) {
+          if (event.logicalKey == LogicalKeyboardKey.space) {
+            // Spacebar pressed
+            if (_tabController.index == 0) {
+              // After Prayer tab - increment counter
+              _onAfterPrayerTap();
+            } else {
+              // Custom tab - increment counter
+              _onCustomTap();
+            }
+            return KeyEventResult.handled;
+          }
+        }
+        return KeyEventResult.ignored;
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          leading: IconButton(
+            onPressed: () {
+              HapticUtils.navigation();
+              Navigator.pop(context);
+            },
+            icon: const Icon(Icons.arrow_back_outlined),
+            tooltip: 'رجوع',
           ),
-          if (_tabController.index == 1)
+          title: const Text(
+            'التسبيح',
+            style: TextStyle(fontWeight: FontWeight.bold, fontFamily: 'Uthmanic'),
+          ),
+          centerTitle: true,
+          actions: [
             IconButton(
-              onPressed: _showManageDuasSheet,
-              icon: const Icon(Icons.edit_note),
-              tooltip: 'إدارة الأدعية',
+              onPressed: _resetCounter,
+              icon: const Icon(Icons.refresh),
+              tooltip: 'إعادة تعيين',
             ),
-        ],
-        bottom: TabBar(
+            if (_tabController.index == 1)
+              IconButton(
+                onPressed: _showManageDuasSheet,
+                icon: const Icon(Icons.edit_note),
+                tooltip: 'إدارة الأدعية',
+              ),
+          ],
+          bottom: TabBar(
+            controller: _tabController,
+            tabs: const [
+              Tab(
+                child: Text(
+                  'التسبيح بعد الصلاة',
+                  style: TextStyle(fontFamily: 'Uthmanic', fontSize: 14),
+                ),
+              ),
+              Tab(
+                child: Text(
+                  'العداد الحر',
+                  style: TextStyle(fontFamily: 'Uthmanic', fontSize: 14),
+                ),
+              ),
+            ],
+          ),
+        ),
+        body: TabBarView(
           controller: _tabController,
-          tabs: const [
-            Tab(
-              child: Text(
-                'التسبيح بعد الصلاة',
-                style: TextStyle(fontFamily: 'Uthmanic', fontSize: 14),
-              ),
-            ),
-            Tab(
-              child: Text(
-                'العداد الحر',
-                style: TextStyle(fontFamily: 'Uthmanic', fontSize: 14),
-              ),
-            ),
+          children: [
+            _buildAfterPrayerTab(),
+            _buildCustomTab(),
           ],
         ),
-      ),
-      body: TabBarView(
-        controller: _tabController,
-        children: [
-          _buildAfterPrayerTab(),
-          _buildCustomTab(),
-        ],
       ),
     );
   }

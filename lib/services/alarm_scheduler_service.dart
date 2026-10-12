@@ -15,7 +15,7 @@ class AlarmSchedulerService {
   bool _initialized = false;
 
   // Method channel for native alarm scheduling
-  static const MethodChannel _alarmChannel = MethodChannel('com.helal.quran/alarm');
+  static const MethodChannel? _alarmChannel = kIsWeb ? null : MethodChannel('com.helal.quran/alarm');
 
   // Alarm IDs for azan
   static const int fajrAlarmId = 1;
@@ -45,6 +45,10 @@ class AlarmSchedulerService {
 
   // Schedule all 5 daily prayer alarms (both azan and notifications)
   Future<void> scheduleAllPrayerAlarms() async {
+    if (_alarmChannel == null) {
+      if (kDebugMode) debugPrint('⏭️ Prayer alarms not available on web');
+      return;
+    }
     try {
       if (!_initialized) {
         await initialize();
@@ -115,7 +119,7 @@ class AlarmSchedulerService {
       final prayerName = _prayerService.getPrayerNameInArabic(prayer);
 
       // Schedule azan alarm using native method channel
-      final azanSuccess = await _alarmChannel.invokeMethod<bool>('scheduleAlarm', {
+      final azanSuccess = await _alarmChannel!.invokeMethod<bool>('scheduleAlarm', {
         'alarmId': alarmId,
         'timeInMillis': scheduleTime.millisecondsSinceEpoch,
         'prayerName': prayerName,
@@ -146,7 +150,7 @@ class AlarmSchedulerService {
 
       // Only schedule notification if it's in the future
       if (notificationTime.isAfter(now)) {
-        final notifSuccess = await _alarmChannel.invokeMethod<bool>('scheduleNotificationAlarm', {
+        final notifSuccess = await _alarmChannel!.invokeMethod<bool>('scheduleNotificationAlarm', {
           'notificationId': notifId,
           'prayerId': alarmId, // Original prayer ID for settings lookup
           'timeInMillis': notificationTime.millisecondsSinceEpoch,
@@ -187,7 +191,7 @@ class AlarmSchedulerService {
       final midnight = DateTime(now.year, now.month, now.day + 1, 0, 0, 1); // 00:00:01 next day
 
       // Schedule midnight reschedule using native method channel
-      final success = await _alarmChannel.invokeMethod<bool>('scheduleMidnightReschedule', {
+      final success = await _alarmChannel!.invokeMethod<bool>('scheduleMidnightReschedule', {
         'timeInMillis': midnight.millisecondsSinceEpoch,
       });
 
@@ -204,8 +208,9 @@ class AlarmSchedulerService {
 
   // Cancel all alarms
   Future<void> cancelAllAlarms() async {
+    if (_alarmChannel == null) return;
     try {
-      await _alarmChannel.invokeMethod('cancelAllAlarms');
+      await _alarmChannel!.invokeMethod('cancelAllAlarms');
       if (kDebugMode) debugPrint('✅ All alarms cancelled');
     } catch (e) {
       if (kDebugMode) debugPrint('❌ Error cancelling alarms: $e');

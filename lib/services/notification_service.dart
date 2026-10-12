@@ -21,8 +21,10 @@ class NotificationService {
 
   // Initialize the service
   Future<void> initialize() async {
-    await _initializeNotifications();
-    if (kDebugMode) debugPrint('✅ NotificationService initialized (native alarms handle all notifications)');
+    if (!kIsWeb) {
+      await _initializeNotifications();
+    }
+    if (kDebugMode) debugPrint('✅ NotificationService initialized${kIsWeb ? " (web - skipped native notifications)" : " (native alarms handle all notifications)"}');
   }
 
 

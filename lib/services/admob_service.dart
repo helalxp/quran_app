@@ -2,7 +2,6 @@
 
 import 'package:flutter/foundation.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
-import 'dart:io';
 
 class AdMobService {
   static final AdMobService _instance = AdMobService._internal();
@@ -31,20 +30,18 @@ class AdMobService {
       return _testRewardedAdUnitId;
     }
 
-    // Use real ads in release mode
-    if (Platform.isAndroid) {
-      debugPrint('📱 Using REAL Android Ad Unit ID: $_androidRewardedAdUnitId');
-      return _androidRewardedAdUnitId;
-    } else if (Platform.isIOS) {
-      debugPrint('📱 Using REAL iOS Ad Unit ID: $_iosRewardedAdUnitId');
-      return _iosRewardedAdUnitId;
-    }
+    // Use real ads in release mode (Android/iOS only)
     debugPrint('⚠️ Platform not recognized, falling back to test ad');
     return _testRewardedAdUnitId;
   }
 
   /// Initialize AdMob
   static Future<void> initialize() async {
+    if (kIsWeb) {
+      if (kDebugMode) debugPrint('⏭️ AdMob not available on web');
+      return;
+    }
+
     if (_isInitialized) return;
 
     try {

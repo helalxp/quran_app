@@ -4,45 +4,59 @@ import 'package:flutter/services.dart';
 import 'package:flutter/foundation.dart';
 
 /// Centralized haptic feedback utilities for consistent user experience
+/// Uses Flutter's built-in HapticFeedback on all platforms (cross-platform, no native code needed)
 class HapticUtils {
-  static const MethodChannel _channel = MethodChannel('com.helal.quran/vibration');
-
-  /// Light haptic feedback for subtle interactions (35ms)
+  /// Light haptic feedback for subtle interactions
   static Future<void> lightImpact() async {
-    await _vibrate(35);
-  }
-
-  /// Medium haptic feedback for standard interactions (60ms)
-  static Future<void> mediumImpact() async {
-    await _vibrate(60);
-  }
-
-  /// Heavy haptic feedback for important interactions (100ms)
-  static Future<void> heavyImpact() async {
-    await _vibrate(100);
-  }
-
-  /// Selection click for toggles and selections (50ms)
-  static Future<void> selectionClick() async {
-    await _vibrate(50);
-  }
-
-  /// Vibrate for error states or warnings (600ms)
-  static Future<void> vibrate() async {
-    await _vibrate(600);
-  }
-
-  /// Continuous vibration for Qibla alignment - pulses until stopped
-  static Future<void> qiblaAlignmentVibrate() async {
-    await _vibrate(200);
-  }
-
-  /// Core vibration method using native Android Vibrator service
-  static Future<void> _vibrate(int durationMs) async {
     try {
-      await _channel.invokeMethod('vibrate', {'duration': durationMs});
+      await HapticFeedback.lightImpact();
     } catch (e) {
-      if (kDebugMode) debugPrint('Vibration error: $e');
+      if (kDebugMode) debugPrint('Haptic error: $e');
+    }
+  }
+
+  /// Medium haptic feedback for standard interactions
+  static Future<void> mediumImpact() async {
+    try {
+      await HapticFeedback.mediumImpact();
+    } catch (e) {
+      if (kDebugMode) debugPrint('Haptic error: $e');
+    }
+  }
+
+  /// Heavy haptic feedback for important interactions
+  static Future<void> heavyImpact() async {
+    try {
+      await HapticFeedback.heavyImpact();
+    } catch (e) {
+      if (kDebugMode) debugPrint('Haptic error: $e');
+    }
+  }
+
+  /// Selection click for toggles and selections
+  static Future<void> selectionClick() async {
+    try {
+      await HapticFeedback.selectionClick();
+    } catch (e) {
+      if (kDebugMode) debugPrint('Haptic error: $e');
+    }
+  }
+
+  /// Vibrate for error states or warnings
+  static Future<void> vibrate() async {
+    try {
+      await HapticFeedback.heavyImpact();
+    } catch (e) {
+      if (kDebugMode) debugPrint('Haptic error: $e');
+    }
+  }
+
+  /// Continuous vibration for Qibla alignment
+  static Future<void> qiblaAlignmentVibrate() async {
+    try {
+      await HapticFeedback.heavyImpact();
+    } catch (e) {
+      if (kDebugMode) debugPrint('Haptic error: $e');
     }
   }
 

@@ -1,9 +1,9 @@
 // lib/services/suggestions_service.dart
 
-import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 import 'package:package_info_plus/package_info_plus.dart';
+import 'dart:io' show Platform;
 
 class SuggestionsService {
   static final SuggestionsService _instance = SuggestionsService._internal();
